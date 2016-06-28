@@ -15,6 +15,7 @@ type ForjjPluginApp struct {
   Flags map[string]*string  // Values for global flags
 }
 
+//***************************************
 // JSON data structure
 
 type PluginRepo struct {
@@ -23,17 +24,37 @@ type PluginRepo struct {
   Files []string       // List of files managed by the plugin
 }
 
+ type PluginService struct {
+  Url map[string]string
+}
+
 type PluginData struct {
   Repos map[string]PluginRepo   // List of repository data
-  Services map[string]string    // web service url. ex: https://github.hpe.com
+  Services []PluginService      // web service url. ex: https://github.hpe.com
 }
 
 type PluginResult struct {
- data PluginData
- state_code uint      // 200 OK
- status string        // Status message
- error_message string // Error message
+ Data PluginData
+ State_code uint      // 200 OK
+ Status string        // Status message
+ Error_message string // Error message
 }
+
+//***************************************
+
+type PluginDef struct {
+ Name string
+ Image string
+}
+
+// Following is created at create time or loaded from update/maintain
+// File to define and store in the infra repository.
+type PluginsDefinition struct {
+ Plugins map[string]PluginDef // Ex: plugins["upstream"] = "github"
+ Flow string                  // Ex: flow = "github-PR". This will connect all tools to provide a github PR flow Ready to start.
+}
+
+//***************************************
 
 func init() {
 }

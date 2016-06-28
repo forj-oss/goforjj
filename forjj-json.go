@@ -7,6 +7,7 @@ import (
         "os/exec"
         "strings"
         "syscall"
+        "github.hpe.com/christophe-larsonneur/goforjj/trace"
 )
 
 // Function to read json
@@ -17,7 +18,7 @@ func (p *PluginResult)PluginRun(image, action string, docker_opts []string, opts
  cmd_args = append(cmd_args, opts ...)
 
  cmd := exec.Command(cmd_args[0], cmd_args[1:]...)
- fmt.Printf("RUNNING: %s\n\n", strings.Join(cmd_args, " "))
+ gotrace.Trace("RUNNING: %s\n\n", strings.Join(cmd_args, " "))
 
  stdout, err := cmd.StdoutPipe()
  if err != nil {
@@ -40,7 +41,7 @@ func (p *PluginResult)PluginRun(image, action string, docker_opts []string, opts
     fmt.Printf("\n%s ERROR.\nCommand status: %s\n", action, cmd.ProcessState.String())
     os.Exit(status.ExitStatus())
  }
- println(action, "DONE")
+ gotrace.Trace("%s %s\n", action, "DONE")
 }
 
 // Function to print out json data
@@ -52,3 +53,11 @@ func (p *PluginResult)JsonPrint() error {
  }
  return nil
 }
+
+/*
+// Load data returned by the plugin in the internal structure of Forjj core.
++func (p *PluginsDefinition)LoadResult(res *PluginResult) error {
++ if p.plugins == nil { p.plugins = make(map[string]PluginDef) }
++ return nil
+ }
+*/
