@@ -37,7 +37,7 @@ const template_source=`package main
 
 import (
   "gopkg.in/alecthomas/kingpin.v2"
-  "github.hpe.com/christophe-larsonneur/go-forjj"
+  "github.hpe.com/christophe-larsonneur/goforjj"
   "os"
   "fmt"
 )
