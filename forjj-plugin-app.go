@@ -15,4 +15,25 @@ type ForjjPluginApp struct {
   Flags map[string]*string  // Values for global flags
 }
 
+// JSON data structure
 
+type PluginRepo struct {
+  Name string          // name of the repository
+  Upstream string      // upstream url
+  Files []string       // List of files managed by the plugin
+}
+
+type PluginData struct {
+  Repos map[string]PluginRepo   // List of repository data
+  Services map[string]string    // web service url. ex: https://github.hpe.com
+}
+
+type PluginResult struct {
+ data PluginData
+ state_code uint      // 200 OK
+ status string        // Status message
+ error_message string // Error message
+}
+
+func init() {
+}
