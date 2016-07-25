@@ -16,7 +16,7 @@ type ForjjPluginApp struct {
 }
 
 //***************************************
-// JSON data structure
+// JSON data structure for shell type of plugin.
 
 type PluginRepo struct {
   Name string          // name of the repository

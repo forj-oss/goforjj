@@ -19,7 +19,7 @@ func PluginNew() *PluginResult {
 
 // Function to Start a driver as container in daemon mode.
 // The container ID will be registered internally to kill/remove them in case of forjj panic.
-func (p *PluginResult) PluginRun(plugin_type, image, action string, docker_opts []string, opts []string) {
+func (p *PluginResult) PluginDockerRun(plugin_type, image, action string, docker_opts []string, opts []string) {
 
     // Check if container exists
     if _, err := docker_container_stat(plugin_type) ; err == nil {
