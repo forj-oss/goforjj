@@ -3,11 +3,11 @@ package goforjj
 import (
     "encoding/json"
     "fmt"
-    "github.hpe.com/christophe-larsonneur/goforjj/trace"
-    "os"
-    "os/exec"
-    "strings"
-    "syscall"
+//    "github.hpe.com/christophe-larsonneur/goforjj/trace"
+//    "os"
+//    "os/exec"
+//    "strings"
+//    "syscall"
 )
 
 func PluginNew() *PluginResult {
@@ -17,42 +17,17 @@ func PluginNew() *PluginResult {
     return &p
 }
 
-// Function to read json
-func (p *PluginResult) PluginRun(image, action string, docker_opts []string, opts []string) {
-    if image == "" {
-        fmt.Printf("docker_image is missing in the driver definition. driver ignored.\n")
-        return
-    }
-    cmd_args := append([]string{}, "sudo", "docker", "run", "-i", "--rm")
-    cmd_args = append(cmd_args, docker_opts...)
-    cmd_args = append(cmd_args, image, action)
-    cmd_args = append(cmd_args, opts...)
+// Function to Start a driver as container in daemon mode.
+// The container ID will be registered internally to kill/remove them in case of forjj panic.
+func (p *PluginResult) PluginRun(plugin_type, image, action string, docker_opts []string, opts []string) {
 
-    cmd := exec.Command(cmd_args[0], cmd_args[1:]...)
-    gotrace.Trace("RUNNING: %s\n\n", strings.Join(cmd_args, " "))
-
-    stdout, err := cmd.StdoutPipe()
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
+    // Check if container exists
+    if _, err := docker_container_stat(plugin_type) ; err == nil {
+        // need to remove it
+        docker_container_remove(plugin_type)
     }
 
-    cmd.Start()
-
-    if err := json.NewDecoder(stdout).Decode(p); err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    if err := cmd.Wait(); err != nil {
-        fmt.Printf("\n%s ERROR.\nCommand status: %s\n", action, err)
-        os.Exit(1)
-    }
-
-    if status := cmd.ProcessState.Sys().(syscall.WaitStatus); status.ExitStatus() != 0 {
-        fmt.Printf("\n%s ERROR.\nCommand status: %s\n", action, cmd.ProcessState.String())
-        os.Exit(status.ExitStatus())
-    }
-    gotrace.Trace("%s %s\n", action, "DONE")
+    docker_container_run(plugin_type, image, action, docker_opts, opts)
 }
 
 // Function to print out json data
