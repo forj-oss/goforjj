@@ -54,33 +54,5 @@ type PluginsDefinition struct {
  Flow string                  // Ex: flow = "github-PR". This will connect all tools to provide a github PR flow Ready to start.
 }
 
-// Define the plugin yaml structure
-// Yaml data structure
-
-type YamlPluginRuntime struct {
-    Service_type string
-    Image string              `yaml:"docker_image"`
-}
-
-type YamlFlagsOptions struct {
-    Help string
-    Required bool
-}
-
-type YamlPluginDef struct {
-    Help string
-    Flags map[string]YamlFlagsOptions
-}
-
-type YamlPlugin struct {
-    Name               string `yaml:"plugin"` // driver name              (yaml:plugin)
-    Version            string                 // driver version           (yaml:version)
-    Description        string                 // driver description       (yaml:description)
-    Runtime YamlPluginRuntime                 // driver Runtime section   (yaml:runtime/)
-    Flags map[string]YamlPluginDef          // flags definition         (yaml:flags/)
-}
-
-//***************************************
-
 func init() {
 }
