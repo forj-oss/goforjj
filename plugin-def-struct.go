@@ -38,9 +38,26 @@ type YamlPluginDef struct {
 //   service_type: string - Support "REST API" and "shell"
 //                          REST API means the driver comply to REST API served as web service
 //                          shell means, the driver is called as shell with parameters and return a json data.
+//   image_docker: string - Docker image containing the driver to start
+//
 type YamlPluginRuntime struct {
     Service_type string
-    Image        string `yaml:"docker_image"`
+    Image        string         `yaml:"docker_image"`
+    Service      YamlPluginComm // Not yet used
+}
+
+// data structure in /runtime/service
+// 'service' defines how forjj communicate with the driver
+// If service is not defined, socket will be used.
+// runtime:
+//   service:
+//     socket: string - default set to the driver name with '.sock' as extension.
+//                      The socket path is set by forjj.
+//                      Socket file name to use between forjj and the driver
+//     port: uint     - Port used to communicate between forjj and the driver
+type YamlPluginComm struct {
+    Socket string // Not yet used
+    Port   string // Not yet implemented
 }
 
 // data structure in /actions/<action>/flags/<flag name>
