@@ -11,6 +11,7 @@ type PluginDef struct {
     Yaml YamlPlugin           // Yaml data definition
     Source_path string        // Plugin source data
     service bool              // True if the service is started as daemon
+    service_booted bool       // True if the service is started
     docker docker_container   // Define data to start the plugin as docker container
     cmd cmd_data              // Define data to start the service process
     req *gorequest.SuperAgent // REST API request

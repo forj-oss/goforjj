@@ -65,6 +65,7 @@ func (p *PluginDef) PluginStartService() error {
             }
 
             if p.CheckServiceUp() {
+                p.service_booted = true
                 return nil
             }
         }
