@@ -41,6 +41,12 @@ func docker_container_run(docker_opts []string, image, cmd string, args []string
     return cmd_run(cmd_args)
 }
 
+func docker_container_stop(name string) (string, error) {
+    gotrace.Trace("Stopping container '%s'", name)
+    cmd_args := append([]string{}, "sudo", "docker", "stop", name)
+    return cmd_run(cmd_args)
+}
+
 func docker_container_start(name string) (string, error) {
     gotrace.Trace("Starting container '%s'", name)
     cmd_args := append([]string{}, "sudo", "docker", "start", name)

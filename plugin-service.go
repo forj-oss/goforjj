@@ -123,3 +123,24 @@ func (p *PluginDef) socket_prepare() (err error) {
     }
     return nil
 }
+
+// To stop the plugin service if the service was started before by goforjj
+func (p *PluginDef) PluginStopService() {
+    if ! p.service || ! p.service_booted {
+        return
+    }
+    p.url.Path = "quit"
+    p.req.Get(p.url.String()).End()
+
+    if p.Yaml.Runtime.Image != "" {
+        for i := 0 ; i <= 10 ; i++ {
+            time.Sleep(time.Second)
+            if out, _ := docker_container_status(p.docker.name); out != "started" {
+                return
+            }
+        }
+        if out, _ := docker_container_status(p.docker.name); out == "started" {
+            docker_container_stop(p.docker.name)
+        }
+    }
+}
