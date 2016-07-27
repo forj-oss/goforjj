@@ -18,8 +18,8 @@ func cmd_run(cmd_args []string) (string, error) {
     var ret []byte
 
     ret, err := cmd.Output()
-    if err != nil {
-        return "", err
+    if err == nil {
+        return string(ret), nil
     }
 
     status := cmd.ProcessState.Sys().(syscall.WaitStatus)
