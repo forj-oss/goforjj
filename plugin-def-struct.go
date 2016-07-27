@@ -42,8 +42,19 @@ type YamlPluginDef struct {
 //
 type YamlPluginRuntime struct {
     Service_type string
-    Image        string         `yaml:"docker_image"`
-    Service      YamlPluginComm // Not yet used
+    Image        string          `yaml:"docker_image"`
+    Service      YamlPluginComm  // Not yet used
+    Shell        YamlPluginShell // Not yet used
+}
+
+// data structure in /runtime/shell
+// Define list of options for a shell plugin
+// runtime:
+//   shell:
+//     parameters: Array of strings - List of parameters to provide to the shell/binary
+//
+type YamlPluginShell struct {
+    Parameters []string
 }
 
 // data structure in /runtime/service
@@ -55,9 +66,12 @@ type YamlPluginRuntime struct {
 //                      The socket path is set by forjj.
 //                      Socket file name to use between forjj and the driver
 //     port: uint     - Port used to communicate between forjj and the driver
+//     parameters: Array of strings - List of parameters to provide to the shell/binary
+//                      Support {{Socket}}
 type YamlPluginComm struct {
-    Socket string // Not yet used
-    Port   string // Not yet implemented
+    Socket     string   // Not yet used
+    Port       uint   // Not yet implemented
+    Parameters []string // Not yet implemented
 }
 
 // data structure in /actions/<action>/flags/<flag name>
