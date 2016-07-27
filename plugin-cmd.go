@@ -17,7 +17,7 @@ func cmd_run(cmd_args []string) (string, error) {
     cmd := exec.Command(cmd_args[0], cmd_args[1:]...)
     var ret []byte
 
-    ret, err := cmd.Output()
+    ret, err := cmd.CombinedOutput()
     if err == nil {
         return string(ret), nil
     }

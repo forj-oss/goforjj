@@ -43,11 +43,30 @@ func (p *PluginDef) PluginStartService() error {
             return err
         }
 
+        gotrace.Trace("Checking service status...")
         for i := 1; i < 30; i++ {
+            time.Sleep(time.Second)
+
+            var err error
+            out := ""
+
+            if out, err = docker_container_status(p.docker.name) ; err != nil {
+                return err
+            }
+
+            if out != "started" {
+                out, err = docker_container_logs(p.docker.name)
+                if  err == nil {
+                    out = fmt.Sprintf("docker logs:\n---\n%s---\n",out)
+                } else {
+                    out = fmt.Sprintf("%s\n", err)
+                }
+                return fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out)
+            }
+
             if p.CheckServiceUp() {
                 return nil
             }
-            time.Sleep(time.Second)
         }
 
         return fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)

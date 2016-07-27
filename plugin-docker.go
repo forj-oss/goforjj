@@ -53,6 +53,12 @@ func docker_container_status(name string) (string, error) {
     return cmd_run(cmd_args)
 }
 
+func docker_container_logs(name string) (string, error) {
+    gotrace.Trace("Getting container '%s' logs", name)
+    cmd_args := append([]string{}, "sudo", "docker", "logs", name)
+    return cmd_run(cmd_args)
+}
+
 func docker_container_remove(name string) (string, error) {
     gotrace.Trace("Removing container '%s'", name)
     cmd_args := append([]string{}, "sudo", "docker", "rm", "-f", name)
