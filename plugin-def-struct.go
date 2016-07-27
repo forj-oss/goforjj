@@ -82,4 +82,6 @@ type YamlPluginComm struct {
 type YamlFlagsOptions struct {
     Help     string
     Required bool
+    Hidden   bool // Used by the plugin.
+    Default  string // Used by the plugin.
 }

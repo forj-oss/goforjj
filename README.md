@@ -1,29 +1,48 @@
 # Introduction
 
-This repo contains a GO package to generate, read and expose a FORJJ plugin flags from a yaml file to the output and a `flags` option of the plugin tool built on GO.
+This repo contains several golang packages and a golang generator to create a FORJJ plugin and implements the FORJJ plugin protocol in golang.
 
-# How to use it?
+# Why creating your forjj plugin
+
+Why will I need to create a forjj plugin?
+Because you want forjj to manage an application (create/configure and maintain it) that is currently not supported
+
+You have 2 possibilities:
+1. create your own plugin in any language that must respect forjj plugin protocol. It can be a REST API or a simple script which return a json data and can be started from docker or natively where forjj is running.
+2. Use `goforjj` to create your plugin in golang.
+
+golang is an awesome language that impressed me when developping forjj.
+To help you be focus in your core task (create an app returning json or create a FORJJ REST API ) I built some great fast and powerful golang code to create your first forjj plugin in minutes.
+
+This code will implement the FORJJ plugin protocol.
+
+# Create your FORJJ plugin
 
 1. Write your FORJJ plugin yaml file as described in [forjj-contribs README](https://github.hpe.com/christophe-larsonneur/forjj-contribs#description-of-yaml)
+
+This file mainly will define a list of flags to provide to the plugin through `forjj` cli
+
 2. create the `plugin.go` with the following:
 
     ```go
-    import "github.hpe.com/christophe-larsonneur/go-forjj"
+    package main
 
-    //go:generate go run $GOPATH/github.hpe.com/christophe-larsonneur/go-forjj/cmd/genflags/main.go <PluginName>.yaml
+    //go:generate go get github.hpe.com/christophe-larsonneur/goforjj gopkg.in/yaml.v2
+    //go:generate go build -o $GOPATH/bin/genapp github.hpe.com/christophe-larsonneur/goforjj/genapp
+    //go:generate genapp <PluginName>.yaml
 
     ```
+    Replace `<PluginName>.yaml` by your own plugin definition yaml file created at step 1.
 
 3. Then do :
 
     ```bash
-    go get                # Download dependencies, and by the way `go-forjj`
     go generate           # To generate the flags management code.
     ```
-  The `go generate` will create 4 files:
+  Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
 
-- `<pluginName>.go` - Plugin core code. Do not update this file. It will be regenerated from your plugin yaml file.
-- `<create|update|maintain>.go` - Those files are created the first time. It won't be re-generated. This is where you will have to write your plugin code.
+- `shell` :
+- `REST API` :
 
 If you have added some extra commands, a `<command>.go` will be also created the first time with initial code. So, you will just need to edit it and add your specific command code.
 
@@ -84,4 +103,4 @@ The yaml file must be structured as follow:
         ...
     ```
 
-   
+
