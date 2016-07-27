@@ -8,6 +8,7 @@ import (
     "os"
     "path"
     "time"
+    "github.hpe.com/christophe-larsonneur/goforjj/trace"
 )
 
 const defaultTimeout = 32 * time.Second
@@ -18,10 +19,11 @@ func (p *PluginDef) PluginStartService() error {
     if !p.service { // Nothing to start
         return nil
     }
-
+    gotrace.Trace("Starting plugin service...")
     // Is it a docker service?
     if p.Yaml.Runtime.Image != "" {
         p.docker.name = p.Yaml.Name
+        gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
         // Source path & mode daemon
         p.docker.opts = []string{"-v", p.Source_path + ":/src/", "-d"}
 
