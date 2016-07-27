@@ -23,7 +23,7 @@ func (p *PluginDef) PluginInit(instance string) (error) {
 
     // To define a unique container name based on workspace name.
     p.docker.name = instance + "-" + p.Yaml.Name
-    gotrace.Trace("Service mode : %s", p.service)
+    gotrace.Trace("Service mode : %t", p.service)
     return nil
 }
 
