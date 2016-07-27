@@ -13,7 +13,7 @@ func (p *PluginDef) PluginDefLoad(yaml_data []byte) (error) {
 
 // Initialize Plugin with Definition data.
 func (p *PluginDef) PluginInit(instance string) (error) {
-    gotrace.Trace("Initializing plugin instance '%s'\n", instance)
+    gotrace.Trace("Initializing plugin instance '%s'", instance)
     if p.Yaml.Name == "" {
         return fmt.Errorf("Unable to initialize the plugin without Plugin definition.")
     }
@@ -23,7 +23,7 @@ func (p *PluginDef) PluginInit(instance string) (error) {
 
     // To define a unique container name based on workspace name.
     p.docker.name = instance + "-" + p.Yaml.Name
-    gotrace.Trace("Service mode : %s\n", p.service)
+    gotrace.Trace("Service mode : %s", p.service)
     return nil
 }
 
