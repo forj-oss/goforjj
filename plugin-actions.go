@@ -1,7 +1,8 @@
 package goforjj
 
 import (
-        "encoding/json"
+    "encoding/json"
+    "github.hpe.com/christophe-larsonneur/goforjj/trace"
 )
 
 // Function which will execute the action requested.
@@ -18,6 +19,7 @@ func (p *PluginDef) PluginRunAction(action string, args map[string]string) (*Plu
 // returns the decoded data into predefined recognized PluginResult sructure
 func (p *PluginDef) api_do(action string, args map[string]string) (*PluginResult, error) {
     p.url.Path = action
+    gotrace.Trace("POST %s", p.url.String())
     _, body, errs := p.req.Post(p.url.String()).Send(args).End()
     if len(errs) > 0 {
         return nil, errs[0]

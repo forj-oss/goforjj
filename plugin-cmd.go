@@ -19,14 +19,17 @@ func cmd_run(cmd_args []string) (string, error) {
 
     ret, err := cmd.CombinedOutput()
     if err == nil {
+        gotrace.Trace("RET: %s", string(ret))
         return string(ret), nil
     }
 
     status := cmd.ProcessState.Sys().(syscall.WaitStatus)
     switch status.ExitStatus() {
     case 0 :
+        gotrace.Trace("RET: %s", string(ret))
         return string(ret), nil
     case 1:
+        gotrace.Trace("RET: %s", string(ret))
         return "", nil
     default:
         return "", fmt.Errorf("ERROR: '%s' returns: %d. %s\n",  cmd_args[0], status.ExitStatus(), cmd.ProcessState.String())
