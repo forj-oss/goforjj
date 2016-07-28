@@ -43,7 +43,7 @@ type YamlPluginDef struct {
 type YamlPluginRuntime struct {
     Service_type string
     Image        string          `yaml:"docker_image"`
-    Service      YamlPluginComm  // Not yet used
+    Service      YamlPluginComm
     Shell        YamlPluginShell // Not yet used
 }
 
@@ -69,7 +69,7 @@ type YamlPluginShell struct {
 //     parameters: Array of strings - List of parameters to provide to the shell/binary
 //                      Support {{Socket}}
 type YamlPluginComm struct {
-    Socket     string   // Not yet used
+    Socket     string
     Port       uint   // Not yet implemented
     Parameters []string // Not yet implemented
 }

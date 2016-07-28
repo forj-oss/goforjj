@@ -8,6 +8,11 @@ import (
     "os"
 )
 
+type YamlData struct {
+    Yaml *goforjj.YamlPlugin
+    Yaml_data string
+}
+
 // Define a source code model. Depending on the plugin service type, the plugin initial sources will be created from a model of sources (REST API or shell for example)
 type Models struct {
     model map[string]Model
@@ -46,21 +51,27 @@ func (m *Model)Source(file, tmpl_src string, reset bool) (*Model){
 }
 
 // Create the source files from the model given.
-func (m *Models)Create_model(yaml *goforjj.YamlPlugin, name string) {
+func (m *Models)Create_model(yaml *goforjj.YamlPlugin, raw_yaml []byte, name string) {
+    var yaml_data YamlData = YamlData {yaml, string(raw_yaml)}
+
     model, ok := m.model[name]
     if !ok {
         fmt.Printf("Invalid Model '%s' to apply.\n", name)
         os.Exit(1)
     }
     for k, v := range model.sources {
-        v.apply_source(yaml, k)
+        v.apply_source(&yaml_data, k)
     }
 }
 
-func (s *Source)apply_source(yaml *goforjj.YamlPlugin, file string) {
+func (s *Source)apply_source(yaml *YamlData, file string) {
     var tmpl *template.Template
     var err error
     var w *os.File
+
+    if _, err = os.Stat(file) ;  err == nil && ! s.reset  {
+        return
+    }
 
     tmpl, err = template.New(file).Funcs(template.FuncMap{
         "escape": func(str string) string {
@@ -93,5 +104,9 @@ func (s *Source)apply_source(yaml *goforjj.YamlPlugin, file string) {
         fmt.Printf("go-forjj-generate: error! %s\n", err)
         os.Exit(1)
     }
-
+    if s.reset {
+        fmt.Printf("Source generated: %s generated\n", file)
+    } else {
+        fmt.Printf("Source created: %s created. Won't be updated anymore at next go generate until file disappear.\n", file)
+    }
 }

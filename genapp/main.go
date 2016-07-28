@@ -58,6 +58,6 @@ func main() {
 
     app.init_model()
 
-    app.Models.Create_model(&app.Yaml, app.Yaml.Runtime.Service_type)
+    app.Models.Create_model(&app.Yaml, yaml_data, app.Yaml.Runtime.Service_type)
 
 }
