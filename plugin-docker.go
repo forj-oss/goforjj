@@ -35,7 +35,10 @@ func docker_container_run(docker_opts []string, image, cmd string, args []string
     gotrace.Trace("Starting container from image '%s'", image)
     cmd_args := append([]string{}, "sudo", "docker", "run")
     cmd_args = append(cmd_args, docker_opts...)
-    cmd_args = append(cmd_args, image, cmd)
+    cmd_args = append(cmd_args, image)
+    if cmd != "" {
+        cmd_args = append(cmd_args, cmd)
+    }
     cmd_args = append(cmd_args, args...)
 
     return cmd_run(cmd_args)
