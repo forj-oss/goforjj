@@ -9,6 +9,7 @@ import (
     "path"
     "time"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
+    "strings"
 )
 
 const defaultTimeout = 32 * time.Second
@@ -34,6 +35,7 @@ func (p *PluginDef) PluginStartService() error {
             }
             p.docker.socket_path = "/tmp/forjj-socks"
             p.docker.opts = append(p.docker.opts, "-v", p.cmd.socket_path+":"+p.docker.socket_path)
+            p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
         } else {
             return fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
         }
@@ -41,7 +43,7 @@ func (p *PluginDef) PluginStartService() error {
         // Check if the container exists and is started.
         // TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
         // Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
-        if _, err := p.docker_container_restart(p.cmd.command, p.cmd.args); err != nil {
+        if _, err := p.docker_container_restart(p.cmd.command, p.Yaml.Runtime.Service.Parameters); err != nil {
             return err
         }
 
@@ -56,17 +58,19 @@ func (p *PluginDef) PluginStartService() error {
                 return err
             }
 
-            if out != "started" {
+            if strings.Trim(out, " \n") != "running" {
                 out, err = docker_container_logs(p.docker.name)
                 if  err == nil {
                     out = fmt.Sprintf("docker logs:\n---\n%s---\n",out)
                 } else {
                     out = fmt.Sprintf("%s\n", err)
                 }
-                return fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out)
+                docker_container_remove(p.docker.name)
+                return fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
             }
 
             if p.CheckServiceUp() {
+                gotrace.Trace("Service is UP.")
                 p.service_booted = true
                 return nil
             }
@@ -101,7 +105,7 @@ func (p *PluginDef) CheckServiceUp() bool {
     if err != nil {
         fmt.Printf("Issue to ping the Plugin service '%s'. %s\n", p.Yaml.Name, err)
     }
-    return body == "OK"
+    return strings.Trim(body, " \n") == "OK"
 }
 
 // Create the socket link for http and his path.
