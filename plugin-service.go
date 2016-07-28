@@ -32,13 +32,15 @@ func (p *PluginDef) PluginStartService() error {
             if err := p.socket_prepare(); err != nil {
                 return err
             }
-            p.docker.socket_path = "/forjj-sockets"
+            p.docker.socket_path = "/tmp/forjj-socks"
             p.docker.opts = append(p.docker.opts, "-v", p.cmd.socket_path+":"+p.docker.socket_path)
         } else {
             return fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
         }
 
         // Check if the container exists and is started.
+        // TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
+        // Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
         if _, err := p.docker_container_restart(p.cmd.command, p.cmd.args); err != nil {
             return err
         }

@@ -31,5 +31,6 @@ func (a *App) init_model_rest() {
         Source("app.go", template_rest_app, true).
         Source("cli.go", template_rest_cli, true).
         Source("handlers.go", template_rest_handlers, false).
-        Source("routes.go", template_rest_routes, true)
+        Source("routes.go", template_rest_routes, true).
+        Source("log.go", template_rest_log, false)
 }
