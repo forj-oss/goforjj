@@ -73,6 +73,10 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         return
     }
 
+    if s.reset {
+        file = "generated-" + file
+    }
+
     tmpl, err = template.New(file).Funcs(template.FuncMap{
         "escape": func(str string) string {
             return strings.Replace(strings.Replace(str, "\"", "\\\"", -1), "\n", "\\n\" +\n   \"", -1)
@@ -105,8 +109,8 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         os.Exit(1)
     }
     if s.reset {
-        fmt.Printf("Source generated: %s generated\n", file)
+        fmt.Printf("%s\n", file)
     } else {
-        fmt.Printf("Source created: %s created. Won't be updated anymore at next go generate until file disappear.\n", file)
+        fmt.Printf("'%s' created. Won't be updated anymore at next go generate until file disappear.\n", file)
     }
 }
