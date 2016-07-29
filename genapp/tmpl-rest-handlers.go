@@ -9,6 +9,7 @@ import (
     "encoding/json"
     "io"
     "io/ioutil"
+    "log"
 )
 
 // PluginData response object creator
@@ -69,6 +70,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
     DoCreate(w, r, &req_data, data)
 
     if data.ErrorMessage != "" {
+        log.Print("HTTPE ERROR: 422 - ", data.ErrorMessage)
         w.WriteHeader(422) // unprocessable entity
     }
 
@@ -101,6 +103,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
     DoUpdate(w, r, &req_data, data)
 
     if data.ErrorMessage != "" {
+        log.Print("HTTPE ERROR: 422 - ", data.ErrorMessage)
         w.WriteHeader(422) // unprocessable entity
     }
 
@@ -130,6 +133,7 @@ func Maintain(w http.ResponseWriter, r *http.Request) {
     DoMaintain(w, r, &req_data, data)
 
     if data.ErrorMessage != "" {
+        log.Print("HTTPE ERROR: 422 - ", data.ErrorMessage)
         w.WriteHeader(422) // unprocessable entity
     }
 
