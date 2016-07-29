@@ -41,8 +41,12 @@ func (p *PluginDef)def_runtime_context() (error) {
 }
 
 // Set plugin source path
-func (p *PluginDef) PluginSetSource(source_path string) {
-    p.Source_path = source_path
+func (p *PluginDef) PluginSetSource(path string) {
+    p.Source_path = path
+}
+
+func (p *PluginDef) PluginSetWorkspace(path string) {
+    p.Workspace_path = path
 }
 
 func (p *PluginDef) PluginSocketPath(path string) {

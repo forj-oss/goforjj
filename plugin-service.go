@@ -25,9 +25,18 @@ func (p *PluginDef) PluginStartService() error {
     if p.Yaml.Runtime.Image != "" {
         p.docker.name = p.Yaml.Name
         gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
-        // Source path & mode daemon
-        p.docker.opts = []string{"-v", p.Source_path + ":/src/", "-d"}
 
+        // mode daemon
+        p.docker.opts = []string{ "-d" }
+        // Source path
+        p.SourceMount = "/src/"
+        p.docker.opts = append(p.docker.opts, "-v", p.Source_path + ":" + p.SourceMount,)
+
+        // Workspace path
+        if p.Workspace_path != "" {
+            p.WorkspaceMount = "/workspace/"
+            p.docker.opts = []string{"-v", p.Workspace_path + ":" + p.WorkspaceMount}
+        }
         // Do we have a socket to prepare?
         if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
             if err := p.socket_prepare(); err != nil {
