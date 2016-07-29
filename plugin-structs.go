@@ -7,15 +7,19 @@ import (
 
 // Data stored about the driver
 type PluginDef struct {
-    Result *PluginResult      // Json data structured returned.
-    Yaml YamlPlugin           // Yaml data definition
-    Source_path string        // Plugin source data
-    service bool              // True if the service is started as daemon
-    service_booted bool       // True if the service is started
-    docker docker_container   // Define data to start the plugin as docker container
-    cmd cmd_data              // Define data to start the service process
-    req *gorequest.SuperAgent // REST API request
-    url *url.URL              // REST API url
+    Result         *PluginResult         // Json data structured returned.
+    Yaml           YamlPlugin            // Yaml data definition
+    Source_path    string                // Plugin source path from Forjj point of view
+    Workspace_path string                // Plugin Workspace path from Forjj point of view
+    service        bool                  // True if the service is started as daemon
+    service_booted bool                  // True if the service is started
+    docker         docker_container      // Define data to start the plugin as docker container
+    cmd            cmd_data              // Define data to start the service process
+    req            *gorequest.SuperAgent // REST API request
+    url            *url.URL              // REST API url
+    SourceMount     string               // Where the driver will have his source code.
+    WorkspaceMount string                // where the driver has his workspace.
+
 }
 
 type cmd_data struct {
