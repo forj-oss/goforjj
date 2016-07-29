@@ -2,10 +2,6 @@ package main
 
 const template_rest_log = `package main
 
-// This file has been created by "go generate" as initial code. go generate will never update it, except if you remove it.
-
-// So, update it for your need.
-
 import (
     "log"
     "net/http"
