@@ -22,15 +22,18 @@ func (a *App) init_model() {
 func (a *App) init_model_shell() {
     a.Models.Create("shell").
         Source("main.go", template_shell_main, false).
-        Source("app.go", template_shell_app, true)
+        Source("app.go", template_shell_app,   true)
 }
 
 func (a *App) init_model_rest() {
     a.Models.Create("REST API").
-        Source("main.go", template_rest_main, false).
-        Source("app.go", template_rest_app, true).
-        Source("cli.go", template_rest_cli, true).
-        Source("handlers.go", template_rest_handlers, false).
-        Source("routes.go", template_rest_routes, true).
-        Source("log.go", template_rest_log, false)
+        Source("main.go",         template_rest_main,     false).
+        Source("app.go",          template_rest_app,      false).
+        Source("cli.go",          template_rest_cli,      false).
+        Source("handlers.go",     template_rest_handlers, false).
+        Source("actions.go",      template_rest_actions,  false).
+        Source("routes.go",       template_rest_routes,   false).
+        Source("router.go",       template_rest_router,   false).
+        Source("log.go",          template_rest_log,      false).
+        Source("yaml-structs.go", template_rest_structs,  true)
 }
