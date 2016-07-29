@@ -19,8 +19,17 @@ func (p *PluginDef) PluginRunAction(action string, args map[string]string) (*Plu
 // returns the decoded data into predefined recognized PluginResult sructure
 func (p *PluginDef) api_do(action string, args map[string]string) (*PluginResult, error) {
     p.url.Path = action
-    gotrace.Trace("POST %s", p.url.String())
-    _, body, errs := p.req.Post(p.url.String()).Send(args).End()
+    var (
+        data []byte
+        err error
+    )
+
+    if data, err = json.Marshal(args); err != nil {
+        return nil, err
+    }
+
+    gotrace.Trace("POST %s with '%s'", p.url.String(), string(data))
+    _, body, errs := p.req.Post(p.url.String()).Send(string(data)).End()
     if len(errs) > 0 {
         return nil, errs[0]
     }
