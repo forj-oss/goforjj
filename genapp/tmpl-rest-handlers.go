@@ -68,6 +68,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
     DoCreate(w, r, &req_data, data)
 
+    if data.ErrorMessage != "" {
+        w.WriteHeader(422) // unprocessable entity
+    }
+
     if err := json.NewEncoder(w).Encode(data); err != nil {
         panic(err)
     }
@@ -96,6 +100,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
     DoUpdate(w, r, &req_data, data)
 
+    if data.ErrorMessage != "" {
+        w.WriteHeader(422) // unprocessable entity
+    }
+
     if err := json.NewEncoder(w).Encode(data); err != nil {
         panic(err)
     }
@@ -120,6 +128,10 @@ func Maintain(w http.ResponseWriter, r *http.Request) {
     }
 
     DoMaintain(w, r, &req_data, data)
+
+    if data.ErrorMessage != "" {
+        w.WriteHeader(422) // unprocessable entity
+    }
 
     if err := json.NewEncoder(w).Encode(data); err != nil {
         panic(err)

@@ -6,7 +6,6 @@ package goforjj
 type PluginRepo struct {
     Name     string   // name of the repository
     Upstream string   // upstream url
-    Files    []string // List of files managed by the plugin
 }
 
 type PluginService struct {
@@ -19,6 +18,8 @@ type PluginData struct {
     Services      []PluginService       // web service url. ex: https://github.hpe.com
     Status        string                // Status message
     CommitMessage string                // Action commit message for Create/Update
+    ErrorMessage  string                // Found only if error detected
+    Files         []string              // List of files managed by the plugin
 }
 
 // Shell json data
