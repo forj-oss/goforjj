@@ -25,5 +25,5 @@ type PluginData struct {
 // Shell json data
 type PluginResult struct {
     Data          PluginData
-    State_code    uint   // 200 OK
+    State_code    int   // 200 OK
 }
