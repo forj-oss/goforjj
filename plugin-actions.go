@@ -3,6 +3,7 @@ package goforjj
 import (
     "encoding/json"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
+    "fmt"
 )
 
 // Function which will execute the action requested.
@@ -29,17 +30,21 @@ func (p *PluginDef) api_do(action string, args map[string]string) (*PluginResult
     }
 
     gotrace.Trace("POST %s with '%s'", p.url.String(), string(data))
-    _, body, errs := p.req.Post(p.url.String()).Send(string(data)).End()
+    resp, body, errs := p.req.Post(p.url.String()).Send(string(data)).End()
     if len(errs) > 0 {
         return nil, errs[0]
     }
 
     var result PluginResult
 
-    if err := json.Unmarshal([]byte(body), &result); err != nil {
+    if err := json.Unmarshal([]byte(body), &result.Data); err != nil {
         return nil, err
     }
 
+    if result.Data.ErrorMessage != "" {
+        result.State_code = resp.StatusCode
+        return &result, fmt.Errorf("Plugin issue detected: %s", result.Data.ErrorMessage)
+    }
     return &result, nil
 }
 
