@@ -29,6 +29,9 @@ func (p *PluginDef) PluginStartService() error {
         // mode daemon
         p.docker.opts = []string{ "-d" }
         // Source path
+        if _, err := os.Stat(p.Source_path) ; err != nil {
+            os.MkdirAll(p.Source_path, 0755)
+        }
         p.SourceMount = "/src/"
         p.docker.opts = append(p.docker.opts, "-v", p.Source_path + ":" + p.SourceMount,)
 
