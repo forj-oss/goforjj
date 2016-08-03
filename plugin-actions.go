@@ -35,11 +35,14 @@ func (p *PluginDef) api_do(action string, args map[string]string) (*PluginResult
         return nil, errs[0]
     }
 
+    gotrace.Trace("Json data returned: \n%s", body)
     var result PluginResult
 
     if err := json.Unmarshal([]byte(body), &result.Data); err != nil {
         return nil, err
     }
+
+    gotrace.Trace("data extracted: \n%#v", result.Data)
 
     if result.Data.ErrorMessage != "" {
         result.State_code = resp.StatusCode
