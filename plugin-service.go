@@ -33,12 +33,12 @@ func (p *PluginDef) PluginStartService() error {
             os.MkdirAll(p.Source_path, 0755)
         }
         p.SourceMount = "/src/"
-        p.docker.opts = append(p.docker.opts, "-v", p.Source_path + ":" + p.SourceMount,)
+        p.docker.opts = append(p.docker.opts, "-v", p.Source_path + ":" + p.SourceMount)
 
         // Workspace path
         if p.Workspace_path != "" {
             p.WorkspaceMount = "/workspace/"
-            p.docker.opts = []string{"-v", p.Workspace_path + ":" + p.WorkspaceMount}
+            p.docker.opts = append(p.docker.opts, "-v", p.Workspace_path + ":" + p.WorkspaceMount)
         }
         // Do we have a socket to prepare?
         if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
