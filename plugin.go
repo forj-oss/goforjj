@@ -27,3 +27,17 @@ func (p *PluginResult) JsonPrint() error {
 + return nil
  }
 */
+func (o *PluginData)StatusAdd(n string, args ...interface{}) string{
+    if o.Status != "" {
+        o.Status += "\n"
+    }
+    s := fmt.Sprintf(n, args ...)
+    o.Status += s
+    return s
+}
+
+func (o *PluginData)Errorf(s string, args ...interface{}) string {
+    s = fmt.Sprintf(s, args ...)
+    o.ErrorMessage = s
+    return s
+}
