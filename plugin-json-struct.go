@@ -9,13 +9,13 @@ type PluginRepo struct {
 }
 
 type PluginService struct {
-    Url map[string]string
+    Urls map[string]string
 }
 
 // REST API json data
 type PluginData struct {
     Repos         map[string]PluginRepo // List of repository data
-    Services      []PluginService       // web service url. ex: https://github.hpe.com
+    Services      PluginService         // web service url. ex: https://github.hpe.com
     Status        string                // Status message
     CommitMessage string                // Action commit message for Create/Update
     ErrorMessage  string                // Found only if error detected
