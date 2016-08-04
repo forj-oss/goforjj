@@ -14,12 +14,18 @@ type PluginService struct {
 
 // REST API json data
 type PluginData struct {
-    Repos         map[string]PluginRepo // List of repository data
-    Services      PluginService         // web service url. ex: https://github.hpe.com
-    Status        string                // Status message
-    CommitMessage string                // Action commit message for Create/Update
-    ErrorMessage  string                // Found only if error detected
-    Files         []string              // List of files managed by the plugin
+    Repos         map[string]PluginRepo   // List of repository data
+    Services      PluginService           // web service url. ex: https://github.hpe.com
+    Status        string                  // Status message
+    CommitMessage string                  // Action commit message for Create/Update
+    ErrorMessage  string                  // Found only if error detected
+    Files         []string                // List of files managed by the plugin
+    Options       map[string]PluginOption // List of options needed at maintain use case. Usually used to provide credentials.
+}
+
+type PluginOption struct {
+    Help string   // Help about plugin options required at maintain phase
+    Value string  // Value set/loaded at create/update phase
 }
 
 // Shell json data
