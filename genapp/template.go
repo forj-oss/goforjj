@@ -96,6 +96,23 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         "go_vars": func(str string) string {
             return strings.Replace(strings.Title(str), "-", "", -1)
         },
+        "maintain_options": func(action string, actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlFlagsOptions) {
+            ret = make(map[string]goforjj.YamlFlagsOptions)
+            // Get a list of maintain required values defined in create/update phase
+            for ak, av := range actions {
+                if ak != "maintain"{
+                    continue
+                }
+                // Check each maintain flags exist on 'create/update' list of flags.
+                for fn, fv := range av.Flags {
+                    if _, ok := actions[action].Flags[fn] ; ok {
+                        ret[fn] = fv
+                    }
+                }
+            }
+            return
+        },
+        "has_prefix": strings.HasPrefix,
         "filter_cmds": func(actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
             ret = make(map[string]goforjj.YamlPluginDef)
 
