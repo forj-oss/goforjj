@@ -89,6 +89,7 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         return
     }
 
+    // TODO: Normalize Structure name in template. For ex, - is not supported. Replace it to _ or remove it.
     tmpl, err = template.New(file).Funcs(template.FuncMap{
         "escape": func(str string) string {
             return strings.Replace(strings.Replace(str, "\"", "\\\"", -1), "\n", "\\n\" +\n   \"", -1)
