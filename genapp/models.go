@@ -21,19 +21,24 @@ func (a *App) init_model() {
 // Do not define any plugin.go file, which is the first plugin golang file created by the Forjj plugin creator.
 func (a *App) init_model_shell() {
     a.Models.Create("shell").
-        Source("main.go", template_shell_main, false).
-        Source("app.go", template_shell_app,   true)
+        Source("main.go", 0644, "//", template_shell_main, false).
+        Source("app.go",  0644, "//", template_shell_app,  true)
 }
 
 func (a *App) init_model_rest() {
     a.Models.Create("REST API").
-        Source("main.go",         template_rest_main,     false).
-        Source("app.go",          template_rest_app,      false).
-        Source("cli.go",          template_rest_cli,      false).
-        Source("handlers.go",     template_rest_handlers, false).
-        Source("actions.go",      template_rest_actions,  false).
-        Source("routes.go",       template_rest_routes,   false).
-        Source("router.go",       template_rest_router,   false).
-        Source("log.go",          template_rest_log,      false).
-        Source("yaml-structs.go", template_rest_structs,  true)
+        Source("main.go",                   0644, "//", template_rest_main,       false).
+        Source("app.go",                    0644, "//", template_rest_app,        false).
+        Source("cli.go",                    0644, "//", template_rest_cli,        false).
+        Source("handlers.go",               0644, "//", template_rest_handlers,   false).
+        Source("actions.go",                0644, "//", template_rest_actions,    false).
+        Source("routes.go",                 0644, "//", template_rest_routes,     false).
+        Source("router.go",                 0644, "//", template_rest_router,     false).
+        Source("log.go",                    0644, "//", template_rest_log,        false).
+        Source("Dockerfile",                0644, "#",  template_rest_dockerfile, false).
+        Source("bin/build.sh",              0755, "",   template_rest_build,      false).
+        Source("bin/publish-alltags.sh",    0755, "",   template_rest_publish,    false).
+        Source("ca_certificates/README.md", 0644, "",   template_rest_careadme,   false).
+        Source("README.md",                 0644, "",   template_rest_readme,     false).
+        Source("yaml-structs.go",           0644, "//", template_rest_structs,    true)
 }
