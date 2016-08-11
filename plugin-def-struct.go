@@ -84,4 +84,6 @@ type YamlFlagsOptions struct {
     Required bool
     Hidden   bool // Used by the plugin.
     Default  string // Used by the plugin.
+    Group    string // Group name used to regroup some flags under a dedicated struct.
+                    // This group used only for create/update flags.
 }

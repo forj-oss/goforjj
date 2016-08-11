@@ -4,9 +4,33 @@ const template_rest_structs = `package main
 
 import "github.hpe.com/christophe-larsonneur/goforjj"
 
+{{ $GroupsList := groups_list .Yaml.Actions }}\
+{{ if $GroupsList }}\
+// Common group of data between create/update actions
+{{   range $GroupName, $GroupOpts := $GroupsList }}\
+type {{ go_vars $GroupName }}Struct struct {
+{{     range $Flagname, $Opts := $GroupOpts.Flags }}\
+    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"` + "`" + `
+{{     end }}\
+}
+
+{{   end }}\
+
+type GroupReq struct {
+{{   range $GroupName, $Opts := $GroupsList }}\
+    {{ go_vars $GroupName }} {{ go_vars $GroupName }}Struct `+"`"+`json:",inline"` + "`" + `
+{{   end}}\
+}
+
+{{ end }}\
 type CreateReq struct {
+{{ if $GroupsList }}\
+    Groups GroupReq ` + "`" + `json:",inline"` + "`" + `
+{{ end }}\
 {{ range $Flagname, $Opts := .Yaml.Actions.create.Flags }}\
+{{   if $Opts.Group | not }}\
     {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
+{{   end }}\
 {{ end }}
     // common flags
 {{ range $Flagname, $Opts := .Yaml.Actions.common.Flags }}\
@@ -15,8 +39,13 @@ type CreateReq struct {
 }
 
 type UpdateReq struct {
+{{ if $GroupsList }}\
+    Groups GroupReq ` + "`" + `json:",inline"` + "`" + `
+{{ end }}\
 {{ range $Flagname, $Opts := .Yaml.Actions.update.Flags }}\
+{{   if $Opts.Group | not }}\
     {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+{{   end }}\
 {{ end }}
     // common flags
 {{ range $Flagname, $Opts := .Yaml.Actions.common.Flags }}\
