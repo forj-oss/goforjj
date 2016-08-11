@@ -110,6 +110,31 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         "go_vars": func(str string) string {
             return strings.Replace(strings.Title(str), "-", "", -1)
         },
+        "groups_list": func (actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
+            ret = make(map[string]goforjj.YamlPluginDef)
+            for name, action_opts := range actions {
+                if name != "create" && name != "update" {
+                    continue
+                }
+                for flag_name, flag_opts := range action_opts.Flags {
+                    if flag_opts.Group == "" {
+                        continue
+                    }
+                    if group, found := ret[flag_opts.Group] ; found {
+                        if _, found := group.Flags[flag_name] ; found {
+                            continue
+                        }
+                        group.Flags[flag_name] = goforjj.YamlFlagsOptions{}
+                        ret[flag_opts.Group] = group
+                    } else {
+                        group := goforjj.YamlPluginDef{ Flags: make(map[string]goforjj.YamlFlagsOptions)}
+                        group.Flags[flag_name] = goforjj.YamlFlagsOptions{}
+                        ret[flag_opts.Group] = group
+                    }
+                }
+            }
+            return
+        },
         "maintain_options": func(action string, actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlFlagsOptions) {
             ret = make(map[string]goforjj.YamlFlagsOptions)
             // Get a list of maintain required values defined in create/update phase
