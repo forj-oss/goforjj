@@ -16,14 +16,14 @@ const defaultTimeout = 32 * time.Second
 
 // This function start the service as daemon and register it
 // If the service is already started, just use it.
-func (p *PluginDef) PluginStartService() error {
+func (p *PluginDef) PluginStartService(instance_name string) error {
     if !p.service { // Nothing to start
         return nil
     }
     gotrace.Trace("Starting plugin service...")
     // Is it a docker service?
     if p.Yaml.Runtime.Image != "" {
-        p.docker.name = p.Yaml.Name
+        p.docker.name = instance_name
         gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
         // mode daemon
