@@ -124,11 +124,11 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
                         if _, found := group.Flags[flag_name] ; found {
                             continue
                         }
-                        group.Flags[flag_name] = goforjj.YamlFlagsOptions{}
+                        group.Flags[flag_name] = flag_opts
                         ret[flag_opts.Group] = group
                     } else {
                         group := goforjj.YamlPluginDef{ Flags: make(map[string]goforjj.YamlFlagsOptions)}
-                        group.Flags[flag_name] = goforjj.YamlFlagsOptions{}
+                        group.Flags[flag_name] = flag_opts
                         ret[flag_opts.Group] = group
                     }
                 }
