@@ -6,6 +6,7 @@ package goforjj
 type PluginRepo struct {
     Name     string   // name of the repository
     Upstream string   // upstream url
+    Exist    bool     // True is the repo exist.
 }
 
 type PluginService struct {
