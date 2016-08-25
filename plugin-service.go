@@ -128,7 +128,7 @@ func (p *PluginDef) socket_prepare() (err error) {
     p.req.Transport.Dial = func(_, _ string) (net.Conn, error) {
         return net.DialTimeout("unix", socket, defaultTimeout)
     }
-    p.url, err = url.Parse("http://forjj.sock")
+    p.url, err = url.Parse("http://" + p.cmd.socket_file)
 
     // TODO: Test deeper about the path access.
     _, err = os.Stat(p.cmd.socket_path)
