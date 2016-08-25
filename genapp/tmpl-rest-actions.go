@@ -2,15 +2,7 @@ package main
 
 const template_rest_actions = `package main
 
-// You can remove following comments.
-// It has been designed fo you, to implement the core of your plugin task.
-//
-// You can use use it to write your own plugin handler for additional functionnality
-// Like Index which currently return a basic code.
-
 import (
-    "fmt"
-    "os"
     "net/http"
     "github.hpe.com/christophe-larsonneur/goforjj"
 )
@@ -20,11 +12,28 @@ import (
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoCreate(w http.ResponseWriter, r *http.Request, req_data *CreateReq, ret_data *goforjj.PluginData) (httpCode int) {
+func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
+    var p *{{ go_vars .Yaml.Name }}Plugin
 
-    // This is where you shoud write your Update code. Following line is for Demo only.
-    fmt.Fprintf(os.Stdout,"%#v\n", req_data)
+    // This is where you shoud write your Create code. Following lines are typical code for a basic plugin.
+    if pr, ok := req.check_source_existence(ret) ; !ok {
+        return
+    } else {
+        p = pr
+    }
 
+    if ! p.initialize_from(req, ret) {
+        return
+    }
+
+    // Example of the core task
+    //if ! p.create_jenkins_sources(req.ForjjInstanceName, ret) {
+    //    return
+    //}
+
+    if ! p.save_yaml(ret) {
+        return
+    }
     return
 }
 
@@ -33,11 +42,32 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req_data *CreateReq, ret_d
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoUpdate(w http.ResponseWriter, r *http.Request, req_data *UpdateReq, ret_data *goforjj.PluginData) (httpCode int){
+func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (httpCode int){
+    var p *{{ go_vars .Yaml.Name }}Plugin
 
-    // This is where you shoud write your create code. Following line is for Demo only.
-    fmt.Fprintf(os.Stdout,"%#v\n", req_data)
+    // This is where you shoud write your Update code. Following lines are typical code for a basic plugin.
+    if pr, ok := req.check_source_existence(ret) ; !ok {
+        return
+    } else {
+        p = pr
+    }
 
+    if ! p.load_yaml(ret) {
+        return
+    }
+
+    if ! p.update_from(req, ret) {
+        return
+    }
+
+    // Example of the core task
+    //if ! p.update_jenkins_sources(ret) {
+    //    return
+    //}
+
+    if ! p.save_yaml(ret) {
+        return
+    }
     return
 }
 
@@ -46,11 +76,15 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req_data *UpdateReq, ret_d
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoMaintain(w http.ResponseWriter, r *http.Request, req_data *MaintainReq, ret_data *goforjj.PluginData) (httpCode int) {
+func DoMaintain(w http.ResponseWriter, r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
+    // This is where you shoud write your Maintain code. Following lines are typical code for a basic plugin.
+    if ! req.check_source_existence(ret) {
+        return
+    }
 
-    // This is where you shoud write your Update code. Following line is for Demo only.
-    fmt.Fprintf(os.Stdout,"%#v\n", req_data)
-
+    if ! req.instantiate(ret) {
+        return
+    }
     return
 }
 `

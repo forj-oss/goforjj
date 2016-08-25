@@ -6,6 +6,7 @@ import (
     "os"
     "io/ioutil"
     "github.hpe.com/christophe-larsonneur/goforjj"
+    "strings"
 )
 
 type App struct {
@@ -31,9 +32,24 @@ func main() {
 
     source_file = os.Args[1]
     if _, err := os.Stat(source_file); os.IsNotExist(err) {
-        fmt.Printf("go-forjj-generate: Error! Yaml source file '%s' is not accessible.\n", source_file)
-        os.Exit(1)
+        fmt.Printf("go-forjj-generate: Warning! Yaml source file '%s' is not accessible. Trying to create a basic one\n", source_file)
+
+        app.Yaml.Name = strings.Replace(source_file, ".yaml", "", -1)
+        yaml_source := Source{
+            template: yaml_template,
+            reset: false,
+            rights: 0644,
+        }
+
+        yaml_data := &YamlData {
+            Yaml: &app.Yaml,
+        }
+
+        yaml_source.apply_source(yaml_data, source_file)
+        fmt.Printf("go-forjj-generate: Reading the Yaml source file '%s' created\n", source_file)
     }
+
+
 
     if d, err := ioutil.ReadFile(source_file); err != nil {
         fmt.Printf("go-forjj-generate: Error! '%s' is not a readable document. %s\n", source_file, err)
