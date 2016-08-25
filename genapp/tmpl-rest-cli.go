@@ -6,6 +6,7 @@ import (
     "gopkg.in/alecthomas/kingpin.v2"
     "github.hpe.com/christophe-larsonneur/goforjj"
     "gopkg.in/yaml.v2"
+    "log"
 )
 
 type {{.Yaml.Name}}App struct {
@@ -41,6 +42,7 @@ func (a *{{.Yaml.Name}}App)load_plugin_def() {
     yaml.Unmarshal([]byte(YamlDesc), &a.Yaml)
     if a.Yaml.Runtime.Service.Socket == "" {
         a.Yaml.Runtime.Service.Socket = "{{ .Yaml.Name }}.sock"
+        log.Printf("Set default socket file: %s", a.Yaml.Runtime.Service.Socket)
     }
 }
 `
