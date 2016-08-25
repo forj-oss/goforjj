@@ -28,6 +28,10 @@ func (a *App) init_model_shell() {
 func (a *App) init_model_rest() {
     a.Models.Create("REST API").
         Source("main.go",                   0644, "//", template_rest_main,       false).
+        Source(a.Yaml.Name + "_plugin.go",  0644, "//", template_rest_plugin,     false).
+        Source("create.go",                 0644, "//", template_rest_create,     false).
+        Source("update.go",                 0644, "//", template_rest_update,     false).
+        Source("maintain.go",               0644, "//", template_rest_maintain,   false).
         Source("app.go",                    0644, "//", template_rest_app,        false).
         Source("cli.go",                    0644, "//", template_rest_cli,        false).
         Source("handlers.go",               0644, "//", template_rest_handlers,   false).

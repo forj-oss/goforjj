@@ -110,6 +110,9 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         "go_vars": func(str string) string {
             return strings.Replace(strings.Title(str), "-", "", -1)
         },
+        "go_vars_underscored": func(str string) string {
+            return strings.Replace(str, "-", "_", -1)
+        },
         "groups_list": func (actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
             ret = make(map[string]goforjj.YamlPluginDef)
             for name, action_opts := range actions {
@@ -200,3 +203,40 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         fmt.Printf("'%s' created. Won't be updated anymore at next go generate until file disappear.\n", file)
     }
 }
+
+const yaml_template = `---
+plugin: "{{ .Yaml.Name }}"
+version: "0.1"
+description: "{{ .Yaml.Name }} plugin for FORJJ."
+runtime:
+  docker_image: "docker.hos.hpecorp.net/forjj/{{ .Yaml.Name }}"
+  service_type: "REST API"
+  service:
+    #socket: "{{ .Yaml.Name }}.sock"
+    parameters: [ "service", "start" ]
+created_flag_file: "{{ "{{ .InstanceName }}" }}/forjj-{{ "{{ .Name }}" }}.yaml"
+actions:
+  common:
+    flags:
+      forjj-infra:
+        help: "Name of the Infra repository to use"
+      {{ .Yaml.Name }}-debug:
+        help: "To activate {{ .Yaml.Name }} debug information"
+      forjj-source-mount: # Used by the plugin to store plugin data in yaml. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
+        help: "Where the source dir is located for {{ .Yaml.Name }} plugin."
+  create:
+    help: "Create a {{ .Yaml.Name }} instance source code."
+    flags:
+      # Options related to source code
+      forjj-instance-name: # Used by the plugin to store plugin data in yaml for the current instance. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
+        help: "Name of the {{ .Yaml.Name }} instance given by forjj."
+        group: "source"
+  update:
+    help: "Update a {{ .Yaml.Name }} instance source code"
+    flags:
+      forjj-instance-name: # Used by the plugin to store plugin data in yaml for the current instance. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
+        help: "Name of the {{ .Yaml.Name }} instance given by forjj."
+        group: "source"
+  maintain:
+    help: "Instantiate {{ .Yaml.Name }} thanks to source code."
+`

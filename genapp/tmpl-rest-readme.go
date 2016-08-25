@@ -6,7 +6,7 @@ const template_rest_readme = `# Introduction
 !!! At least, **<!!! >** MUST be replaced by appropriate text.
 !!! Of course this explanation have to be removed as well.**
 
-This plugin implements {{ Yaml.Name }} configuration to build **<!!! Define what kind of application you are building here>**.
+This plugin implements {{ .Yaml.Name }} configuration to build **<!!! Define what kind of application you are building here>**.
 
 It has been implemented as REST API. See ...(TBD) for FORJJ REST API description.
 
@@ -16,7 +16,7 @@ Depending on tasks, the driver will concretely do several things described below
 
 ` + "`Create`" + ` will properly configure
 
-The plugin will returns the list of source files managed by FORJJ {{ Yaml.Name }} plugin, generated in the local ` + "`infra`" + ` repo.
+The plugin will returns the list of source files managed by FORJJ {{ .Yaml.Name }} plugin, generated in the local ` + "`infra`" + ` repo.
 
 ## Update task
 
@@ -27,7 +27,4 @@ This action will ensure **<!!! Define what kind of application is built>**:
 
 -  **<!!! Define the list of element updated in your application>**
 
-## Info
-
-This action will return the list of resources managed by this FORJJ {{ Yaml.Name }} plugin.
 `

@@ -18,9 +18,11 @@ This code will implement the FORJJ plugin protocol.
 
 # Create your FORJJ plugin
 
-1. Write your FORJJ plugin yaml file as described in [forjj-contribs README](https://github.hpe.com/christophe-larsonneur/forjj-contribs#description-of-yaml)
+1. Optional. Write your FORJJ plugin yaml file as described in [forjj-contribs README](https://github.hpe.com/christophe-larsonneur/forjj-contribs#description-of-yaml)
 
 This file mainly will define a list of flags to provide to the plugin through `forjj` cli
+
+**If you do not create it, go generate will create one for you.**
 
 2. create the `plugin.go` with the following:
 

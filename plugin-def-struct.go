@@ -13,6 +13,7 @@ type YamlPlugin struct {
     Name        string `yaml:"plugin"`
     Version     string
     Description string
+    CreatedFile  string `yaml:"created_flag_file"`
     Runtime     YamlPluginRuntime
     Actions     map[string]YamlPluginDef
 }
