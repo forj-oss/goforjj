@@ -17,7 +17,8 @@ type PluginDef struct {
     cmd            cmd_data              // Define data to start the service process
     req            *gorequest.SuperAgent // REST API request
     url            *url.URL              // REST API url
-    SourceMount     string               // Where the driver will have his source code.
+    dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
+    SourceMount    string                // Where the driver will have his source code.
     WorkspaceMount string                // where the driver has his workspace.
 
 }
@@ -33,6 +34,8 @@ type docker_container struct {
     name string
     opts []string
     socket_path string
+    volumes map[string]byte
+    envs map[string]byte
 }
 
 // Following is created at create time or loaded from update/maintain

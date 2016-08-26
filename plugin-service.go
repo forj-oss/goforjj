@@ -10,6 +10,7 @@ import (
     "time"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
     "strings"
+    "log"
 )
 
 const defaultTimeout = 32 * time.Second
@@ -22,74 +23,14 @@ func (p *PluginDef) PluginStartService(instance_name string) error {
     }
     gotrace.Trace("Starting plugin service...")
     // Is it a docker service?
-    if p.Yaml.Runtime.Image != "" {
-        p.docker.name = instance_name
-        gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
-
-        // mode daemon
-        p.docker.opts = []string{ "-d" }
-        // Source path
-        if _, err := os.Stat(p.Source_path) ; err != nil {
-            os.MkdirAll(p.Source_path, 0755)
-        }
-        p.SourceMount = "/src/"
-        p.docker.opts = append(p.docker.opts, "-v", p.Source_path + ":" + p.SourceMount)
-
-        // Workspace path
-        if p.Workspace_path != "" {
-            p.WorkspaceMount = "/workspace/"
-            p.docker.opts = append(p.docker.opts, "-v", p.Workspace_path + ":" + p.WorkspaceMount)
-        }
-        // Do we have a socket to prepare?
-        if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
-            if err := p.socket_prepare(); err != nil {
-                return err
-            }
-            p.docker.socket_path = "/tmp/forjj-socks"
-            p.docker.opts = append(p.docker.opts, "-v", p.cmd.socket_path+":"+p.docker.socket_path)
-            p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
-        } else {
-            return fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
-        }
-
-        // Check if the container exists and is started.
-        // TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
-        // Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
-        if _, err := p.docker_container_restart(p.cmd.command, p.Yaml.Runtime.Service.Parameters); err != nil {
-            return err
-        }
-
-        gotrace.Trace("Checking service status...")
-        for i := 1; i < 30; i++ {
-            time.Sleep(time.Second)
-
-            var err error
-            out := ""
-
-            if out, err = docker_container_status(p.docker.name) ; err != nil {
-                return err
-            }
-
-            if strings.Trim(out, " \n") != "running" {
-                out, err = docker_container_logs(p.docker.name)
-                if  err == nil {
-                    out = fmt.Sprintf("docker logs:\n---\n%s---\n",out)
-                } else {
-                    out = fmt.Sprintf("%s\n", err)
-                }
-                docker_container_remove(p.docker.name)
-                return fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
-            }
-
-            if p.CheckServiceUp() {
-                gotrace.Trace("Service is UP.")
-                p.service_booted = true
-                return nil
-            }
-        }
-
-        return fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
+    if p.Yaml.Runtime.Image != "" && p.Yaml.Runtime.Docker.Image == "" {
+        p.Yaml.Runtime.Docker.Image = p.Yaml.Runtime.Image
+        log.Printf("Warning! Key /runtime/docker_image is obsolete and replaced by key /runtime/docker/image")
     }
+    if is_docker, err := p.docker_start_service(instance_name) ; is_docker {
+        return err
+    }
+
     // Run a command which should become a daemon (options or shell fork)
 
     // Do we have a socket to prepare?
