@@ -43,9 +43,20 @@ type YamlPluginDef struct {
 //
 type YamlPluginRuntime struct {
     Service_type string
-    Image        string          `yaml:"docker_image"`
+    Image        string          `yaml:"docker_image"` // obsolete
+    Docker       DockerStruct
     Service      YamlPluginComm
     Shell        YamlPluginShell // Not yet used
+}
+
+//data structure in /runtime/docker
+
+type DockerStruct struct {
+    Image string
+    Dood bool
+    Volumes []string
+    Env []string
+    User string
 }
 
 // data structure in /runtime/shell
