@@ -3,13 +3,20 @@ package goforjj
 import (
     "fmt"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
+    "log"
 )
 
 // Function to start an existing container or create and run a new one
 func (p *PluginDef) docker_container_restart(cmd string, args []string) (string, error) {
-    if p.Yaml.Runtime.Image == "" {
-        return "", fmt.Errorf("docker_image is missing in the driver definition. driver ignored.\n")
+    if p.Yaml.Runtime.Image != "" {
+        log.Printf("Warning! 'docker_image' is obsolete. Please replace if by 'docker/image'")
     }
+    Image := p.Yaml.Runtime.Image
+    Image = p.Yaml.Runtime.Docker.Image
+    if Image == "" {
+        return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
+    }
+
     gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
     ret, err := docker_container_status(p.docker.name)
     if err != nil {
@@ -23,7 +30,7 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
         p.docker.complete_opts_with(p.docker.volumes, p.docker.envs)
         dopts = append(dopts, p.docker.opts...)
         gotrace.Trace("Booting container '%s' status", p.docker.name)
-        return docker_container_run(dopts, p.Yaml.Runtime.Image, cmd, args)
+        return docker_container_run(dopts, Image, cmd, args)
     default:
         gotrace.Trace("Starting container '%s' status", p.docker.name)
         return docker_container_start(p.docker.name)
