@@ -150,7 +150,7 @@ func (d *docker_container) complete_opts_with(val ...map[string]byte) {
     }
 
     // allocate
-    r := make([]string, tot)
+    r := make([]string, 0, tot)
 
     // append
     r = append(r, d.opts...)
