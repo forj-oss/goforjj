@@ -13,7 +13,7 @@ import (
 // If return code is 1 return empty string
 // else return the error string in err
 func cmd_run(cmd_args []string) (string, error) {
-    gotrace.Trace("RUNNING: %s", strings.Join(cmd_args, " "))
+    gotrace.Trace("RUNNING: '%s'", strings.Join(cmd_args, "' '"))
     cmd := exec.Command(cmd_args[0], cmd_args[1:]...)
     var ret []byte
 
