@@ -17,6 +17,7 @@ type DockerService struct {
 // Define how to start
 func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, err error) {
     if p.Yaml.Runtime.Docker.Image == "" {
+        gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", instance_name)
         return false, nil
     }
     is_docker = true
