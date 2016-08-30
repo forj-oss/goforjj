@@ -4,6 +4,8 @@ import (
     "gopkg.in/yaml.v2"
     "fmt"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
+    "path"
+    "os"
 )
 
 // Load yaml raw data in YamlPlugin data structure
@@ -40,7 +42,7 @@ func (p *PluginDef)def_runtime_context() (error) {
     return nil
 }
 
-// Set plugin source path
+// Set plugin source path. Created later by docker_start_service
 func (p *PluginDef) PluginSetSource(path string) {
     p.Source_path = path
 }
@@ -49,7 +51,20 @@ func (p *PluginDef) PluginSetWorkspace(path string) {
     p.Workspace_path = path
 }
 
+// Declare the socket path. It will be created later by function socket_prepare
 func (p *PluginDef) PluginSocketPath(path string) {
     p.cmd.socket_path = path
 }
 
+func (p *PluginDef) PluginDockerBin(thePath string) error {
+    if thePath == "" {
+        gotrace.Trace("PluginDockerBin : '%s'.", thePath)
+        return nil
+    }
+    if _, err := os.Stat(thePath) ; err == nil {
+        p.dockerBin = path.Clean(thePath)
+    } else {
+        return fmt.Errorf("Invalid PluginDockerBin '%s'. %s", thePath, err)
+    }
+    return nil
+}
