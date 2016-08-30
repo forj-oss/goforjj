@@ -1,6 +1,6 @@
 package goforjj
 
-import "gopkg.in/alecthomas/kingpin.v2"
+import "github.com/alecthomas/kingpin"
 
 // Defines default internal structure to enhance in the plugin.
 type PluginTask struct {
