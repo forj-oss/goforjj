@@ -5,7 +5,6 @@ package goforjj
 
 type PluginRepo struct {
     Name     string   // name of the repository
-    Upstream string   // upstream url TODO: obsolete. To remove shorlty in plugins.
     Exist    bool     // True is the repo exist.
     Remotes map[string]string        // k: remote name, v: remote url
     BranchConnect map[string]string  // k: local branch name, v: remote/branch
