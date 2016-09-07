@@ -17,6 +17,11 @@ type {{ go_vars $GroupName }}Struct struct {
 {{   end }}\
 {{ end }}\
 type CreateReq struct {
+    Args CreateArgReq ` + "`" +`json:"args"`+ "`" + `
+    ReposData map[string]goforjj.PluginRepoData
+}
+
+type CreateArgReq struct {
 {{ if $GroupsList }}\
 {{   range $GroupName, $GroupOpts := $GroupsList }}\
     {{ go_vars $GroupName }}Struct
@@ -34,6 +39,11 @@ type CreateReq struct {
 }
 
 type UpdateReq struct {
+    Args UpdateArgReq ` + "`" +`json:"args"`+ "`" + `
+    ReposData map[string]goforjj.PluginRepoData
+}
+
+type UpdateArgReq struct {
 {{ if $GroupsList }}\
 {{   range $GroupName, $GroupOpts := $GroupsList }}\
     {{ go_vars $GroupName }}Struct
@@ -51,6 +61,11 @@ type UpdateReq struct {
 }
 
 type MaintainReq struct {
+    Args MaintainArgReq ` + "`" +`json:"args"`+ "`" + `
+    ReposData map[string]goforjj.PluginRepoData
+}
+
+type MaintainArgReq struct {
 {{ range $Flagname, $Opts := .Yaml.Actions.maintain.Flags }}\
     {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
 {{ end }}
@@ -63,7 +78,7 @@ type MaintainReq struct {
 // Function which adds maintain options as part of the plugin answer in create/update phase.
 // forjj won't add any driver name because 'maintain' phase read the list of drivers to use from forjj-maintain.yml
 // So --git-us is not available for forjj maintain.
-func (r *CreateReq)SaveMaintainOptions(ret *goforjj.PluginData) {
+func (r *CreateArgReq)SaveMaintainOptions(ret *goforjj.PluginData) {
     if ret.Options == nil {
         ret.Options = make(map[string]goforjj.PluginOption)
     }
@@ -74,7 +89,7 @@ func (r *CreateReq)SaveMaintainOptions(ret *goforjj.PluginData) {
 {{ end }}\
 }
 
-func (r *UpdateReq)SaveMaintainOptions(ret *goforjj.PluginData) {
+func (r *UpdateArgReq)SaveMaintainOptions(ret *goforjj.PluginData) {
     if ret.Options == nil {
         ret.Options = make(map[string]goforjj.PluginOption)
     }

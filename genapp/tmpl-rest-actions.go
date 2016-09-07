@@ -26,10 +26,11 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
         return
     }
 
-    // Example of the core task
-    //if ! p.create_jenkins_sources(req.ForjjInstanceName, ret) {
+    // Example of the core task (req.a contains the list of args your plugin requires)
+    //if ! p.create_jenkins_sources(req.a.ForjjInstanceName, ret) {
     //    return
     //}
+    // If your plugin is an upstream plugin, you will need to get the list of Requested Repositories from "req.ReposData"
 
     if ! p.save_yaml(ret) {
         return
