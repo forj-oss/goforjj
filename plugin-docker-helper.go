@@ -4,6 +4,9 @@ import (
     "fmt"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
     "log"
+    "os"
+    "strings"
+    "path"
 )
 
 // Function to start an existing container or create and run a new one
@@ -22,8 +25,10 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
     if err != nil {
         return "", err
     }
-    switch ret {
-    case "started":
+    status := strings.Trim(ret, " \n")
+    p.cleanup_socket(status)
+    switch status {
+    case "running":
         return "", nil
     case "":
         dopts := []string{"--name", p.docker.name}
@@ -34,6 +39,22 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
     default:
         gotrace.Trace("Starting container '%s' status", p.docker.name)
         return docker_container_start(p.docker.name)
+    }
+
+}
+
+// Function to remove any already existing socket file.
+// Usually, needs to be executed if the container is not running.
+func (p *PluginDef) cleanup_socket(status string) {
+    if status == "running" {
+        return
+    }
+    if p.cmd.socket_file != "" {
+        file := path.Join(p.cmd.socket_path, p.cmd.socket_file)
+        if _, err := os.Stat(file); err == nil {
+            os.Remove(file)
+            gotrace.Trace("Removed socket file '%s' related toa  non running container", file)
+        }
     }
 
 }
