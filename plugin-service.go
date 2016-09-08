@@ -48,11 +48,13 @@ func (p *PluginDef) PluginStartService(instance_name string) error {
 }
 
 func (p *PluginDef) CheckServiceUp() bool {
+    gotrace.Trace("Checking service response.")
     if p.cmd.socket_file != "" {
         if _, err := os.Stat(path.Join(p.cmd.socket_path, p.cmd.socket_file)); os.IsNotExist(err) {
             return false
         }
     }
+    gotrace.Trace("Pinging the service.")
     p.url.Path = "ping"
     _, body, err := p.req.Get(p.url.String()).End()
     if err != nil {
