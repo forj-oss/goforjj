@@ -43,20 +43,20 @@ type YamlPluginDef struct {
 //
 type YamlPluginRuntime struct {
     Service_type string
-    Image        string          `yaml:"docker_image"` // obsolete
-    Docker       DockerStruct
-    Service      YamlPluginComm
-    Shell        YamlPluginShell // Not yet used
+    Image        string          `yaml:"docker_image,omitempty"` // obsolete
+    Docker       DockerStruct    `yaml:",omitempty"`
+    Service      YamlPluginComm  `yaml:",omitempty"`
+    Shell        YamlPluginShell `yaml:",omitempty"`   // Not yet used
 }
 
 //data structure in /runtime/docker
 
 type DockerStruct struct {
     Image string
-    Dood bool
-    Volumes []string
-    Env []string
-    User string
+    Dood bool           `yaml:",omitempty"`
+    Volumes []string    `yaml:",omitempty"`
+    Env []string        `yaml:",omitempty"`
+    User string         `yaml:",omitempty"`
 }
 
 // data structure in /runtime/shell
@@ -81,9 +81,9 @@ type YamlPluginShell struct {
 //     parameters: Array of strings - List of parameters to provide to the shell/binary
 //                      Support {{Socket}}
 type YamlPluginComm struct {
-    Socket     string
-    Port       uint   // Not yet implemented
-    Parameters []string // Not yet implemented
+    Socket     string   `yaml:",omitempty"`
+    Port       uint     `yaml:",omitempty"` // Not yet implemented
+    Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
 }
 
 // data structure in /actions/<action>/flags/<flag name>
