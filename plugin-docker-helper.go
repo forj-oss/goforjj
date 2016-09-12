@@ -3,7 +3,6 @@ package goforjj
 import (
     "fmt"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
-    "log"
     "os"
     "strings"
     "path"
@@ -11,11 +10,7 @@ import (
 
 // Function to start an existing container or create and run a new one
 func (p *PluginDef) docker_container_restart(cmd string, args []string) (string, error) {
-    if p.Yaml.Runtime.Image != "" {
-        log.Printf("Warning! 'docker_image' is obsolete. Please replace if by 'docker/image'")
-    }
-    Image := p.Yaml.Runtime.Image
-    Image = p.Yaml.Runtime.Docker.Image
+    Image := p.Yaml.Runtime.Docker.Image
     if Image == "" {
         return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
     }

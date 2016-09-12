@@ -43,7 +43,6 @@ type YamlPluginDef struct {
 //
 type YamlPluginRuntime struct {
     Service_type string
-    Image        string          `yaml:"docker_image,omitempty"` // obsolete
     Docker       DockerStruct    `yaml:",omitempty"`
     Service      YamlPluginComm  `yaml:",omitempty"`
     Shell        YamlPluginShell `yaml:",omitempty"`   // Not yet used

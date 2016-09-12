@@ -10,7 +10,6 @@ import (
     "time"
     "github.hpe.com/christophe-larsonneur/goforjj/trace"
     "strings"
-    "log"
 )
 
 const defaultTimeout = 32 * time.Second
@@ -23,10 +22,6 @@ func (p *PluginDef) PluginStartService(instance_name string) error {
     }
     gotrace.Trace("Starting plugin service...")
     // Is it a docker service?
-    if p.Yaml.Runtime.Image != "" && p.Yaml.Runtime.Docker.Image == "" {
-        p.Yaml.Runtime.Docker.Image = p.Yaml.Runtime.Image
-        log.Printf("Warning! Key /runtime/docker_image is obsolete and replaced by key /runtime/docker/image")
-    }
     if is_docker, err := p.docker_start_service(instance_name) ; is_docker {
         return err
     }
@@ -93,7 +88,7 @@ func (p *PluginDef) PluginStopService() {
     p.url.Path = "quit"
     p.req.Get(p.url.String()).End()
 
-    if p.Yaml.Runtime.Image != "" {
+    if p.Yaml.Runtime.Docker.Image != "" {
         for i := 0 ; i <= 10 ; i++ {
             time.Sleep(time.Second)
             if out, _ := docker_container_status(p.docker.name); out != "started" {
