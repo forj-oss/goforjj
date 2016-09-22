@@ -52,10 +52,10 @@ type YamlPluginRuntime struct {
 
 type DockerStruct struct {
     Image string
-    Dood bool           `yaml:",omitempty"`
-    Volumes []string    `yaml:",omitempty"`
-    Env []string        `yaml:",omitempty"`
-    User string         `yaml:",omitempty"`
+    Dood bool             `yaml:",omitempty"`
+    Volumes []string      `yaml:",omitempty"`
+    Env map[string]string `yaml:",omitempty"`
+    User string           `yaml:",omitempty"`
 }
 
 // data structure in /runtime/shell

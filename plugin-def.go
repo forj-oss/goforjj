@@ -72,16 +72,19 @@ func (p *PluginDef) PluginDockerBin(thePath string) error {
 // This function do a load of the plugin Def Runtime section
 // This information is saved by forjj to avoid reloding the plugin.yaml
 // A plugin already loaded is not refreshed.
+// NOTE: Workspace_path, Source_path and SourceMount must be set in PluginDef to make it work.
 // TODO: Add a Plugin refresh? Not sure if forjj could do it or not differently...
-func (p *PluginDef) PluginLoadFrom(plugin *YamlPlugin) error {
-    if plugin == nil {
-        return fmt.Errorf("Internal Error: PluginRuntimeReloadFrom: plugin cannot be nil.")
+func (p *PluginDef) PluginLoadFrom(name string, runtime *YamlPluginRuntime) error {
+    if name == "" || runtime == nil {
+        return fmt.Errorf("Internal Error: PluginRuntimeReloadFrom: name cannot be empty and plugin cannot be nil.")
     }
     if p.Yaml.Name != "" {
         gotrace.Trace("'%s' is not loaded from the workspace cache.", p.Yaml.Name)
         return nil
     }
-    p.Yaml = *plugin
+    p.Yaml.Name = name
+
+    p.Yaml.Runtime = *runtime
     gotrace.Trace("'%s' has been reloaded.", p.Yaml.Name)
     return nil
 }

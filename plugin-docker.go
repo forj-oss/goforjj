@@ -63,8 +63,11 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
     }
 
     if p.Yaml.Runtime.Docker.Env != nil {
-        for _, v := range p.Yaml.Runtime.Docker.Env {
-            p.docker.add_env(v)
+        for k, v := range p.Yaml.Runtime.Docker.Env {
+            if env := os.ExpandEnv(v) ; v != env && env != "" {
+                gotrace.Trace("expand and set %s from %s to %s", k, v, env)
+                p.docker.add_env(k, os.ExpandEnv(v))
+            }
         }
     }
 
@@ -73,7 +76,8 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
             err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
             return
         }
-        p.docker.add_volume("/var/lib/docker/docker.sock:/var/lib/docker/docker.sock")
+        gotrace.Trace("Adding docker dood volumes...")
+        p.docker.add_volume("/var/run/docker.sock:/var/run/docker.sock")
         p.docker.add_volume(p.dockerBin + ":/bin/docker")
         // TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
@@ -136,10 +140,9 @@ func (d *docker_container) add_volume(volume string) {
     }
 }
 
-func (d *docker_container) add_env(env string) {
-    if ok, _ := regexp.MatchString("^.*=.*$", env ) ; ok {
-        d.envs[env] = 'e'
-    }
+func (d *docker_container) add_env(key, value string) {
+    env := key + "=" + value
+    d.envs[env] = 'e'
 }
 
 func (d *docker_container) complete_opts_with(val ...map[string]byte) {
