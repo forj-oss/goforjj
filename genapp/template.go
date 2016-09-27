@@ -165,17 +165,27 @@ func (s *Source)apply_source(yaml *YamlData, file string) {
         },
         "maintain_options": func(action string, actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlFlagsOptions) {
             ret = make(map[string]goforjj.YamlFlagsOptions)
-            // Get a list of maintain required values defined in create/update phase
+            // Get a list of secure values defined in create/update phase
             for ak, av := range actions {
-                if ak != "maintain"{
+                if ak != "maintain" {
                     continue
                 }
                 // Check each maintain flags exist on 'create/update' list of flags.
                 for fn, fv := range av.Flags {
-                    if _, ok := actions[action].Flags[fn] ; ok {
+                    if fd, ok := actions[action].Flags[fn] ; ok && fd.Secure {
+                        ret[fn] = fv
+                    }
+                    if fd, ok := actions["common"].Flags[fn] ; ok && fd.Secure {
                         ret[fn] = fv
                     }
                 }
+            }
+            // All common case identified secure are added as well.
+            for fn, fv := range actions["common"].Flags {
+                if fv.Secure {
+                    ret[fn] = fv
+                }
+
             }
             return
         },

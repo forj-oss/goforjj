@@ -97,4 +97,5 @@ type YamlFlagsOptions struct {
     Default  string // Used by the plugin.
     Group    string // Group name used to regroup some flags under a dedicated struct.
                     // This group used only for create/update flags.
+    Secure   bool // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
 }
