@@ -79,6 +79,7 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
         gotrace.Trace("Adding docker dood volumes...")
         p.docker.add_volume("/var/run/docker.sock:/var/run/docker.sock")
         p.docker.add_volume(p.dockerBin + ":/bin/docker")
+        p.docker.add_env("DOOD_SRC", p.Source_path)
         // TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
     }
