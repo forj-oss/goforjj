@@ -16,7 +16,8 @@ type YamlPlugin struct {
 	CreatedFile string `yaml:"created_flag_file"`
 	Runtime     YamlPluginRuntime
 	Actions     map[string]YamlPluginDef
-	Objects     map[string]ObjectStruct
+	Tasks       map[string]YamlFlags `yaml:"task_flag"`
+	Objects     map[string]YamlObject
 }
 
 // data structure in /objects/<Object Name>
@@ -24,10 +25,10 @@ type YamlPlugin struct {
 //       <flag name>:
 //         help: string - Help attached to the object
 //         actions: collection of forjj actions (add/update/rename/remove/list)
-type ObjectStruct struct {
+type YamlObject struct {
 	Actions []string // Collection of actions for the group given.
 	Help  string
-	Flags map[string]YamlObjectFlagsOptions
+	Flags map[string]YamlFlags
 }
 
 // data structure in /objects/<Object Name>/flags/<flag name>
@@ -35,7 +36,7 @@ type ObjectStruct struct {
 //       <flag name>:
 //         help: string - Help attached to the flag
 //         required: bool - true if this flag is required.
-type YamlObjectFlagsOptions struct {
+type YamlFlags struct {
 	Help     string
 	Required bool
 	Hidden   bool // Used by the plugin.
