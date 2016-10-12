@@ -97,7 +97,7 @@ runtime:   // Define how the plugin is started
   service:
     socket: "string" // Optional: Name of the socket to use. By default, it creates <PluginName>.sock
     parameters: [ "string", ... ] // Optional: Collection of parameters to start the plugin service.
-actions:
+actions: // Obsolete. Is replaced by task_flags and objects.
   common: // Flags defined for each tasks
     <FlagName>: // Please note the spaces shift for next lines. It have to be indented from the <FlagName> string position.
       help: "<Help string>"  // If missing, no help is displayed.
@@ -113,6 +113,21 @@ actions:
       ...
   maintain: // Flags defined for 'maintain' task. Same syntax as found in 'common' section.
       ...
+task_flags:
+  common: // Flags defined for each tasks
+    <FlagName>: // Please note the spaces shift for next lines. It have to be indented from the <FlagName> string position.
+      help: "<Help string>"  // If missing, no help is displayed.
+      required: <false/true> // If missing, required is false.
+      hidden: <false/true>   // if missing, hidden is false.
+      short: '<caracter>'    // single caracter for short option. if Missing no short option set.
+      secure: <false/true>   // false by default. If the flag is given, forjj will save in a `forjj-creds.yml` like file in your workspace. The plugin should not save it anywhere.
+      [...]                    // Collection of FlagName...
+
+  add:     // Flags defined for 'add' or others tasks. Same syntax as found in 'common' section.
+  remove:
+  rename:
+  list:
+  maintain:
 objects:          // Collection of options that the plugin expose to forjj.
   <object_name>:
     actions :     // By default: [ "add", "update", "remove", "rename", "list"]. If you limit to few actions, set it here.
@@ -148,8 +163,8 @@ runtime:
   docker:
     image: "myimage" // Docker Image name to use
 actions:
-  create:
-    my-first-flag:
+  add:
+    my-flag:
       help: Help about my flag
       required : true
 ```
@@ -159,7 +174,10 @@ This one expose 1 flag that forjj will list as possible and REQUIRED when we do 
 So, you could ask forjj to provide this flag as follow:
 
 ```bash
-forjj create ~/tmp/my-workspace --apps mycateg:myplugin --my-plugin-my-first-flag flag-value
+forjj create ~/tmp/my-workspace --apps mycateg:myplugin --myplugin-my-flag flag-value
+forjj create ~/tmp/my-workspace --apps mycateg:myplugin:myinstance --myinstance-my-flag flag-value
+forjj add repo mycateg:myplugin --my-flag flag-value
+forjj add repo mycateg:myplugin:myinstance --my-flag flag-value
 ```
 
 In this case, forjj will create a workspace, add your plugin in the list of managed applications and provide the `flag-value` to the flag name `my-first-flag`
@@ -174,8 +192,8 @@ runtime:
   docker:
     image: "myimage" // Docker Image name to use
 actions:
-  create:
-    my-first-flag:
+  add:
+    my-flag:
       help: Help about my flag
       required : true
     forjj-organization:
@@ -198,7 +216,7 @@ runtime:
     image: "myimage" // Docker Image name to use
 actions:
   common:
-    my-first-flag:
+    my-common-flag:
       help: Help about my flag
       required : true
 ```
