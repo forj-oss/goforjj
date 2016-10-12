@@ -16,7 +16,34 @@ type YamlPlugin struct {
 	CreatedFile string `yaml:"created_flag_file"`
 	Runtime     YamlPluginRuntime
 	Actions     map[string]YamlPluginDef
+	Objects     map[string]ObjectStruct
 }
+
+// data structure in /objects/<Object Name>
+//     flags:
+//       <flag name>:
+//         help: string - Help attached to the object
+//         actions: collection of forjj actions (add/update/rename/remove/list)
+type ObjectStruct struct {
+	Actions []string // Collection of actions for the group given.
+	Help  string
+	Flags map[string]YamlObjectFlagsOptions
+}
+
+// data structure in /objects/<Object Name>/flags/<flag name>
+//     flags:
+//       <flag name>:
+//         help: string - Help attached to the flag
+//         required: bool - true if this flag is required.
+type YamlObjectFlagsOptions struct {
+	Help     string
+	Required bool
+	Hidden   bool // Used by the plugin.
+	Default  string // Used by the plugin.
+	Secure   bool // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
+	Actions []string `yaml:"only-forj-actions"`
+}
+
 
 // data structure in /flags
 // actions: hash - Collection of valid keys. Support only common, create, update and maintain.
