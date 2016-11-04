@@ -23,7 +23,7 @@ func (*{{.Name}}App) maintain() {
 
 `
 
-const template_shell_app=`package main
+const template_shell_app = `package main
 
 import (
   "gopkg.in/alecthomas/kingpin.v2"
