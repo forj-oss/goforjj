@@ -10,12 +10,12 @@ package goforjj
 // runtime: struct - See YamlPluginRuntime
 // actions: hash of struct - See YamlPluginDef - must be common/create/update/maintain as hash keys only.
 type YamlPlugin struct {
-    Name        string `yaml:"plugin"`
-    Version     string
-    Description string
-    CreatedFile  string `yaml:"created_flag_file"`
-    Runtime     YamlPluginRuntime
-    Actions     map[string]YamlPluginDef
+	Name        string `yaml:"plugin"`
+	Version     string
+	Description string
+	CreatedFile string `yaml:"created_flag_file"`
+	Runtime     YamlPluginRuntime
+	Actions     map[string]YamlPluginDef
 }
 
 // data structure in /flags
@@ -30,8 +30,8 @@ type YamlPlugin struct {
 //   maintain: struct - Represent help and collection of flags for maintain action
 //     ... - same as create
 type YamlPluginDef struct {
-    Help  string
-    Flags map[string]YamlFlagsOptions
+	Help  string
+	Flags map[string]YamlFlagsOptions
 }
 
 // data structure in /runtime
@@ -42,20 +42,20 @@ type YamlPluginDef struct {
 //   image_docker: string - Docker image containing the driver to start
 //
 type YamlPluginRuntime struct {
-    Service_type string
-    Docker       DockerStruct    `yaml:",omitempty"`
-    Service      YamlPluginComm  `yaml:",omitempty"`
-    Shell        YamlPluginShell `yaml:",omitempty"`   // Not yet used
+	Service_type string
+	Docker       DockerStruct    `yaml:",omitempty"`
+	Service      YamlPluginComm  `yaml:",omitempty"`
+	Shell        YamlPluginShell `yaml:",omitempty"` // Not yet used
 }
 
 //data structure in /runtime/docker
 
 type DockerStruct struct {
-    Image string
-    Dood bool             `yaml:",omitempty"`
-    Volumes []string      `yaml:",omitempty"`
-    Env map[string]string `yaml:",omitempty"`
-    User string           `yaml:",omitempty"`
+	Image   string
+	Dood    bool              `yaml:",omitempty"`
+	Volumes []string          `yaml:",omitempty"`
+	Env     map[string]string `yaml:",omitempty"`
+	User    string            `yaml:",omitempty"`
 }
 
 // data structure in /runtime/shell
@@ -65,7 +65,7 @@ type DockerStruct struct {
 //     parameters: Array of strings - List of parameters to provide to the shell/binary
 //
 type YamlPluginShell struct {
-    Parameters []string
+	Parameters []string
 }
 
 // data structure in /runtime/service
@@ -80,9 +80,9 @@ type YamlPluginShell struct {
 //     parameters: Array of strings - List of parameters to provide to the shell/binary
 //                      Support {{Socket}}
 type YamlPluginComm struct {
-    Socket     string   `yaml:",omitempty"`
-    Port       uint     `yaml:",omitempty"` // Not yet implemented
-    Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
+	Socket     string   `yaml:",omitempty"`
+	Port       uint     `yaml:",omitempty"`      // Not yet implemented
+	Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
 }
 
 // data structure in /actions/<action>/flags/<flag name>
@@ -91,11 +91,11 @@ type YamlPluginComm struct {
 //         help: string - Help attached to the flag
 //         required: bool - true if this flag is required.
 type YamlFlagsOptions struct {
-    Help     string
-    Required bool
-    Hidden   bool // Used by the plugin.
-    Default  string // Used by the plugin.
-    Group    string // Group name used to regroup some flags under a dedicated struct.
-                    // This group used only for create/update flags.
-    Secure   bool // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
+	Help     string
+	Required bool
+	Hidden   bool   // Used by the plugin.
+	Default  string // Used by the plugin.
+	Group    string // Group name used to regroup some flags under a dedicated struct.
+	// This group used only for create/update flags.
+	Secure bool // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
 }

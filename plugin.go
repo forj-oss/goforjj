@@ -1,23 +1,23 @@
 package goforjj
 
 import (
-    "encoding/json"
-    "fmt"
-//    "github.hpe.com/christophe-larsonneur/goforjj/trace"
-//    "os"
-//   "os/exec"
-//    "strings"
-//    "syscall"
+	"encoding/json"
+	"fmt"
+	//    "github.hpe.com/christophe-larsonneur/goforjj/trace"
+	//    "os"
+	//   "os/exec"
+	//    "strings"
+	//    "syscall"
 )
 
 // Function to print out json data
 func (p *PluginResult) JsonPrint() error {
-    if b, err := json.Marshal(p); err != nil {
-        return err
-    } else {
-        fmt.Printf("%s\n", b)
-    }
-    return nil
+	if b, err := json.Marshal(p); err != nil {
+		return err
+	} else {
+		fmt.Printf("%s\n", b)
+	}
+	return nil
 }
 
 /*
@@ -27,17 +27,17 @@ func (p *PluginResult) JsonPrint() error {
 + return nil
  }
 */
-func (o *PluginData)StatusAdd(n string, args ...interface{}) string{
-    if o.Status != "" {
-        o.Status += "\n"
-    }
-    s := fmt.Sprintf(n, args ...)
-    o.Status += s
-    return s
+func (o *PluginData) StatusAdd(n string, args ...interface{}) string {
+	if o.Status != "" {
+		o.Status += "\n"
+	}
+	s := fmt.Sprintf(n, args...)
+	o.Status += s
+	return s
 }
 
-func (o *PluginData)Errorf(s string, args ...interface{}) string {
-    s = fmt.Sprintf(s, args ...)
-    o.ErrorMessage = s
-    return s
+func (o *PluginData) Errorf(s string, args ...interface{}) string {
+	s = fmt.Sprintf(s, args...)
+	o.ErrorMessage = s
+	return s
 }
