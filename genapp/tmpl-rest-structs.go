@@ -11,14 +11,14 @@ import "github.hpe.com/christophe-larsonneur/goforjj"
 {{   range $GroupName, $GroupOpts := $GroupsList }}\
 type {{ go_vars $GroupName }}Struct struct {
 {{     range $Flagname, $Opts := $GroupOpts.Flags }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{     end }}\
 }
 
 {{   end }}\
 {{ end }}\
 type CreateReq struct {
-    Args CreateArgReq ` + "`" +`json:"args"`+ "`" + `
+    Args CreateArgReq ` + "`" + `json:"args"` + "`" + `
     ReposData map[string]goforjj.PluginRepoData
 }
 
@@ -30,19 +30,19 @@ type CreateArgReq struct {
 {{ end }}\
 {{ range $Flagname, $Opts := .Yaml.Actions.create.Flags }}\
 {{   if $Opts.Group | not }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{   end }}\
 {{ end }}\
     // common flags
 {{ range $Flagname, $Opts := .Yaml.Actions.common.Flags }}\
 {{   if $Opts.Group | not }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{   end }}\
 {{ end }}\
 }
 
 type UpdateReq struct {
-    Args UpdateArgReq ` + "`" +`json:"args"`+ "`" + `
+    Args UpdateArgReq ` + "`" + `json:"args"` + "`" + `
     ReposData map[string]goforjj.PluginRepoData
 }
 
@@ -54,19 +54,19 @@ type UpdateArgReq struct {
 {{ end }}\
 {{ range $Flagname, $Opts := .Yaml.Actions.update.Flags }}\
 {{   if $Opts.Group | not }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{   end }}\
 {{ end }}
     // common flags
 {{ range $Flagname, $Opts := .Yaml.Actions.common.Flags }}\
 {{   if $Opts.Group | not }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{   end }}\
 {{ end }}\
 }
 
 type MaintainReq struct {
-    Args MaintainArgReq ` + "`" +`json:"args"`+ "`" + `
+    Args MaintainArgReq ` + "`" + `json:"args"` + "`" + `
     ReposData map[string]goforjj.PluginRepoData
 }
 
@@ -77,12 +77,12 @@ type MaintainArgReq struct {
 {{   end }}
 {{ end }}\
 {{ range $Flagname, $Opts := .Yaml.Actions.maintain.Flags }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{ end }}
     // common flags
 {{ range $Flagname, $Opts := .Yaml.Actions.common.Flags }}\
 {{   if $Opts.Group | not }}\
-    {{ go_vars $Flagname}} string `+"`"+`json:"{{$Flagname}}"`+"`"+` // {{ $Opts.Help }}
+    {{ go_vars $Flagname}} string ` + "`" + `json:"{{$Flagname}}"` + "`" + ` // {{ $Opts.Help }}
 {{   end }}\
 {{ end }}\
 }
