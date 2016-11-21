@@ -1,5 +1,14 @@
 package goforjj
 
+func NewRepoData() (r *PluginRepoData) {
+	r = new(PluginRepoData)
+	r.Templates = make([]string, 0)
+	r.Users = make(map[string]string)
+	r.Groups = make(map[string]string)
+	r.Options = make(map[string]string)
+	return
+}
+
 func (r *PluginRepoData) Initialize_Options(a ...string) {
 	for _, d := range a {
 		r.Options[d] = ""
