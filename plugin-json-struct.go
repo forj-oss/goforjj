@@ -46,12 +46,3 @@ type PluginResult struct {
 	Data       PluginData
 	State_code int // 200 OK
 }
-
-//***************************************
-// JSON data structure of plugin input.
-// See plugin-actions.go about how those structs are managed.
-
-type PluginReqData struct {
-	Args      map[string]string         `json:"args"`       // Collection of <plugin>.yaml arguments (create/update/maintain) to communicate to the plugin.
-	ReposData map[string]PluginRepoData `json:",omitempty"` // Data associated to each Repository that the plugin should manage.
-}
