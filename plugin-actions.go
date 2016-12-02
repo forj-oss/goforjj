@@ -6,8 +6,10 @@ import (
 	"github.com/forj-oss/goforjj/trace"
 )
 
-// Function which will execute the action requested.
-// If the is a REST API, communicate with REST API protocol
+// PluginRunAction Function which will execute the action requested.
+// If the plugin is a REST API, communicate with real basic REST API protocol
+// Basic RESTFul means : GET/POST, simple unique route, no version, payload with everything.
+// If needed in a next iteration, we can move the API to match fully the RESTFul API with forjj objects/actions.
 // else start a shell or a container to get the json data.
 func (p *PluginDef) PluginRunAction(action string, d PluginReqData) (*PluginResult, error) {
 	if p.service {
@@ -16,7 +18,7 @@ func (p *PluginDef) PluginRunAction(action string, d PluginReqData) (*PluginResu
 	return p.shell_do(action, d)
 }
 
-// Internally execute the REST POST Call with parameters
+// api_do Internally execute the REST POST Call with parameters
 // returns the decoded data into predefined recognized PluginResult sructure
 func (p *PluginDef) api_do(action string, d PluginReqData) (*PluginResult, error) {
 	p.url.Path = action
@@ -51,7 +53,7 @@ func (p *PluginDef) api_do(action string, d PluginReqData) (*PluginResult, error
 	return &result, nil
 }
 
-// Internally execute the command with collection of parameters
+// shell_do Internally execute the command with collection of parameters
 // returns the decoded data into predefined recognized PluginResult sructure
 func (p *PluginDef) shell_do(action string, d PluginReqData) (*PluginResult, error) {
 	cmd_args := []string{action}
