@@ -37,12 +37,16 @@ type YamlObject struct {
 //         help: string - Help attached to the flag
 //         required: bool - true if this flag is required.
 type YamlFlags struct {
-	Help     string
+	Options YamlFlagOptions
+	Help    string
+	Actions []string `yaml:"only-for-actions"`
+}
+
+type YamlFlagOptions struct {
 	Required bool
-	Hidden   bool     // Used by the plugin.
-	Default  string   // Used by the plugin.
-	Secure   bool     // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
-	Actions  []string `yaml:"only-for-actions"`
+	Hidden   bool   // Used by the plugin.
+	Default  string // Used by the plugin.
+	Secure   bool   // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
 }
 
 // data structure in /runtime
