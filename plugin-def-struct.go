@@ -39,7 +39,8 @@ type YamlObject struct {
 type YamlFlags struct {
 	Options YamlFlagOptions
 	Help    string
-	Actions []string `yaml:"only-for-actions"`
+	FormatRegexp string 	`yaml:"format-regexp"`
+	Actions []string 		`yaml:"only-for-actions"`
 }
 
 type YamlFlagOptions struct {

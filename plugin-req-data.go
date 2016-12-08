@@ -15,6 +15,13 @@ type ObjectInstances map[string]InstanceActions
 type InstanceActions map[string]ActionKeys
 type ActionKeys map[string]string
 
+func NewReqData() (r *PluginReqData) {
+	r = new(PluginReqData)
+	r.Forj = make(map[string]string)
+	r.Objects = make(map[string]ObjectInstances)
+	return
+}
+
 func (r *PluginReqData) SetForjFlag(key, value string) {
 	if r == nil {
 		return
