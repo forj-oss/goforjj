@@ -12,18 +12,14 @@ func TestActionKeys_AddKey(t *testing.T) {
 	b := a.AddKey("key", "value")
 
 	// --- Start testing ---
-	if a == nil {
+	if a != nil {
+		t.Error("Expected original Action to NOT be initialized. Got it.")
+	}
+	if b == nil {
 		t.Error("Expected Action to be initialized. Got Nil.")
 		return
 	}
-	if v, found := a["key"]; !found {
-		t.Errorf("Expected Action to be have a key '%s'. not found", "key")
-		return
-	} else {
-		if v != "value" {
-			t.Errorf("Expected action key '%s' to be have '%s'. not found", "key", "value")
-		}
-	}
+	a = b
 	if v, found := b["key"]; !found {
 		t.Errorf("Expected Action to be have a key '%s'. not found", "action")
 		return
@@ -60,10 +56,23 @@ func TestInstanceActions_AddAction(t *testing.T) {
 	t.Log("Expect AddActions() to Add an action in the map.")
 
 	// --- Setting test context ---
-	a := make(InstanceActions)
-
+	var a InstanceActions
 	// --- Run the test ---
 	b := a.AddAction("action", nil)
+	// --- Start testing ---
+	if a != nil {
+		t.Error("Expected original Instance Action to NOT be initialized. Got it.")
+	}
+	if b == nil {
+		t.Error("Expected Instance Action to be initialized. Got Nil.")
+		return
+	}
+
+	// --- Update test context ---
+	a = make(InstanceActions)
+
+	// --- Run the test ---
+	b = a.AddAction("action", nil)
 	// --- Start testing ---
 	if _, found := a["action"]; !found {
 		t.Errorf("Expected Instance to be have action '%s'. not found", "action")
@@ -91,7 +100,13 @@ func TestPluginReqData_AddObjectActions(t *testing.T) {
 	t.Log("Expect PluginReqData_AddObjectActions() to add an Object actions.")
 
 	// --- Setting test context ---
-	d := new(PluginReqData)
+	var d *PluginReqData
+
+	// --- Run the test ---
+	d.AddObjectActions("type", "instance", nil)
+	// No exception should occur.
+
+	d = new(PluginReqData)
 	// --- Run the test ---
 	d.AddObjectActions("type", "instance", nil)
 	// --- Start testing ---
