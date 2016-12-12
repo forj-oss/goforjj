@@ -48,6 +48,7 @@ type YamlFlagOptions struct {
 	Hidden   bool   // Used by the plugin.
 	Default  string // Used by the plugin.
 	Secure   bool   // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
+	Envar    string // Environment variable name to use.
 }
 
 // data structure in /runtime
