@@ -15,7 +15,7 @@ type YamlPlugin struct {
 	Description string
 	CreatedFile string `yaml:"created_flag_file"`
 	Runtime     YamlPluginRuntime
-	Tasks       map[string]map[string]YamlFlags `yaml:"task_flag"`
+	Tasks       map[string]map[string]YamlFlags `yaml:"task_flags"`
 	Objects     map[string]YamlObject
 }
 
@@ -37,10 +37,10 @@ type YamlObject struct {
 //         help: string - Help attached to the flag
 //         required: bool - true if this flag is required.
 type YamlFlags struct {
-	Options YamlFlagOptions
-	Help    string
-	FormatRegexp string 	`yaml:"format-regexp"`
-	Actions []string 		`yaml:"only-for-actions"`
+	Options      YamlFlagOptions `yaml:",inline"`
+	Help         string
+	FormatRegexp string   `yaml:"format-regexp"`
+	Actions      []string `yaml:"only-for-actions"`
 }
 
 type YamlFlagOptions struct {
