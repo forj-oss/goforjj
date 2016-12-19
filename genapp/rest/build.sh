@@ -1,10 +1,8 @@
-package main
-
-const template_rest_build = `#!/bin/bash
+#!/bin/bash
 #
 #
 
-TAG="-t $(awk '$1 ~ /docker_image/ { print $0 }' {{ .Yaml.Name }}.yaml | sed 's/^ *docker_image: "*\(.*\)"/\1/g')"
+TAG="-t $(awk '$1 ~ /docker_image/ { print $0 }' __MYPLUGINNAME__.yaml | sed 's/^ *docker_image: "*\(.*\)"/\1/g')"
 
 echo "Local go build, then create a docker image..."
 CGO_ENABLED=0 go build
@@ -24,4 +22,4 @@ then
    fi
 fi
 
-sudo docker build $PROXY $DOCKERFILE $TAG .`
+sudo docker build $PROXY $DOCKERFILE $TAG .

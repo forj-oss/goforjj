@@ -1,6 +1,4 @@
-package main
-
-const template_rest_publish = `#!/bin/bash
+#!/bin/bash
 #
 # This script is used to publish officially all released docker images (tagged)
 #
@@ -15,7 +13,7 @@ const template_rest_publish = `#!/bin/bash
 # Then this job should implement the following code in jenkins
 # And jenkins-ci images for each flavors will be officially pushed to the internal registry.
 
-TAG_BASE="$(awk '$1 ~ /image:/ { print $2 }' {{ .Yaml.Name }}.yaml)"
+TAG_BASE="$(awk '$1 ~ /image:/ { print $2 }' __MYPLUGINNAME__.yaml)"
 
 if [ ! -f releases.lst ]
 then
@@ -25,7 +23,7 @@ fi
 
 case "$1" in
   release-it )
-    VERSION=$(eval "echo $(awk '$1 ~ /version:/ { print $2 }' {{ .Yaml.Name }}.yaml)")
+    VERSION=$(eval "echo $(awk '$1 ~ /version:/ { print $2 }' __MYPLUGINNAME__.yaml)")
     if [ "$(git tag -l $VERSION)" = "" ]
     then
        echo "Unable to publish a release version. git tag missing"
@@ -69,4 +67,3 @@ do
    done
    echo "=============== DONE"
 done
-`

@@ -1,6 +1,4 @@
-package main
-
-const template_rest_dockerfile = `FROM alpine:latest
+FROM alpine:latest
 
 WORKDIR /src
 
@@ -12,10 +10,10 @@ RUN apk update && \
     rm -f /var/cache/apk/*tar.gz && \
     adduser devops devops -D
 
-COPY {{ .Yaml.Name }} /bin/{{ .Yaml.Name }}
+COPY __MYPLUGINNAME__ /bin/__MYPLUGINNAME__
 
 USER devops
 
-ENTRYPOINT ["/bin/{{.Yaml.Name}}"]
+ENTRYPOINT ["/bin/__MYPLUGINNAME__"]
 
-CMD ["--help"]`
+CMD ["--help"]
