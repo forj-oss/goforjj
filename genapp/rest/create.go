@@ -21,3 +21,9 @@ func (r *CreateReq) check_source_existence(ret *goforjj.PluginData) (p *__MYPLUG
 	log.Printf(ret.StatusAdd("environment checked."))
 	return p, true
 }
+
+func (r *CreateArgReq) SaveMaintainOptions(ret *goforjj.PluginData) {
+	if ret.Options == nil {
+		ret.Options = make(map[string]goforjj.PluginOption)
+	}
+}

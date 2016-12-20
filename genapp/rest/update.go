@@ -29,12 +29,6 @@ func (r *__MYPLUGIN__Plugin) update_jenkins_sources(ret *goforjj.PluginData) (st
 // Function which adds maintain options as part of the plugin answer in create/update phase.
 // forjj won't add any driver name because 'maintain' phase read the list of drivers to use from forjj-maintain.yml
 // So --git-us is not available for forjj maintain.
-func (r *CreateArgReq) SaveMaintainOptions(ret *goforjj.PluginData) {
-	if ret.Options == nil {
-		ret.Options = make(map[string]goforjj.PluginOption)
-	}
-}
-
 func (r *UpdateArgReq) SaveMaintainOptions(ret *goforjj.PluginData) {
 	if ret.Options == nil {
 		ret.Options = make(map[string]goforjj.PluginOption)
@@ -57,6 +51,3 @@ func addMaintainOptionValue(options map[string]goforjj.PluginOption, option, val
 	}
 	return opt
 }
-
-// YamlDesc has been created from your '{{.Yaml.Name}}.yaml' file.
-const YamlDesc = "{{ escape .Yaml_data}}"
