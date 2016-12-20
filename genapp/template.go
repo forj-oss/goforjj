@@ -102,6 +102,15 @@ func template_comment(template, comment string) string {
 	return strings.Replace(template, "//", comment, -1)
 }
 
+func inStringList(element string, elements ...string) string {
+	for _, value := range elements {
+		if element == value {
+			return value
+		}
+	}
+	return ""
+}
+
 // Create the source files from the model given.
 func (m *Models) Create_model(yaml *goforjj.YamlPlugin, raw_yaml []byte, name string) {
 	var yaml_data YamlData = YamlData{yaml, string(raw_yaml)}
@@ -137,12 +146,38 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 			return strings.Replace(str, "-", "_", -1)
 		},
 		"has_prefix": strings.HasPrefix,
-		"filter_cmds": func(actions map[string]goforjj.YamlPlugin) (ret map[string]goforjj.YamlPlugin) {
-			ret = make(map[string]goforjj.YamlPlugin)
+		"object_has_secure": func(object goforjj.YamlObject) bool {
+			for _, flag := range object.Flags {
+				if flag.Options.Secure {
+					return true
+				}
+			}
+			return false
+		},
+		"object_tree": func(object goforjj.YamlObject) (ret map[string]map[string]goforjj.YamlFlag) {
+			ret = make(map[string]map[string]goforjj.YamlFlag)
+			actions := []string{"add", "change", "remove", "rename", "list"}
+			var actions_list []string
 
-			for k, v := range actions {
-				if k != "common" {
-					ret[k] = v
+			if object.Actions != nil && len(object.Actions) > 0 {
+				actions_list = object.Actions
+			} else {
+				actions_list = actions
+			}
+			for _, v := range actions_list {
+				ret_a := make(map[string]goforjj.YamlFlag)
+				for flag_name, flag := range object.Flags {
+					if flag.Actions == nil || len(flag.Actions) == 0 {
+						ret_a[flag_name] = flag
+						continue
+					}
+					if inStringList(v, flag.Actions...) == "" {
+						continue
+					}
+					ret_a[flag_name] = flag
+				}
+				if len(ret_a) > 0 {
+					ret[v] = ret_a
 				}
 			}
 			return
