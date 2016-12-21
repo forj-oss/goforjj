@@ -51,7 +51,7 @@ func (a *__MYPLUGIN__App) start_server() {
 			if err != nil {
 				break
 			}
-			time.Sleep(5)
+			time.Sleep(5 * time.Millisecond)
 		}
 
 		if Start {
