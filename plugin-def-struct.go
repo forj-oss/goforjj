@@ -25,10 +25,17 @@ type YamlPlugin struct {
 //         help: string - Help attached to the object
 //         actions: collection of forjj actions (add/update/rename/remove/list)
 type YamlObject struct {
-	Actions            []string // Collection of actions for the group given.
+	Actions            []string `yaml:"default-actions"` // Collection of actions for the group given.
 	Help               string
 	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
+	Groups             map[string]YamlObjectGroup
 	Flags              map[string]YamlFlag
+}
+
+// data structure in /objects/<Object Name>/groups/<group_name>
+type YamlObjectGroup struct {
+	Actions []string `yaml:"default-actions"` // Collection of actions for the group given.
+	Flags   map[string]YamlFlag
 }
 
 // data structure in /objects/<Object Name>/flags/<flag name>

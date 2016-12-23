@@ -125,6 +125,11 @@ func (m *Models) Create_model(yaml *goforjj.YamlPlugin, raw_yaml []byte, name st
 	}
 }
 
+type ObjectModel struct {
+	Flags  map[string]goforjj.YamlFlag
+	Groups map[string]goforjj.YamlObjectGroup
+}
+
 func (s *Source) apply_source(yaml *YamlData, file string) {
 	var tmpl *template.Template
 	var err error
@@ -154,8 +159,11 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 			}
 			return false
 		},
-		"object_tree": func(object goforjj.YamlObject) (ret map[string]map[string]goforjj.YamlFlag) {
-			ret = make(map[string]map[string]goforjj.YamlFlag)
+		"inList": func(value string, list []string) string {
+			return inStringList(value, list...)
+		},
+		"object_tree": func(object goforjj.YamlObject) (ret map[string]ObjectModel) {
+			ret = make(map[string]ObjectModel)
 			actions := []string{"add", "change", "remove", "rename", "list"}
 			var actions_list []string
 
@@ -165,18 +173,28 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 				actions_list = actions
 			}
 			for _, v := range actions_list {
-				ret_a := make(map[string]goforjj.YamlFlag)
+				ret_a := ObjectModel{make(map[string]goforjj.YamlFlag), make(map[string]goforjj.YamlObjectGroup)}
 				for flag_name, flag := range object.Flags {
 					if flag.Actions == nil || len(flag.Actions) == 0 {
-						ret_a[flag_name] = flag
+						ret_a.Flags[flag_name] = flag
 						continue
 					}
 					if inStringList(v, flag.Actions...) == "" {
 						continue
 					}
-					ret_a[flag_name] = flag
+					ret_a.Flags[flag_name] = flag
 				}
-				if len(ret_a) > 0 {
+				for group_name, group := range object.Groups {
+					if group.Actions == nil || len(group.Actions) == 0 {
+						ret_a.Groups[group_name] = group
+						continue
+					}
+					if inStringList(v, group.Actions...) == "" {
+						continue
+					}
+					ret_a.Groups[group_name] = group
+				}
+				if len(ret_a.Flags) > 0 || len(ret_a.Groups) > 0 {
 					ret[v] = ret_a
 				}
 			}
