@@ -9,8 +9,8 @@ import (
 
 // Return ok if the jenkins instance exist
 func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *__MYPLUGIN__Plugin, status bool) {
-	log.Printf("Checking __MYPLUGIN__ source code existence.")
-	src_path := path.Join(r.Forj["forjj-source-mount"], r.Forj["forjj-instance-name"])
+	log.Print("Checking __MYPLUGIN__ source code existence.")
+	src_path := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
 	if _, err := os.Stat(path.Join(src_path, __MYPLUGIN_UNDERSCORED___file)); err == nil {
 		log.Printf(ret.Errorf("Unable to create the __MYPLUGINNAME__ source code for instance name '%s' which already exist.\nUse update to update it (or update %s), and maintain to update __MYPLUGINNAME__ according to his configuration. %s.", src_path, src_path, err))
 		return
