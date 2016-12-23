@@ -30,7 +30,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 	//}
 	// If your plugin is an upstream plugin, you will need to get the list of Requested Repositories from "req.ReposData"
 
-	if !p.save_yaml(ret, req.Forj["forjj-instance-name"]) {
+	if !p.save_yaml(ret, req.Forj.ForjjInstanceName) {
 		return
 	}
 	return
@@ -51,7 +51,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 		p = pr
 	}
 
-	instance := req.Forj["forjj-instance-name"]
+	instance := req.Forj.ForjjInstanceName
 	if !p.load_yaml(ret, instance) {
 		return
 	}
