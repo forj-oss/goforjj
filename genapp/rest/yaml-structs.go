@@ -6,7 +6,7 @@ package main
 // __MYPLUGIN: {{   range $GroupName, $Group := $Object.Groups }}\
 type DataStruct struct { // __MYPLUGIN: type {{ go_vars $GroupName }}Struct struct {
 	// __MYPLUGIN: {{     range $FlagName, $Flag := $Group.Flags }}\
-	data1 string // __MYPLUGIN: 	{{ go_vars $FlagName }} string
+	data1 string `json:"data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"`
 	// __MYPLUGIN: {{     end }}\
 }
 
@@ -18,10 +18,10 @@ type ActionDataStruct struct { // __MYPLUGIN: type {{go_vars $ActionName}}{{ go_
 	// __MYPLUGIN: {{       range $FlagName, $Flag := $Group.Flags }}\
 	// __MYPLUGIN: {{         if $Flag.Actions }}
 	// __MYPLUGIN: {{           if inList $ActionName $Flag.Actions }}\
-	data1 string // __MYPLUGIN: 	{{ go_vars $FlagName }} string
+	data1 string `json:"action-data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"`
 	// __MYPLUGIN: {{           end }}\
 	// __MYPLUGIN: {{         else }}\
-	// __MYPLUGIN: 	{{ go_vars $FlagName }} string
+	// __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"`
 	// __MYPLUGIN: {{         end }}\
 	// __MYPLUGIN: {{       end }}\
 }
@@ -42,7 +42,7 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 // __MYPLUGIN: {{   range $ActionName, $Action := object_tree $Object }}\
 type AppActionStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}{{ go_vars $ActionName}}Struct struct {
 	// __MYPLUGIN: {{     range $ParamName, $Opts := $Action.Flags }}\
-	Param1 string // __MYPLUGIN: 	{{ go_vars $ParamName }} string // {{ $Opts.Help }}
+	Param1 string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"`// {{ $Opts.Help }}
 	// __MYPLUGIN: {{     end }}\
 	// __MYPLUGIN: {{     if $Action.Groups }}\
 
@@ -131,7 +131,7 @@ type AppMaintainStruct struct { // __MYPLUGIN: type {{ go_vars $Objectname}}Main
 	Setup struct {
 		// __MYPLUGIN: {{ range $ParamName, $Opts := $ObjectOpts.Flags }}\
 		// __MYPLUGIN: {{   if $Opts.Options.Secure }}\
-		Token string // __MYPLUGIN: 		{{ go_vars $ParamName }} string // {{ $Opts.Help }}
+		Token string // __MYPLUGIN: 		{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
 		// __MYPLUGIN: {{   end }}\
 		// __MYPLUGIN: {{ end }}\
 	}
