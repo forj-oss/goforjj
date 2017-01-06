@@ -2,7 +2,7 @@ package goforjj
 
 import (
 	"fmt"
-	"github.com/forjj-oss/goforjj/trace"
+	"github.com/forj-oss/forjj-modules/trace"
 	"os"
 	"regexp"
 	"strings"

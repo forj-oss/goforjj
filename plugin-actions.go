@@ -3,7 +3,7 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/forjj-oss/goforjj/trace"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // PluginRunAction Function which will execute the action requested.
