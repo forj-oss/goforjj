@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj"
+	"github.com/forj-oss/goforjj"
 	"os"
 	"path"
 	"strings"

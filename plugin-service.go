@@ -3,7 +3,7 @@ package goforjj
 import (
 	"fmt"
 	"github.com/parnurzeal/gorequest"
-	"github.hpe.com/christophe-larsonneur/goforjj/trace"
+	"github.com/forj-oss/goforjj/trace"
 	"net"
 	"net/url"
 	"os"

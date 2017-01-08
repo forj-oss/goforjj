@@ -5,7 +5,7 @@ const template_rest_handlers = `package main
 import (
     "fmt"
     "net/http"
-    "github.hpe.com/christophe-larsonneur/goforjj"
+    "github.com/forj-oss/goforjj"
     "encoding/json"
     "io"
     "io/ioutil"

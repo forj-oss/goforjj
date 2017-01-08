@@ -3,7 +3,7 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj/trace"
+	"github.com/forj-oss/goforjj/trace"
 )
 
 // Function which will execute the action requested.
