@@ -3,7 +3,7 @@ package main
 const template_rest_maintain = `package main
 
 import (
-    "github.hpe.com/christophe-larsonneur/goforjj"
+    "github.com/forjj-oss/goforjj"
     "log"
     "os"
 )

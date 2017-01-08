@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj"
+	"github.com/forjj-oss/goforjj"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"

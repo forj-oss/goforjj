@@ -4,7 +4,7 @@ const template_rest_actions = `package main
 
 import (
     "net/http"
-    "github.hpe.com/christophe-larsonneur/goforjj"
+    "github.com/forjj-oss/goforjj"
 )
 
 // Do creating plugin task

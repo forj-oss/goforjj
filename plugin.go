@@ -3,7 +3,7 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	//    "github.hpe.com/christophe-larsonneur/goforjj/trace"
+	//    "github.com/forjj-oss/goforjj/trace"
 	//    "os"
 	//   "os/exec"
 	//    "strings"

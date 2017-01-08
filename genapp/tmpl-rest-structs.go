@@ -2,7 +2,7 @@ package main
 
 const template_rest_structs = `package main
 
-import "github.hpe.com/christophe-larsonneur/goforjj"
+import "github.com/forjj-oss/goforjj"
 
 {{ $GroupsList := groups_list .Yaml.Actions }}\
 {{ $GroupsMaintainList := groups_list_for "maintain" .Yaml.Actions }}\

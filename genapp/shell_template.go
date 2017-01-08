@@ -27,7 +27,7 @@ const template_shell_app = `package main
 
 import (
   "gopkg.in/alecthomas/kingpin.v2"
-  "github.hpe.com/christophe-larsonneur/goforjj"
+  "github.com/forjj-oss/goforjj"
   "os"
   "fmt"
 )
