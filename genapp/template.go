@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj"
+	"github.com/forj-oss/goforjj"
+	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -31,7 +33,8 @@ type Models struct {
 
 // Collection of source files to generate
 type Model struct {
-	sources map[string]Source // key is the filename
+	sources    map[string]Source // key is the filename
+	model_path string
 }
 
 // Core of the generated source file
@@ -43,31 +46,51 @@ type Source struct {
 }
 
 // Create a new model of sources
-func (m *Models) Create(name string) *Model {
+func (m *Models) Create(name, template_path string) *Model {
 	if m.model == nil {
 		m.model = make(map[string]Model)
 	}
 
-	sources := Model{make(map[string]Source)}
+	sources := Model{sources: make(map[string]Source)}
+	sources.model_path = path.Join(template_path, name)
 	m.model[name] = sources
 	return &sources
 }
 
 // Add a source template to the model
-func (m *Model) Source(file string, rights os.FileMode, comment, tmpl_src string, reset bool) *Model {
-	template := strings.Replace(tmpl_src, "\\\n", "", -1)
+func (m *Model) Source(file string, rights os.FileMode, comment, tmpl_file string, reset bool) *Model {
+	tmpl := path.Join(m.model_path, tmpl_file)
+	if _, err := os.Stat(tmpl); os.IsNotExist(err) {
+		fmt.Printf("go-forjj-generate: Warning! template source file '%s' is not accessible. \n", tmpl)
+		os.Exit(1)
+	}
+
+	var tmpl_src string
+	if d, err := ioutil.ReadFile(tmpl); err != nil {
+		fmt.Printf("go-forjj-generate: Error! '%s' is not a readable document. %s\n", tmpl, err)
+		os.Exit(1)
+	} else {
+		tmpl_src = string(d)
+	}
+
+	vars_regexp, _ := regexp.Compile(`.*// __MYPLUGIN: ?`)
+	template_data := strings.Replace(tmpl_src, "__MYPLUGIN__", "{{ go_vars .Yaml.Name }}", -1)
+	template_data = strings.Replace(template_data, "__MYPLUGINNAME__", "{{ .Yaml.Name }}", -1)
+	template_data = strings.Replace(template_data, "__MYPLUGIN_UNDERSCORED__", "{{ go_vars_underscored .Yaml.Name }}", -1)
+	template_data = vars_regexp.ReplaceAllLiteralString(template_data, "")
+	template_data = strings.Replace(template_data, "\\\n", "", -1)
 	source := Source{}
 	source.reset = reset
 	source.rights = rights
 
 	switch {
 	case comment == "":
-		source.template = template
+		source.template = template_data
 	case reset:
 		file = "generated-" + file
-		source.template = template_comment(prefix_generated_template, comment) + template
+		source.template = template_comment(prefix_generated_template, comment) + template_data
 	case !reset:
-		source.template = template_comment(prefix_created_template, comment) + template
+		source.template = template_comment(prefix_created_template, comment) + template_data
 	}
 
 	m.sources[file] = source
@@ -77,6 +100,15 @@ func (m *Model) Source(file string, rights os.FileMode, comment, tmpl_src string
 // Set appropriate comment prefix
 func template_comment(template, comment string) string {
 	return strings.Replace(template, "//", comment, -1)
+}
+
+func inStringList(element string, elements ...string) string {
+	for _, value := range elements {
+		if element == value {
+			return value
+		}
+	}
+	return ""
 }
 
 // Create the source files from the model given.
@@ -91,6 +123,11 @@ func (m *Models) Create_model(yaml *goforjj.YamlPlugin, raw_yaml []byte, name st
 	for k, v := range model.sources {
 		v.apply_source(&yaml_data, k)
 	}
+}
+
+type ObjectModel struct {
+	Flags  map[string]goforjj.YamlFlag
+	Groups map[string]goforjj.YamlObjectGroup
 }
 
 func (s *Source) apply_source(yaml *YamlData, file string) {
@@ -113,89 +150,52 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 		"go_vars_underscored": func(str string) string {
 			return strings.Replace(str, "-", "_", -1)
 		},
-		"groups_list": func(actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
-			ret = make(map[string]goforjj.YamlPluginDef)
-			for name, action_opts := range actions {
-				if name != "create" && name != "update" && name != "common" {
-					continue
-				}
-				for flag_name, flag_opts := range action_opts.Flags {
-					if flag_opts.Group == "" {
-						continue
-					}
-					if group, found := ret[flag_opts.Group]; found {
-						if _, found := group.Flags[flag_name]; found {
-							continue
-						}
-						group.Flags[flag_name] = flag_opts
-						ret[flag_opts.Group] = group
-					} else {
-						group := goforjj.YamlPluginDef{Flags: make(map[string]goforjj.YamlFlagsOptions)}
-						group.Flags[flag_name] = flag_opts
-						ret[flag_opts.Group] = group
-					}
-				}
-			}
-			return
-		},
-		"groups_list_for": func(cmd string, actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
-			ret = make(map[string]goforjj.YamlPluginDef)
-			for name, action_opts := range actions {
-				if name != cmd && name != "common" {
-					continue
-				}
-				for flag_name, flag_opts := range action_opts.Flags {
-					if flag_opts.Group == "" {
-						continue
-					}
-					if group, found := ret[flag_opts.Group]; found {
-						if _, found := group.Flags[flag_name]; found {
-							continue
-						}
-						group.Flags[flag_name] = flag_opts
-						ret[flag_opts.Group] = group
-					} else {
-						group := goforjj.YamlPluginDef{Flags: make(map[string]goforjj.YamlFlagsOptions)}
-						group.Flags[flag_name] = flag_opts
-						ret[flag_opts.Group] = group
-					}
-				}
-			}
-			return
-		},
-		"maintain_options": func(action string, actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlFlagsOptions) {
-			ret = make(map[string]goforjj.YamlFlagsOptions)
-			// Get a list of secure values defined in create/update phase
-			for ak, av := range actions {
-				if ak != "maintain" {
-					continue
-				}
-				// Check each maintain flags exist on 'create/update' list of flags.
-				for fn, fv := range av.Flags {
-					if fd, ok := actions[action].Flags[fn]; ok && fd.Secure {
-						ret[fn] = fv
-					}
-					if fd, ok := actions["common"].Flags[fn]; ok && fd.Secure {
-						ret[fn] = fv
-					}
-				}
-			}
-			// All common case identified secure are added as well.
-			for fn, fv := range actions["common"].Flags {
-				if fv.Secure {
-					ret[fn] = fv
-				}
-
-			}
-			return
-		},
 		"has_prefix": strings.HasPrefix,
-		"filter_cmds": func(actions map[string]goforjj.YamlPluginDef) (ret map[string]goforjj.YamlPluginDef) {
-			ret = make(map[string]goforjj.YamlPluginDef)
+		"object_has_secure": func(object goforjj.YamlObject) bool {
+			for _, flag := range object.Flags {
+				if flag.Options.Secure {
+					return true
+				}
+			}
+			return false
+		},
+		"inList": func(value string, list []string) string {
+			return inStringList(value, list...)
+		},
+		"object_tree": func(object goforjj.YamlObject) (ret map[string]ObjectModel) {
+			ret = make(map[string]ObjectModel)
+			actions := []string{"add", "change", "remove", "rename", "list"}
+			var actions_list []string
 
-			for k, v := range actions {
-				if k != "common" {
-					ret[k] = v
+			if object.Actions != nil && len(object.Actions) > 0 {
+				actions_list = object.Actions
+			} else {
+				actions_list = actions
+			}
+			for _, v := range actions_list {
+				ret_a := ObjectModel{make(map[string]goforjj.YamlFlag), make(map[string]goforjj.YamlObjectGroup)}
+				for flag_name, flag := range object.Flags {
+					if flag.Actions == nil || len(flag.Actions) == 0 {
+						ret_a.Flags[flag_name] = flag
+						continue
+					}
+					if inStringList(v, flag.Actions...) == "" {
+						continue
+					}
+					ret_a.Flags[flag_name] = flag
+				}
+				for group_name, group := range object.Groups {
+					if group.Actions == nil || len(group.Actions) == 0 {
+						ret_a.Groups[group_name] = group
+						continue
+					}
+					if inStringList(v, group.Actions...) == "" {
+						continue
+					}
+					ret_a.Groups[group_name] = group
+				}
+				if len(ret_a.Flags) > 0 || len(ret_a.Groups) > 0 {
+					ret[v] = ret_a
 				}
 			}
 			return

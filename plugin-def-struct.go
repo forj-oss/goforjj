@@ -15,23 +15,47 @@ type YamlPlugin struct {
 	Description string
 	CreatedFile string `yaml:"created_flag_file"`
 	Runtime     YamlPluginRuntime
-	Actions     map[string]YamlPluginDef
+	Tasks       map[string]map[string]YamlFlag `yaml:"task_flags"`
+	Objects     map[string]YamlObject
 }
 
-// data structure in /flags
-// actions: hash - Collection of valid keys. Support only common, create, update and maintain.
-//   common: struct - Represent a collection of flags shared between create/update/maintain action
+// data structure in /objects/<Object Name>
 //     flags:
-//   create: struct - Represent help and collection of flags for create action
-//     help: string - Help attached to the action
-//     flags: Hash - Collection of flags
-//   update: struct - Represent help and collection of flags for update action
-//     ... - same as create
-//   maintain: struct - Represent help and collection of flags for maintain action
-//     ... - same as create
-type YamlPluginDef struct {
-	Help  string
-	Flags map[string]YamlFlagsOptions
+//       <flag name>:
+//         help: string - Help attached to the object
+//         actions: collection of forjj actions (add/update/rename/remove/list)
+type YamlObject struct {
+	Actions            []string `yaml:"default-actions"` // Collection of actions for the group given.
+	Help               string
+	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
+	Groups             map[string]YamlObjectGroup
+	Flags              map[string]YamlFlag
+}
+
+// data structure in /objects/<Object Name>/groups/<group_name>
+type YamlObjectGroup struct {
+	Actions []string `yaml:"default-actions"` // Collection of actions for the group given.
+	Flags   map[string]YamlFlag
+}
+
+// data structure in /objects/<Object Name>/flags/<flag name>
+//     flags:
+//       <flag name>:
+//         help: string - Help attached to the flag
+//         required: bool - true if this flag is required.
+type YamlFlag struct {
+	Options      YamlFlagOptions `yaml:",inline"`
+	Help         string
+	FormatRegexp string   `yaml:"format-regexp"`
+	Actions      []string `yaml:"only-for-actions"`
+}
+
+type YamlFlagOptions struct {
+	Required bool
+	Hidden   bool   // Used by the plugin.
+	Default  string // Used by the plugin.
+	Secure   bool   // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
+	Envar    string // Environment variable name to use.
 }
 
 // data structure in /runtime
@@ -83,19 +107,4 @@ type YamlPluginComm struct {
 	Socket     string   `yaml:",omitempty"`
 	Port       uint     `yaml:",omitempty"`      // Not yet implemented
 	Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
-}
-
-// data structure in /actions/<action>/flags/<flag name>
-//     flags:
-//       <flag name>:
-//         help: string - Help attached to the flag
-//         required: bool - true if this flag is required.
-type YamlFlagsOptions struct {
-	Help     string
-	Required bool
-	Hidden   bool   // Used by the plugin.
-	Default  string // Used by the plugin.
-	Group    string // Group name used to regroup some flags under a dedicated struct.
-	// This group used only for create/update flags.
-	Secure bool // true if the data must be securely stored, ie not in the git repo. The flag must be defined in 'common' or 'maintain' flag group.
 }

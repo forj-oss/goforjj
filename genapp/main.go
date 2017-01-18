@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj"
+	"github.com/forj-oss/goforjj"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -12,6 +12,7 @@ import (
 type App struct {
 	Yaml goforjj.YamlPlugin
 	Models
+	template_path string
 }
 
 func (a *App) ReadFrom(yaml_data []byte) error {
@@ -25,12 +26,28 @@ func main() {
 		source_file string
 	)
 
+	if len(os.Args) != 3 {
+		fmt.Print("Usage is : genapp <plugin yaml file> <template source path>")
+		os.Exit(1)
+	}
 	if os.Args[1] == "" {
-		fmt.Printf("go-forjj-generate: Error! Yaml source file missing.\n")
+		fmt.Print("go-forjj-generate: Error! Yaml source file missing.\n")
+		os.Exit(1)
+	}
+	if os.Args[2] == "" {
+		fmt.Print("go-forjj-generate: Error! template source files missing." +
+			"It should be something like '.../goforjj/genapp'\n")
 		os.Exit(1)
 	}
 
 	source_file = os.Args[1]
+	app.template_path = os.Args[2]
+	if _, err := os.Stat(app.template_path); os.IsNotExist(err) {
+		fmt.Printf("go-forjj-generate: Warning! template source files path '%s' is not accessible. "+
+			"It should be something like '.../goforjj/genapp'\n", app.template_path)
+		os.Exit(1)
+	}
+
 	if _, err := os.Stat(source_file); os.IsNotExist(err) {
 		fmt.Printf("go-forjj-generate: Warning! Yaml source file '%s' is not accessible. Trying to create a basic one\n", source_file)
 
@@ -70,8 +87,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	app.init_model()
+	model_id := app.init_model()
 
-	app.Models.Create_model(&app.Yaml, yaml_data, app.Yaml.Runtime.Service_type)
+	app.Models.Create_model(&app.Yaml, yaml_data, model_id)
 
 }

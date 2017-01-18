@@ -2,7 +2,7 @@ package goforjj
 
 import (
 	"fmt"
-	"github.hpe.com/christophe-larsonneur/goforjj/trace"
+	"github.com/forj-oss/forjj-modules/trace"
 	"gopkg.in/yaml.v2"
 	"os"
 	"path"
