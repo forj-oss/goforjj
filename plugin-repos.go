@@ -51,3 +51,37 @@ func (r *PluginRepoData) UpdateFrom(source *PluginRepoData) {
 		}
 	}
 }
+
+// -----------------------------
+
+func NewRepo() *PluginRepo {
+	r := new(PluginRepo)
+	r.Remotes = make(map[string]string)
+	r.BranchConnect = make(map[string]string)
+	return r
+}
+
+// GetUpstream Currently get the 'upstream' if exist or 'origin' url
+func (r *PluginRepo) GetUpstream() string {
+	if r == nil {
+		return ""
+	}
+	if s, found := r.Remotes["upstream"] ; found {
+		return s
+	}
+	if s, found := r.Remotes["origin"] ; found {
+		return s
+	}
+	return ""
+}
+
+func (r *PluginRepo) GetOrigin() string {
+	if r == nil {
+		return ""
+	}
+	if s, found := r.Remotes["origin"] ; found {
+		return s
+	}
+	return ""
+}
+
