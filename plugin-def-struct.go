@@ -59,6 +59,7 @@ type YamlFlag struct {
 	Help         string
 	FormatRegexp string   `yaml:"format-regexp"`
 	Actions      []string `yaml:"only-for-actions"`
+	ObjectScope  string   `yaml:"scope"`
 }
 
 type YamlFlagOptions struct {
