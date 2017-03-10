@@ -27,9 +27,10 @@ type YamlPlugin struct {
 type YamlObject struct { // Ex: object projects. Instances: prj1, prj2, ...
 	Actions            []string `yaml:"default-actions"` // Collection of actions for the group given.
 	Help               string
-	FlagsScope         string `yaml:"flags-scope"`       // By default, a flag is prefixed by object instances name
-														 // Set 'global' to not prefix flags, so flags will be applied
-														 // to all instances.
+	FlagsScope         string `yaml:"flags-scope"`       // 'object' by default. flag name is NOT prefixed
+														 // 'instance' flag name is prefixed by instance name.
+	FieldsScope        string `yaml:"fields-scope"`      // 'global' by default. Means field is added at Object level.
+														 // 'instance' Means fields is added at object instance level.
 	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
 	Groups             map[string]YamlObjectGroup
 	Flags              map[string]YamlFlag
@@ -59,7 +60,10 @@ type YamlFlag struct {
 	Help         string
 	FormatRegexp string   `yaml:"format-regexp"`
 	Actions      []string `yaml:"only-for-actions"`
-	ObjectScope  string   `yaml:"scope"`
+	FlagScope    string   `yaml:"flag-scope"`   // 'object' by default. Flag is not prefixed by instance name.
+												// 'instance' Flag is prefixed by instance name if certain condition.
+	FieldScope   string   `yaml:"fields-scope"` // 'object' by default. Means field is added at Object level.
+						  					 	// 'instance' Means fields is added at object instance level.
 }
 
 type YamlFlagOptions struct {
