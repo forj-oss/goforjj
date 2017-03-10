@@ -24,9 +24,12 @@ type YamlPlugin struct {
 //       <flag name>:
 //         help: string - Help attached to the object
 //         actions: collection of forjj actions (add/update/rename/remove/list)
-type YamlObject struct {
+type YamlObject struct { // Ex: object projects. Instances: prj1, prj2, ...
 	Actions            []string `yaml:"default-actions"` // Collection of actions for the group given.
 	Help               string
+	FlagsScope         string `yaml:"flags-scope"`       // By default, a flag is prefixed by object instances name
+														 // Set 'global' to not prefix flags, so flags will be applied
+														 // to all instances.
 	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
 	Groups             map[string]YamlObjectGroup
 	Flags              map[string]YamlFlag
