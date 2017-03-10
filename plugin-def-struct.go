@@ -33,6 +33,14 @@ type YamlObject struct { // Ex: object projects. Instances: prj1, prj2, ...
 	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
 	Groups             map[string]YamlObjectGroup
 	Flags              map[string]YamlFlag
+	Lists              map[string]YamlObjectList
+}
+
+// data structure in /objects/<Object Name>/lists/<list_name>
+type YamlObjectList struct {
+	Sep string `yaml:"separator"`
+	Help string
+	ExtRegexp string `yaml:"defined-by"`
 }
 
 // data structure in /objects/<Object Name>/groups/<group_name>
