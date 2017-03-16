@@ -15,16 +15,15 @@ type DockerService struct {
 }
 
 // Define how to start
-func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, err error) {
+func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 	if p.Yaml.Runtime.Docker.Image == "" {
-		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", instance_name)
+		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", p.docker.name)
 		return false, nil
 	}
 	is_docker = true
-	p.docker.name = instance_name
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
-	// intialize
+	// initialize
 	p.docker.init()
 
 	// mode daemon
@@ -66,7 +65,10 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
 		for k, v := range p.Yaml.Runtime.Docker.Env {
 			if env := os.ExpandEnv(v); v != env && env != "" {
 				gotrace.Trace("expand and set %s from %s to %s", k, v, env)
-				p.docker.add_env(k, os.ExpandEnv(v))
+				p.docker.add_env(k, env)
+			} else {
+				gotrace.Trace("set %s to %s", k, v)
+				p.docker.add_env(k, v)
 			}
 		}
 	}
