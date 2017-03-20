@@ -11,9 +11,8 @@ type PluginReqData struct {
 	Objects map[string]ObjectInstances
 }
 
-type ObjectInstances map[string]InstanceActions
-type InstanceActions map[string]ActionKeys
-type ActionKeys map[string]string
+type ObjectInstances map[string]InstanceKeys
+type InstanceKeys map[string]string
 
 func NewReqData() (r *PluginReqData) {
 	r = new(PluginReqData)
@@ -32,7 +31,7 @@ func (r *PluginReqData) SetForjFlag(key, value string) {
 	r.Forj[key] = value
 }
 
-func (r *PluginReqData) AddObjectActions(object_type, object_name string, actions InstanceActions) {
+func (r *PluginReqData) AddObjectActions(object_type, object_name string, keys InstanceKeys) {
 	if r == nil {
 		return
 	}
@@ -40,24 +39,8 @@ func (r *PluginReqData) AddObjectActions(object_type, object_name string, action
 		r.Objects = make(map[string]ObjectInstances)
 	}
 	if _, found := r.Objects[object_type]; !found {
-		r.Objects[object_type] = make(map[string]InstanceActions)
+		r.Objects[object_type] = make(map[string]InstanceKeys)
 	}
-	r.Objects[object_type][object_name] = actions
+	r.Objects[object_type][object_name] = keys
 	return
-}
-
-func (i InstanceActions) AddAction(action_name string, keys ActionKeys) InstanceActions {
-	if i == nil {
-		i = make(InstanceActions)
-	}
-	i[action_name] = keys
-	return i
-}
-
-func (a ActionKeys) AddKey(key, value string) ActionKeys {
-	if a == nil {
-		a = make(ActionKeys)
-	}
-	a[key] = value
-	return a
 }
