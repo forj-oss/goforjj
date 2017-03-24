@@ -103,13 +103,11 @@ type MaintainArgReq struct {
 // __MYPLUGIN: {{ range $Objectname, $ObjectOpts := .Yaml.Objects }}\
 // __MYPLUGIN: {{   if object_has_secure $ObjectOpts }}\
 type AppMaintainStruct struct { // __MYPLUGIN: type {{ go_vars $Objectname}}MaintainStruct struct {
-	Setup struct {
-		// __MYPLUGIN: {{ range $ParamName, $Opts := $ObjectOpts.Flags }}\
-		// __MYPLUGIN: {{   if $Opts.Options.Secure }}\
-		Token string // __MYPLUGIN: 		{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
-		// __MYPLUGIN: {{   end }}\
-		// __MYPLUGIN: {{ end }}\
-	}
+	// __MYPLUGIN: {{ range $ParamName, $Opts := $ObjectOpts.Flags }}\
+	// __MYPLUGIN: {{   if $Opts.Options.Secure }}\
+	Token string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
+	// __MYPLUGIN: {{   end }}\
+	// __MYPLUGIN: {{ end }}\
 }
 
 // __MYPLUGIN: {{   end }}\
