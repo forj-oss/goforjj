@@ -85,7 +85,6 @@ type YamlPluginRuntime struct {
 	Service_type string
 	Docker       DockerStruct    `yaml:",omitempty"`
 	Service      YamlPluginComm  `yaml:",omitempty"`
-	Shell        YamlPluginShell `yaml:",omitempty"` // Not yet used
 }
 
 //data structure in /runtime/docker
@@ -96,16 +95,6 @@ type DockerStruct struct {
 	Volumes []string          `yaml:",omitempty"`
 	Env     map[string]string `yaml:",omitempty"`
 	User    string            `yaml:",omitempty"`
-}
-
-// data structure in /runtime/shell
-// Define list of options for a shell plugin
-// runtime:
-//   shell:
-//     parameters: Array of strings - List of parameters to provide to the shell/binary
-//
-type YamlPluginShell struct {
-	Parameters []string
 }
 
 // data structure in /runtime/service
@@ -122,5 +111,6 @@ type YamlPluginShell struct {
 type YamlPluginComm struct {
 	Socket     string   `yaml:",omitempty"`
 	Port       uint     `yaml:",omitempty"`      // Not yet implemented
+	Command    string   `yaml:",omitempty"`      // Not yet implemented
 	Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
 }
