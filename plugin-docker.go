@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"strconv"
 )
 
 type DockerService struct {
@@ -93,8 +94,8 @@ func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
 		p.docker.opts = append(p.docker.opts, "-u", "root:root")
-		p.docker.add_env("UID", string(os.Getuid()))
-		p.docker.add_env("GID", string(os.Getgid()))
+		p.docker.add_env("UID", strconv.Itoa(os.Getuid()))
+		p.docker.add_env("GID", strconv.Itoa(os.Getgid()))
 	} else {
 		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
 	}
