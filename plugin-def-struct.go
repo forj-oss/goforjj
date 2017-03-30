@@ -24,12 +24,24 @@ type YamlPlugin struct {
 //       <flag name>:
 //         help: string - Help attached to the object
 //         actions: collection of forjj actions (add/update/rename/remove/list)
-type YamlObject struct {
+type YamlObject struct { // Ex: object projects. Instances: prj1, prj2, ...
 	Actions            []string `yaml:"default-actions"` // Collection of actions for the group given.
 	Help               string
+	FlagsScope         string `yaml:"flags-scope"`       // 'object' by default. flag name is NOT prefixed
+														 // 'instance' flag name is prefixed by instance name.
+	FieldsScope        string `yaml:"fields-scope"`      // 'global' by default. Means field is added at Object level.
+														 // 'instance' Means fields is added at object instance level.
 	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
 	Groups             map[string]YamlObjectGroup
 	Flags              map[string]YamlFlag
+	Lists              map[string]YamlObjectList
+}
+
+// data structure in /objects/<Object Name>/lists/<list_name>
+type YamlObjectList struct {
+	Sep string `yaml:"separator"`
+	Help string
+	ExtRegexp string `yaml:"defined-by"`
 }
 
 // data structure in /objects/<Object Name>/groups/<group_name>
@@ -48,6 +60,10 @@ type YamlFlag struct {
 	Help         string
 	FormatRegexp string   `yaml:"format-regexp"`
 	Actions      []string `yaml:"only-for-actions"`
+	FlagScope    string   `yaml:"flag-scope"`   // 'object' by default. Flag is not prefixed by instance name.
+												// 'instance' Flag is prefixed by instance name if certain condition.
+	FieldScope   string   `yaml:"fields-scope"` // 'object' by default. Means field is added at Object level.
+						  					 	// 'instance' Means fields is added at object instance level.
 }
 
 type YamlFlagOptions struct {
@@ -69,7 +85,6 @@ type YamlPluginRuntime struct {
 	Service_type string
 	Docker       DockerStruct    `yaml:",omitempty"`
 	Service      YamlPluginComm  `yaml:",omitempty"`
-	Shell        YamlPluginShell `yaml:",omitempty"` // Not yet used
 }
 
 //data structure in /runtime/docker
@@ -80,16 +95,6 @@ type DockerStruct struct {
 	Volumes []string          `yaml:",omitempty"`
 	Env     map[string]string `yaml:",omitempty"`
 	User    string            `yaml:",omitempty"`
-}
-
-// data structure in /runtime/shell
-// Define list of options for a shell plugin
-// runtime:
-//   shell:
-//     parameters: Array of strings - List of parameters to provide to the shell/binary
-//
-type YamlPluginShell struct {
-	Parameters []string
 }
 
 // data structure in /runtime/service
@@ -106,5 +111,6 @@ type YamlPluginShell struct {
 type YamlPluginComm struct {
 	Socket     string   `yaml:",omitempty"`
 	Port       uint     `yaml:",omitempty"`      // Not yet implemented
+	Command    string   `yaml:",omitempty"`      // Not yet implemented
 	Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
 }

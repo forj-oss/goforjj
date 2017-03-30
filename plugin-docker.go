@@ -15,16 +15,15 @@ type DockerService struct {
 }
 
 // Define how to start
-func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, err error) {
+func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 	if p.Yaml.Runtime.Docker.Image == "" {
-		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", instance_name)
+		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", p.docker.name)
 		return false, nil
 	}
 	is_docker = true
-	p.docker.name = instance_name
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
-	// intialize
+	// initialize
 	p.docker.init()
 
 	// mode daemon
@@ -50,7 +49,6 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
 		}
 		p.docker.socket_path = "/tmp/forjj-socks"
 		p.docker.add_volume(p.cmd.socket_path + ":" + p.docker.socket_path)
-		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
 	} else {
 		err = fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
 		return
@@ -66,12 +64,24 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
 		for k, v := range p.Yaml.Runtime.Docker.Env {
 			if env := os.ExpandEnv(v); v != env && env != "" {
 				gotrace.Trace("expand and set %s from %s to %s", k, v, env)
-				p.docker.add_env(k, os.ExpandEnv(v))
+				p.docker.add_env(k, env)
+			} else {
+				gotrace.Trace("set %s to %s", k, v)
+				p.docker.add_env(k, v)
 			}
 		}
 	}
 
 	if p.Yaml.Runtime.Docker.Dood {
+		// In context of dood, the container must respect few things:
+		// - The container is started as root
+		// - the start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate unprivileged user.
+		// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
+		//   substitute.
+		// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
+		//   provided by forjj with --docker-exe
+		// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
+		//   must use a sudoers so your plugin user could call docker against the host server socket.
 		if p.dockerBin == "" {
 			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
 			return
@@ -82,12 +92,17 @@ func (p *PluginDef) docker_start_service(instance_name string) (is_docker bool, 
 		p.docker.add_env("DOOD_SRC", p.Source_path)
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
+		p.docker.opts = append(p.docker.opts, "-u", "root:root")
+		p.docker.add_env("UID", string(os.Getuid()))
+		p.docker.add_env("GID", string(os.Getgid()))
+	} else {
+		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
 	}
 
 	// Check if the container exists and is started.
 	// TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
 	// Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
-	if _, err = p.docker_container_restart(p.cmd.command, p.Yaml.Runtime.Service.Parameters); err != nil {
+	if _, err = p.docker_container_restart(p.Yaml.Runtime.Service.Command, p.Yaml.Runtime.Service.Parameters); err != nil {
 		return
 	}
 
@@ -136,12 +151,18 @@ func (d *docker_container) init() {
 }
 
 func (d *docker_container) add_volume(volume string) {
+	if d.envs == nil {
+		d.init()
+	}
 	if ok, _ := regexp.MatchString("^.*(:.*(:(ro|rw))?)?$", volume); ok {
 		d.volumes[volume] = 'v'
 	}
 }
 
 func (d *docker_container) add_env(key, value string) {
+	if d.envs == nil {
+		d.init()
+	}
 	env := key + "=" + value
 	d.envs[env] = 'e'
 }

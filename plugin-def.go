@@ -6,6 +6,8 @@ import (
 	"gopkg.in/yaml.v2"
 	"os"
 	"path"
+	"path/filepath"
+	"os/user"
 )
 
 // Load yaml raw data in YamlPlugin data structure
@@ -60,6 +62,15 @@ func (p *PluginDef) PluginDockerBin(thePath string) error {
 	if thePath == "" {
 		gotrace.Trace("PluginDockerBin : '%s'.", thePath)
 		return nil
+	}
+	// Check in case of paths like "/something/~/something/"
+	if thePath[:2] == "~/" {
+		usr, err := user.Current()
+		if err != nil {
+			return fmt.Errorf("Unable to get Current USER information. %s", err)
+		}
+		dir := usr.HomeDir
+		thePath = filepath.Join(dir, thePath[2:])
 	}
 	if _, err := os.Stat(thePath); err == nil {
 		p.dockerBin = path.Clean(thePath)

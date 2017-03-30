@@ -15,6 +15,7 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
 		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
 	}
 
+	// TODO: Compare container inspect with requested container in order to restart or remove/start
 	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
 	ret, err := docker_container_status(p.docker.name)
 	if err != nil {
