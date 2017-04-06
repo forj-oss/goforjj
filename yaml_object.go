@@ -45,14 +45,14 @@ func (o *YamlObject)found_flag_action_def(action, group_name, flag_name string) 
 	if actions != nil && len(actions) > 0 {
 		return flag.found_action_def(action)
 	}
-	if found, _ = in_array(action, actions) ; found {
+	if found, _ = InArray(action, actions) ; found {
 		return
 	}
-	found, _ = in_array(setup, actions)
+	found, _ = InArray(setup, actions)
 	return
 }
 
-func in_array(v interface{}, in interface{}) (ok bool, i int) {
+func InArray(v interface{}, in interface{}) (ok bool, i int) {
     val := reflect.Indirect(reflect.ValueOf(in))
     switch val.Kind() {
     case reflect.Slice, reflect.Array:
