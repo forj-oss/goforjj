@@ -21,6 +21,10 @@ func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", p.docker.name)
 		return false, nil
 	}
+	if p.local_debug {
+		gotrace.Trace("Local debugger activated. The service is not started from docker.")
+		return false, nil
+	}
 	is_docker = true
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
