@@ -31,6 +31,10 @@ func (p *PluginDef) PluginInit(instance string) error {
 	return nil
 }
 
+func (p *PluginDef) RunningFromDebugger() {
+	p.local_debug = true
+}
+
 func (p *PluginDef) def_runtime_context() error {
 	switch p.Yaml.Runtime.Service_type {
 	case "REST API": // REST API Service started as daemon

@@ -20,6 +20,8 @@ type PluginDef struct {
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
 	SourceMount    string                // Where the driver will have his source code.
 	WorkspaceMount string                // where the driver has his workspace.
+	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
+	                                     // instance of the driver from a debugger
 }
 
 type cmd_data struct {

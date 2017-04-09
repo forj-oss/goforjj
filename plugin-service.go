@@ -34,6 +34,10 @@ func (p *PluginDef) PluginStartService() error {
 		if err := p.socket_prepare(); err != nil {
 			return err
 		}
+		if p.local_debug {
+			gotrace.Trace("Local debugger activated. The service is not started.")
+			return nil
+		}
 		cmd_args := []string{p.cmd.command}
 		cmd_args = append(cmd_args, p.cmd.args...)
 		_, err := cmd_run(cmd_args)
