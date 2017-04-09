@@ -34,6 +34,12 @@ func (p *PluginDef) PluginStartService() error {
 		if err := p.socket_prepare(); err != nil {
 			return err
 		}
+
+		p.SourceMount = p.Source_path
+
+		// Workspace path
+		if p.Workspace_path != "" { p.WorkspaceMount = p.Workspace_path } else { p.WorkspaceMount = "" }
+
 		if p.local_debug {
 			gotrace.Trace("Local debugger activated. The service is not started.")
 			return nil
