@@ -36,6 +36,9 @@ func (p *PluginDef) PluginStartService() error {
 		}
 
 		p.SourceMount = p.Source_path
+		if _, err := os.Stat(p.Source_path); err != nil {
+			os.MkdirAll(p.Source_path, 0755)
+		}
 
 		// Workspace path
 		if p.Workspace_path != "" { p.WorkspaceMount = p.Workspace_path } else { p.WorkspaceMount = "" }
