@@ -2,7 +2,6 @@ package goforjj
 
 import (
 	"encoding/json"
-	"go/types"
 )
 
 //***************************************
@@ -31,10 +30,14 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	case "[]string":
 		return json.Marshal(v.list)
 	}
-	return nil
+	return nil, nil
 }
 
-func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
+func (v *ValueStruct)Set(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
+	if !found {
+		return
+	}
+	ret_bool = true
 	if v == nil {
 		ret = new(ValueStruct)
 	} else {
@@ -46,7 +49,7 @@ func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
 		ret.value = value.(string)
 	case []string:
 		ret.internal_type = "[]string"
-		ret.value = value.([]string)
+		ret.list = value.([]string)
 	}
 	return
 }
