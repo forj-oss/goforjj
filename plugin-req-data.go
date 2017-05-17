@@ -34,7 +34,7 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	return nil
 }
 
-func (v *ValueStruct)Set(value interface{}) {
+func (v *ValueStruct)Set(value interface{}) *ValueStruct {
 	switch value.(type) {
 	case string:
 		v.internal_type = "string"
@@ -43,6 +43,7 @@ func (v *ValueStruct)Set(value interface{}) {
 		v.internal_type = "[]string"
 		v.value = value.([]string)
 	}
+	return v
 }
 
 func (v *ValueStruct)Get() (value interface{}) {
