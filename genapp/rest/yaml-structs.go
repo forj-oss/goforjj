@@ -8,7 +8,7 @@ package main
 // __MYPLUGIN: {{   range $GroupName, $Group := $Object.Groups }}\
 type DataStruct struct { // __MYPLUGIN: type {{ go_vars $GroupName }}Struct struct {
 // __MYPLUGIN: {{     range $FlagName, $Flag := $Group.Flags }}\
-	data1 string `json:"data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"`
+	data1 string `json:"data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} {{if $Object.List}}[]{{end}}string `json:"{{ $GroupName }}-{{ $FlagName }}"`
 // __MYPLUGIN: {{     end }}\
 }
 
@@ -18,7 +18,7 @@ type DataStruct struct { // __MYPLUGIN: type {{ go_vars $GroupName }}Struct stru
 
 type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}InstanceStruct struct {
 // __MYPLUGIN: {{   range $ParamName, $Opts := $Object.Flags }}\
-	Param1 string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"`// {{ $Opts.Help }}
+	Param1 string // __MYPLUGIN: 	{{ go_vars $ParamName }} {{if $Object.List}}[]{{end}}string `json:"{{ $ParamName }}"`// {{ $Opts.Help }}
 // __MYPLUGIN: {{   end }}\
 // __MYPLUGIN: {{   if $Object.Groups }}\
 
