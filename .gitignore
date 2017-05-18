@@ -2,3 +2,5 @@
 /.idea/
 *.xml
 *.iml
+.be-*
+vendor/
