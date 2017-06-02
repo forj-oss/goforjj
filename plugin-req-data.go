@@ -12,7 +12,7 @@ type PluginReqData struct {
 }
 
 type ObjectInstances map[string]InstanceKeys
-type InstanceKeys map[string]ValueStruct
+type InstanceKeys map[string]*ValueStruct
 
 func NewReqData() (r *PluginReqData) {
 	r = new(PluginReqData)
