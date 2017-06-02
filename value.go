@@ -2,6 +2,9 @@ package goforjj
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v2"
+	"fmt"
+	"reflect"
 )
 
 type ValueStruct struct {
@@ -18,6 +21,35 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 		return json.Marshal(v.list)
 	}
 	return nil, nil
+}
+
+func (v ValueStruct)MarshalYAML() ([]byte, error) {
+	switch v.internal_type {
+	case "string":
+		return yaml.Marshal(v.value)
+	case "[]string":
+		return yaml.Marshal(v.list)
+	}
+	return nil, nil
+}
+
+func (v *ValueStruct) UnmarshalYAML(unmarchal func(interface{}) error) error {
+	var data interface{}
+
+	if err := unmarchal(&data); err != nil {
+		return err
+	}
+	switch data.(type) {
+	case string:
+		v.internal_type = "string"
+		v.value = data.(string)
+	case []string:
+		v.internal_type = "[]string"
+		v.list = data.([]string)
+	default:
+		return fmt.Errorf("value type ('%s') not supported.", reflect.TypeOf(data))
+	}
+	return nil
 }
 
 func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
