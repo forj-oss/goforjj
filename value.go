@@ -51,6 +51,10 @@ func (v *ValueStruct)Get() (value interface{}) {
 	return
 }
 
+func (v *ValueStruct)Type() string {
+	return v.internal_type
+}
+
 func (v *ValueStruct)GetString() (string) {
 	if v.internal_type != "string" { return "" }
 	return v.value
