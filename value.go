@@ -56,11 +56,13 @@ func (v *ValueStruct)Type() string {
 }
 
 func (v *ValueStruct)GetString() (string) {
+	if v == nil { return "" }
 	if v.internal_type != "string" { return "" }
 	return v.value
 }
 
 func (v *ValueStruct)GetStringSlice() ([]string) {
+	if v == nil { return nil }
 	if v.internal_type != "[]string" { return nil }
 	return v.list
 }
