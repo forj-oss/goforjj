@@ -32,3 +32,5 @@ _testmain.go
 vendor/
 
 test*/*
+
+.glide
