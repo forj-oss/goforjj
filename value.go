@@ -20,11 +20,7 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	return nil, nil
 }
 
-func (v *ValueStruct)Set(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
-	if !found {
-		return
-	}
-	ret_bool = true
+func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
 	if v == nil {
 		ret = new(ValueStruct)
 	} else {
@@ -32,13 +28,28 @@ func (v *ValueStruct)Set(value interface{}, found bool) (ret *ValueStruct, ret_b
 	}
 	switch value.(type) {
 	case string:
-		ret.internal_type = "string"
-		ret.value = value.(string)
+		ret.SetString(value.(string))
 	case []string:
 		ret.internal_type = "[]string"
 		ret.list = value.([]string)
 	}
 	return
+}
+
+func (v *ValueStruct)SetIfFound(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
+	if !found {
+		return
+	}
+	ret_bool = true
+	ret = v.Set(value)
+	return
+}
+
+func (v *ValueStruct)SetString(value string) {
+	if v == nil { return }
+	v.internal_type = "string"
+	v.value = value
+
 }
 
 func (v *ValueStruct)Get() (value interface{}) {
