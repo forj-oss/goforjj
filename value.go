@@ -51,6 +51,16 @@ func (v *ValueStruct)Get() (value interface{}) {
 	return
 }
 
+func (v *ValueStruct)GetString() (string) {
+	if v.internal_type != "string" { return "" }
+	return v.value
+}
+
+func (v *ValueStruct)GetStringSlice() ([]string) {
+	if v.internal_type != "[]string" { return nil }
+	return v.list
+}
+
 // Equal return true, if value compared are equal.
 // The equality depends on internal type:
 // - string : string equality
