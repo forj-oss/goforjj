@@ -1,9 +1,5 @@
 package goforjj
 
-import (
-	"encoding/json"
-)
-
 //***************************************
 // JSON data structure of plugin input.
 // See plugin-actions.go about how those structs are managed.
@@ -17,52 +13,6 @@ type PluginReqData struct {
 
 type ObjectInstances map[string]InstanceKeys
 type InstanceKeys map[string]ValueStruct
-type ValueStruct struct {
-	internal_type string
-	value string
-	list []string
-} // Represents a flag value. Can be of type string or []string
-
-func (v ValueStruct)MarshalJSON() ([]byte, error) {
-	switch v.internal_type {
-	case "string":
-		return json.Marshal(v.value)
-	case "[]string":
-		return json.Marshal(v.list)
-	}
-	return nil, nil
-}
-
-func (v *ValueStruct)Set(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
-	if !found {
-		return
-	}
-	ret_bool = true
-	if v == nil {
-		ret = new(ValueStruct)
-	} else {
-		ret = v
-	}
-	switch value.(type) {
-	case string:
-		ret.internal_type = "string"
-		ret.value = value.(string)
-	case []string:
-		ret.internal_type = "[]string"
-		ret.list = value.([]string)
-	}
-	return
-}
-
-func (v *ValueStruct)Get() (value interface{}) {
-	switch v.internal_type {
-	case "string":
-		value = v.value
-	case "[]string":
-		value = v.list
-	}
-	return
-}
 
 func NewReqData() (r *PluginReqData) {
 	r = new(PluginReqData)
