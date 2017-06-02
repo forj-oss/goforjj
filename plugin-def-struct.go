@@ -60,7 +60,7 @@ type YamlFlag struct {
 	Help         string
 	FormatRegexp string   `yaml:"format-regexp"`
 	Actions      []string `yaml:"only-for-actions"`
-	List         bool
+	Type         string   `yaml:"of-type"`
 	FlagScope    string   `yaml:"flag-scope"`   // 'object' by default. Flag is not prefixed by instance name.
 												// 'instance' Flag is prefixed by instance name if certain condition.
 	FieldScope   string   `yaml:"fields-scope"` // 'object' by default. Means field is added at Object level.
