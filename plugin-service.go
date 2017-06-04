@@ -14,46 +14,56 @@ import (
 
 const defaultTimeout = 32 * time.Second
 
-// This function start the service as daemon and register it
+func (p *PluginDef) define_as_local_paths() {
+	p.SourceMount = p.Source_path
+	if _, err := os.Stat(p.Source_path); err != nil {
+		os.MkdirAll(p.Source_path, 0755)
+	}
+
+	// Workspace path
+	if p.Workspace_path != "" {
+		p.WorkspaceMount = p.Workspace_path
+	} else {
+		p.WorkspaceMount = ""
+	}
+
+}
+
+func (p *PluginDef) command_start_service() (err error) {
+	if _, err = p.define_socket() ; err != nil { return }
+
+	p.define_as_local_paths()
+
+	cmd_args := []string{p.cmd.command}
+	cmd_args = append(cmd_args, p.cmd.args...)
+	_, err = cmd_run(cmd_args)
+	return
+}
+
+// PluginStartService This function start the service as daemon and register it
 // If the service is already started, just use it.
-func (p *PluginDef) PluginStartService() error {
+func (p *PluginDef) PluginStartService() (err error) {
 	if !p.service {
 		// Nothing to start
 		return nil
 	}
 	gotrace.Trace("Starting plugin service...")
-	// Is it a docker service?
-	if is_docker, err := p.docker_start_service(); is_docker {
-		return err
+
+	switch {
+	case p.local_debug: // Local debug Nothing to start
+		p.define_as_local_paths()
+		gotrace.Trace("Local debugger activated. The service is not started.")
+	case p.Yaml.Runtime.Docker.Image != "": // Docker to start
+		err = p.docker_start_service()
+	default: // Command to start
+		err = p.command_start_service()
 	}
 
-	// Run a command which should become a daemon (options or shell fork)
+	if err != nil { return }
 
-	// Do we have a socket to prepare?
-	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
-		if err := p.socket_prepare(); err != nil {
-			return err
-		}
-
-		p.SourceMount = p.Source_path
-		if _, err := os.Stat(p.Source_path); err != nil {
-			os.MkdirAll(p.Source_path, 0755)
-		}
-
-		// Workspace path
-		if p.Workspace_path != "" { p.WorkspaceMount = p.Workspace_path } else { p.WorkspaceMount = "" }
-
-		if p.local_debug {
-			gotrace.Trace("Local debugger activated. The service is not started.")
-			return nil
-		}
-		cmd_args := []string{p.cmd.command}
-		cmd_args = append(cmd_args, p.cmd.args...)
-		_, err := cmd_run(cmd_args)
-		return err
-	} else {
-		return fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
-	}
+	// Do a ping of the service.
+	p.CheckServiceUp()
+	return
 }
 
 func (p *PluginDef) CheckServiceUp() bool {
@@ -64,6 +74,8 @@ func (p *PluginDef) CheckServiceUp() bool {
 		}
 	}
 	gotrace.Trace("Pinging the service.")
+
+	p.define_socket()
 	p.url.Path = "ping"
 	_, body, err := p.req.Get(p.url.String()).End()
 	if err != nil {
@@ -76,6 +88,9 @@ func (p *PluginDef) CheckServiceUp() bool {
 
 // Create the socket link for http and his path.
 func (p *PluginDef) socket_prepare() (err error) {
+	// Define it once
+	if p.req != nil { return }
+
 	p.cmd.socket_file = p.Yaml.Name + ".sock"
 	socket := path.Join(p.cmd.socket_path, p.cmd.socket_file)
 	p.req = gorequest.New()

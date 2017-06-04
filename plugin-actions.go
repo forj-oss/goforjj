@@ -28,6 +28,8 @@ func (p *PluginDef) api_do(action string, d *PluginReqData) (*PluginResult, erro
 		return nil, err
 	}
 
+	p.define_socket()
+
 	gotrace.Trace("POST %s with '%s'", p.url.String(), string(data))
 	resp, body, errs := p.req.Post(p.url.String()).Send(string(data)).End()
 	if len(errs) > 0 {
