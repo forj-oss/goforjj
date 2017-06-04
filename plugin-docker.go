@@ -23,7 +23,10 @@ func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 	}
 	if p.local_debug {
 		gotrace.Trace("Local debugger activated. The service is not started from docker.")
-		return false, nil
+		if ! p.CheckServiceUp() {
+			return false, fmt.Errorf("Your service in debug mode has not responded to the ping call.")
+		}
+		return false, err
 	}
 	is_docker = true
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
@@ -139,11 +142,7 @@ func (p *PluginDef) check_service_ready() (err error) {
 			return
 		}
 
-		if p.CheckServiceUp() {
-			gotrace.Trace("Service is UP.")
-			p.service_booted = true
-			return
-		}
+		if p.CheckServiceUp() { return }
 	}
 	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
 	return

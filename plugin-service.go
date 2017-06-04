@@ -69,6 +69,8 @@ func (p *PluginDef) CheckServiceUp() bool {
 	if err != nil {
 		fmt.Printf("Issue to ping the Plugin service '%s'. %s\n", p.Yaml.Name, err)
 	}
+	p.service_booted = true
+	gotrace.Trace("Service is UP.")
 	return strings.Trim(body, " \n") == "OK"
 }
 
