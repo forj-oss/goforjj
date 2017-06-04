@@ -136,7 +136,7 @@ func (p *PluginDef) check_service_ready() (err error) {
 			docker_container_remove(p.docker.name)
 			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
 			return
-		}
+		} else { return }
 
 	}
 	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
