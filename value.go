@@ -15,22 +15,20 @@ type ValueStruct struct {
 
 func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	switch v.internal_type {
-	case "string":
-		return json.Marshal(v.value)
 	case "[]string":
 		return json.Marshal(v.list)
 	}
-	return nil, nil
+	// By default, encode a string
+	return json.Marshal(v.value)
 }
 
 func (v ValueStruct)MarshalYAML() ([]byte, error) {
 	switch v.internal_type {
-	case "string":
-		return yaml.Marshal(v.value)
 	case "[]string":
 		return yaml.Marshal(v.list)
 	}
-	return nil, nil
+	// By default, encode a string
+	return yaml.Marshal(v.value)
 }
 
 func (v *ValueStruct) UnmarshalYAML(unmarchal func(interface{}) error) error {
@@ -64,6 +62,10 @@ func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
 	case []string:
 		ret.internal_type = "[]string"
 		ret.list = value.([]string)
+	case *ValueStruct:
+		*ret = *value.(*ValueStruct)
+	case ValueStruct:
+		*ret = value.(ValueStruct)
 	}
 	return
 }
