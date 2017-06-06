@@ -15,17 +15,19 @@ type DockerService struct {
 	Env     map[string]byte
 }
 
+func (p *PluginDef) define_socket() (remote bool, err error) {
+	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
+		err = p.socket_prepare()
+		return
+	}
+
+	err = fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
+	remote = true
+	return
+}
+
 // Define how to start
-func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
-	if p.Yaml.Runtime.Docker.Image == "" {
-		gotrace.Trace("No docker image defined. Not starting service '%s' as docker container", p.docker.name)
-		return false, nil
-	}
-	if p.local_debug {
-		gotrace.Trace("Local debugger activated. The service is not started from docker.")
-		return false, nil
-	}
-	is_docker = true
+func (p *PluginDef) docker_start_service() (err error) {
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
 	// initialize
@@ -47,16 +49,13 @@ func (p *PluginDef) docker_start_service() (is_docker bool, err error) {
 		p.docker.add_volume(p.Workspace_path + ":" + p.WorkspaceMount)
 	}
 
-	// Do we have a socket to prepare?
-	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
-		if err = p.socket_prepare(); err != nil {
-			return
-		}
+	// Define the socket
+	remote_url := false
+	remote_url, err = p.define_socket()
+	if err != nil { return }
+	if ! remote_url {
 		p.docker.socket_path = "/tmp/forjj-socks"
 		p.docker.add_volume(p.cmd.socket_path + ":" + p.docker.socket_path)
-	} else {
-		err = fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
-		return
 	}
 
 	if p.Yaml.Runtime.Docker.Volumes != nil {
@@ -137,13 +136,8 @@ func (p *PluginDef) check_service_ready() (err error) {
 			docker_container_remove(p.docker.name)
 			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
 			return
-		}
+		} else { return }
 
-		if p.CheckServiceUp() {
-			gotrace.Trace("Service is UP.")
-			p.service_booted = true
-			return
-		}
 	}
 	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
 	return

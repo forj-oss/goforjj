@@ -1,0 +1,15 @@
+package: goforjj
+import:
+- package: github.com/alecthomas/kingpin
+  version: ^2.2.4
+- package: github.com/forj-oss/forjj-modules
+  subpackages:
+  - trace
+- package: github.com/forj-oss/goforjj
+- package: github.com/gorilla/mux
+  version: ^1.3.0
+- package: github.com/parnurzeal/gorequest
+  version: ^0.2.15
+- package: gopkg.in/alecthomas/kingpin.v2
+  version: ^2.2.4
+- package: gopkg.in/yaml.v2

@@ -8,7 +8,12 @@ package main
 // __MYPLUGIN: {{   range $GroupName, $Group := $Object.Groups }}\
 type DataStruct struct { // __MYPLUGIN: type {{ go_vars $GroupName }}Struct struct {
 // __MYPLUGIN: {{     range $FlagName, $Flag := $Group.Flags }}\
-	data1 string `json:"data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"`
+// __MYPLUGIN: {{       if (eq $Flag.Type "[]string")}}\
+	Data2 []string `json:"data-data2"` // __MYPLUGIN: 	{{ go_vars $FlagName }} []string `json:"{{ $GroupName }}-{{ $FlagName }}"` // {{ $Flag.Help }}
+// __MYPLUGIN: {{       end }}\
+// __MYPLUGIN: {{       if (or (not $Flag.Type) (eq $Flag.Type "string"))}}\
+	Data1 string   `json:"data-data1"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $GroupName }}-{{ $FlagName }}"` // {{ $Flag.Help }}
+// __MYPLUGIN: {{       end }}\
 // __MYPLUGIN: {{     end }}\
 }
 
@@ -18,7 +23,12 @@ type DataStruct struct { // __MYPLUGIN: type {{ go_vars $GroupName }}Struct stru
 
 type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}InstanceStruct struct {
 // __MYPLUGIN: {{   range $ParamName, $Opts := $Object.Flags }}\
-	Param1 string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"`// {{ $Opts.Help }}
+// __MYPLUGIN: {{     if eq $Opts.Type "[]string"}}\
+	Param2 []string `json:"param2"` // __MYPLUGIN: 	{{ go_vars $ParamName }} []string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
+// __MYPLUGIN: {{     end }}\
+// __MYPLUGIN: {{     if or (not $Opts.Type) (eq $Opts.Type "string")}}\
+	Param1 string   `json:"param1"` // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
+// __MYPLUGIN: {{     end }}\
 // __MYPLUGIN: {{   end }}\
 // __MYPLUGIN: {{   if $Object.Groups }}\
 
