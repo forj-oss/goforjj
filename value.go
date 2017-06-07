@@ -2,7 +2,6 @@ package goforjj
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v2"
 	"fmt"
 	"reflect"
 )
@@ -22,13 +21,13 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v ValueStruct)MarshalYAML() ([]byte, error) {
+func (v ValueStruct)MarshalYAML() (interface{}, error) {
 	switch v.internal_type {
 	case "[]string":
-		return yaml.Marshal(v.list)
+		return v.list, nil
 	}
 	// By default, encode a string
-	return yaml.Marshal(v.value)
+	return v.value, nil
 }
 
 func (v *ValueStruct) UnmarshalYAML(unmarchal func(interface{}) error) error {
