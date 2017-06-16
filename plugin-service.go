@@ -113,7 +113,7 @@ func (p *PluginDef) socket_prepare() (err error) {
 
 // To stop the plugin service if the service was started before by goforjj
 func (p *PluginDef) PluginStopService() {
-	if !p.service || !p.service_booted {
+	if !p.service || !p.service_booted || p.local_debug {
 		return
 	}
 	p.url.Path = "quit"
