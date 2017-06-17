@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"text/template"
 	"bytes"
+	"strings"
 )
 
 type ValueStruct struct {
@@ -77,6 +78,7 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 
 	switch v.internal_type {
 	case "string":
+		if ! strings.Contains(v.value, "{{") { return nil }
 		if _, err := tmpl.Parse(v.value) ; err != nil {
 			return err
 		}
@@ -86,6 +88,9 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 		v.value = doc.String()
 	case "[]string":
 		for index, value := range v.list {
+			if ! strings.Contains(v.value, "{{") {
+				continue
+			}
 			if _, err := tmpl.Parse(value); err != nil {
 				return err
 			}
