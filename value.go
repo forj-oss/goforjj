@@ -7,6 +7,7 @@ import (
 	"text/template"
 	"bytes"
 	"strings"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type ValueStruct struct {
@@ -85,7 +86,9 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 		if err := tmpl.Execute(&doc, data) ; err != nil {
 			return err
 		}
-		v.value = doc.String()
+		ret := doc.String()
+		gotrace.Trace("'%s' were interpreted to '%s'", v.value, ret)
+		v.value = ret
 	case "[]string":
 		for index, value := range v.list {
 			if ! strings.Contains(v.value, "{{") {
@@ -97,7 +100,9 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 			if err := tmpl.Execute(&doc, data) ; err != nil {
 				return err
 			}
-			v.list[index] = doc.String()
+			ret := doc.String()
+			gotrace.Trace("'%s'[%d] were interpreted to '%s'", v.value, index, ret)
+			v.list[index] = ret
 		}
 	}
 	return nil
