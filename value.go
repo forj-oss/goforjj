@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"text/template"
+	"bytes"
+	"strings"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type ValueStruct struct {
@@ -67,6 +71,41 @@ func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
 		*ret = value.(ValueStruct)
 	}
 	return
+}
+
+func (v *ValueStruct)Evaluate(data interface{}) error {
+	var doc bytes.Buffer
+	tmpl := template.New("forjj_data")
+
+	switch v.internal_type {
+	case "string":
+		if ! strings.Contains(v.value, "{{") { return nil }
+		if _, err := tmpl.Parse(v.value) ; err != nil {
+			return err
+		}
+		if err := tmpl.Execute(&doc, data) ; err != nil {
+			return err
+		}
+		ret := doc.String()
+		gotrace.Trace("'%s' were interpreted to '%s'", v.value, ret)
+		v.value = ret
+	case "[]string":
+		for index, value := range v.list {
+			if ! strings.Contains(v.value, "{{") {
+				continue
+			}
+			if _, err := tmpl.Parse(value); err != nil {
+				return err
+			}
+			if err := tmpl.Execute(&doc, data) ; err != nil {
+				return err
+			}
+			ret := doc.String()
+			gotrace.Trace("'%s'[%d] were interpreted to '%s'", v.value, index, ret)
+			v.list[index] = ret
+		}
+	}
+	return nil
 }
 
 func (v *ValueStruct)SetIfFound(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
