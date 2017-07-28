@@ -88,7 +88,10 @@ func (a *__MYPLUGIN__App) listen_and_serve(ln net.Listener, server_chan chan boo
 func (a *__MYPLUGIN__App) server_set() {
 	if _, err := os.Stat(*a.params.socket_path); err != nil {
 		if os.IsNotExist(err) {
-			os.MkdirAll(*a.params.socket_path, 0755)
+			if err = os.MkdirAll(*a.params.socket_path, 0755) ; err != nil {
+				kingpin.FatalIfError(err, "Unable to create '%s'\n", *a.params.socket_path)
+			}
+			log.Printf("Path %s created.", *a.params.socket_path)
 		} else {
 			kingpin.FatalIfError(err, "Unable to create '%s'\n", *a.params.socket_path)
 		}
