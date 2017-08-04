@@ -46,11 +46,15 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 // Create request structure
 // ************************
 
+type ForjCommonStruct struct {
+// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.common }}\
+	ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
+	ForjjSourceMount  string `json:"forjj-source-mount"`  // __MYPLUGIN: {{ end }}\
+}
+
 type CreateReq struct {
 	Forj struct {
-// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.common }}\
-		ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
-		ForjjSourceMount  string `json:"forjj-source-mount"`  // __MYPLUGIN: {{ end }}\
+		ForjCommonStruct
 // __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.create }}\
 // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 // __MYPLUGIN: {{ end }}\
@@ -70,9 +74,7 @@ type CreateArgReq struct {
 
 type UpdateReq struct {
 	Forj struct {
-// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.common }}\
-		ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
-		ForjjSourceMount  string `json:"forjj-source-mount"`  // __MYPLUGIN: {{ end }}\
+		ForjCommonStruct
 		// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.update }}\
 		// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 		// __MYPLUGIN: {{ end }}\
@@ -92,9 +94,7 @@ type UpdateArgReq struct {
 
 type MaintainReq struct {
 	Forj struct {
-// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.common }}\
-		ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
-		ForjjSourceMount  string `json:"forjj-source-mount"`  // __MYPLUGIN: {{ end }}\
+		ForjCommonStruct
 // __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.maintain }}\
 // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 // __MYPLUGIN: {{ end }}\
