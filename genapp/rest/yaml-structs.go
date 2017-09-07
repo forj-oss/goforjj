@@ -120,6 +120,15 @@ type AppMaintainStruct struct { // __MYPLUGIN: type {{ go_vars $Objectname}}Main
 	// __MYPLUGIN: {{     end }}\
 	// __MYPLUGIN: {{   end }}\
 	// __MYPLUGIN: {{ end }}\
+	// __MYPLUGIN: {{ range $GroupName, $Group := $ObjectOpts.Groups }}\
+	// __MYPLUGIN: {{   range $ParamName, $Opts := $Group.Flags }}\
+	// __MYPLUGIN: {{     range $ActionName := $Opts.CliCmdActions }}\
+	// __MYPLUGIN: {{       if eq $ActionName "maintain" }}\
+	GroupToken string // __MYPLUGIN: 	{{ go_vars $GroupName }}{{ go_vars $ParamName }} string `json:"{{ $GroupName }}-{{ $ParamName }}"` // {{ $Opts.Help }}
+	// __MYPLUGIN: {{       end }}\
+	// __MYPLUGIN: {{     end }}\
+	// __MYPLUGIN: {{   end }}\
+								// __MYPLUGIN: {{ end }}\
 }
 
 // __MYPLUGIN: {{   end }}\
