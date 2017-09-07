@@ -114,8 +114,10 @@ type MaintainArgReq struct {
 // __MYPLUGIN: {{   if object_has_secure $ObjectOpts }}\
 type AppMaintainStruct struct { // __MYPLUGIN: type {{ go_vars $Objectname}}MaintainStruct struct {
 	// __MYPLUGIN: {{ range $ParamName, $Opts := $ObjectOpts.Flags }}\
-	// __MYPLUGIN: {{   if $Opts.Options.Secure }}\
+	// __MYPLUGIN: {{   range $ActionName := $Opts.CliCmdActions }}\
+	// __MYPLUGIN: {{     if eq $ActionName "maintain" }}\
 	Token string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
+	// __MYPLUGIN: {{     end }}\
 	// __MYPLUGIN: {{   end }}\
 	// __MYPLUGIN: {{ end }}\
 }
