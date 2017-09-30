@@ -104,7 +104,7 @@ type MaintainReq struct {
 
 type MaintainArgReq struct {
 // __MYPLUGIN: {{ range $Objectname, $Opts := .Yaml.Objects }}\
-// __MYPLUGIN: {{   if object_has_flags_for $Opts }}\
+// __MYPLUGIN: {{   if object_has_flags_for "maintain" $Opts }}\
 	App map[string]AppMaintainStruct `json:"app"` // __MYPLUGIN: 	{{ go_vars $Objectname}} map[string]{{ go_vars $Objectname}}MaintainStruct `json:"{{$Objectname}}"` // Object details
 // __MYPLUGIN: {{   end }}\
 // __MYPLUGIN: {{ end }}\
