@@ -75,9 +75,9 @@ type CreateArgReq struct {
 type UpdateReq struct {
 	Forj struct {
 		ForjCommonStruct
-		// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.update }}\
-		// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
-		// __MYPLUGIN: {{ end }}\
+// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.update }}\
+// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
+// __MYPLUGIN: {{ end }}\
 	}
 	Objects UpdateArgReq
 }
@@ -85,7 +85,7 @@ type UpdateReq struct {
 type UpdateArgReq struct {
 // __MYPLUGIN: {{ range $Objectname, $Opts := .Yaml.Objects }}\
 	App map[string]AppInstanceStruct // __MYPLUGIN: 	{{ go_vars $Objectname}} map[string]{{ go_vars $Objectname}}InstanceStruct `json:"{{$Objectname}}"` // Object details
-	// __MYPLUGIN: {{ end }}\
+// __MYPLUGIN: {{ end }}\
 }
 
 // **************************
@@ -104,31 +104,27 @@ type MaintainReq struct {
 
 type MaintainArgReq struct {
 // __MYPLUGIN: {{ range $Objectname, $Opts := .Yaml.Objects }}\
-// __MYPLUGIN: {{   if object_has_secure $Opts }}\
+// __MYPLUGIN: {{   if object_has_flags_for $Opts }}\
 	App map[string]AppMaintainStruct `json:"app"` // __MYPLUGIN: 	{{ go_vars $Objectname}} map[string]{{ go_vars $Objectname}}MaintainStruct `json:"{{$Objectname}}"` // Object details
-	// __MYPLUGIN: {{   end }}\
-	// __MYPLUGIN: {{ end }}\
+// __MYPLUGIN: {{   end }}\
+// __MYPLUGIN: {{ end }}\
 }
 
 // __MYPLUGIN: {{ range $Objectname, $ObjectOpts := .Yaml.Objects }}\
-// __MYPLUGIN: {{   if object_has_secure $ObjectOpts }}\
+// __MYPLUGIN: {{   if object_has_flags_for "maintain" $ObjectOpts }}\
 type AppMaintainStruct struct { // __MYPLUGIN: type {{ go_vars $Objectname}}MaintainStruct struct {
-	// __MYPLUGIN: {{ range $ParamName, $Opts := $ObjectOpts.Flags }}\
-	// __MYPLUGIN: {{   range $ActionName := $Opts.CliCmdActions }}\
-	// __MYPLUGIN: {{     if eq $ActionName "maintain" }}\
+// __MYPLUGIN: {{     range $ParamName, $Opts := $ObjectOpts.Flags }}\
+// __MYPLUGIN: {{       if inList "maintain" $Opts.CliCmdActions }}\
 	Token string // __MYPLUGIN: 	{{ go_vars $ParamName }} string `json:"{{ $ParamName }}"` // {{ $Opts.Help }}
-	// __MYPLUGIN: {{     end }}\
-	// __MYPLUGIN: {{   end }}\
-	// __MYPLUGIN: {{ end }}\
-	// __MYPLUGIN: {{ range $GroupName, $Group := $ObjectOpts.Groups }}\
-	// __MYPLUGIN: {{   range $ParamName, $Opts := $Group.Flags }}\
-	// __MYPLUGIN: {{     range $ActionName := $Opts.CliCmdActions }}\
-	// __MYPLUGIN: {{       if eq $ActionName "maintain" }}\
+// __MYPLUGIN: {{       end }}\
+// __MYPLUGIN: {{     end }}\
+// __MYPLUGIN: {{     range $GroupName, $Group := $ObjectOpts.Groups }}\
+// __MYPLUGIN: {{       range $ParamName, $Opts := $Group.Flags }}\
+// __MYPLUGIN: {{         if inList "maintain" $Opts.CliCmdActions }}\
 	GroupToken string // __MYPLUGIN: 	{{ go_vars $GroupName }}{{ go_vars $ParamName }} string `json:"{{ $GroupName }}-{{ $ParamName }}"` // {{ $Opts.Help }}
-	// __MYPLUGIN: {{       end }}\
-	// __MYPLUGIN: {{     end }}\
-	// __MYPLUGIN: {{   end }}\
-								// __MYPLUGIN: {{ end }}\
+// __MYPLUGIN: {{         end }}\
+// __MYPLUGIN: {{       end }}\
+// __MYPLUGIN: {{     end }}\
 }
 
 // __MYPLUGIN: {{   end }}\

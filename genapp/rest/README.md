@@ -126,7 +126,7 @@ So, if you change your plugin definition, you need to execute a
 
 TBD
 
-# Developping Forjj template
+# Developing Forjj template
 
 The collection of files used to build the plugin is defined in ../models.go
 

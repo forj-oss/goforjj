@@ -151,6 +151,21 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 			return strings.Replace(str, "-", "_", -1)
 		},
 		"has_prefix": strings.HasPrefix,
+		"object_has_flags_for": func(action string, object goforjj.YamlObject) bool {
+			for _, flag := range object.Flags {
+				if inStringList(action, flag.CliCmdActions...) == action {
+					return true
+				}
+			}
+			for _, group := range object.Groups {
+				for _, flag:= range group.Flags {
+					if inStringList(action, flag.CliCmdActions...) == action {
+						return true
+					}
+				}
+			}
+			return false
+		},
 		"object_has_secure": func(object goforjj.YamlObject) bool {
 			for _, flag := range object.Flags {
 				if flag.Options.Secure {
