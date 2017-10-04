@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"os/user"
+	"strings"
 )
 
 // Load yaml raw data in YamlPlugin data structure
@@ -102,4 +103,19 @@ func (p *PluginDef) PluginLoadFrom(name string, runtime *YamlPluginRuntime) erro
 	p.Yaml.Runtime = *runtime
 	gotrace.Trace("'%s' has been reloaded.", p.Yaml.Name)
 	return nil
+}
+
+func (o *YamlObject)HasValidKey(key string) bool {
+	if _, found := o.Flags[key]; found {
+		return true
+	}
+	for group_name, group := range o.Groups {
+		if len(group_name) + 1 < len(key) && strings.HasPrefix(key, group_name) {
+			key_name := key[len(group_name):]
+			if _, found := group.Flags[key_name] ; found {
+				return true
+			}
+		}
+	}
+	return false
 }
