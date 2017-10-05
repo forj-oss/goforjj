@@ -111,7 +111,7 @@ func (o *YamlObject)HasValidKey(key string) bool {
 	}
 	for group_name, group := range o.Groups {
 		if len(group_name) + 1 < len(key) && strings.HasPrefix(key, group_name) {
-			key_name := key[len(group_name):]
+			key_name := key[len(group_name) + 1:]
 			if _, found := group.Flags[key_name] ; found {
 				return true
 			}
