@@ -2,6 +2,8 @@ package goforjj
 
 // Yaml data structure
 
+const ObjectApp = "app"
+
 // Data structure in /
 // ---
 // plugin: string - Driver name (Name)
