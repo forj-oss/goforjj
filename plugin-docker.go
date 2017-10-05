@@ -77,28 +77,18 @@ func (p *PluginDef) docker_start_service() (err error) {
 	}
 
 	if p.Yaml.Runtime.Docker.Dood {
-		// In context of dood, the container must respect few things:
-		// - The container is started as root
-		// - the start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate unprivileged user.
-		// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
-		//   substitute.
-		// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
-		//   provided by forjj with --docker-exe
-		// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
-		//   must use a sudoers so your plugin user could call docker against the host server socket.
 		if p.dockerBin == "" {
 			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
 			return
 		}
-		gotrace.Trace("Adding docker dood volumes...")
-		p.docker.add_volume("/var/run/docker.sock:/var/run/docker.sock")
-		p.docker.add_volume(p.dockerBin + ":/bin/docker")
-		p.docker.add_env("DOOD_SRC", p.Source_path)
+		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		p.docker.opts = append(p.docker.opts, "-u", "root:root")
-		p.docker.add_env("UID", strconv.Itoa(os.Getuid()))
-		p.docker.add_env("GID", strconv.Itoa(os.Getgid()))
+		if dood_opts, err := p.GetDockerDoodParamaters() ; err != nil {
+			return err
+		} else {
+			p.docker.opts = append(p.docker.opts, dood_opts...)
+		}
 	} else {
 		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
 	}
@@ -111,6 +101,35 @@ func (p *PluginDef) docker_start_service() (err error) {
 	}
 
 	err = p.check_service_ready()
+
+	return
+}
+
+func (p *PluginDef) GetDockerDoodParamaters() (ret []string, err error) {
+	if !p.Yaml.Runtime.Docker.Dood {
+		return nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
+	}
+	// In context of dood, the container must respect few things:
+	// - The container is started as root
+	// - the start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate unprivileged user.
+	// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
+	//   substitute.
+	// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
+	//   provided by forjj with --docker-exe
+	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
+	//   must use a sudoers so your plugin user could call docker against the host server socket.
+	if p.dockerBin == "" {
+		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
+		return
+	}
+	ret = make([]string, 12)
+	ret = append(ret, "-v", "/var/run/docker.sock:/var/run/docker.sock")
+	ret = append(ret, "-v", p.dockerBin + ":/bin/docker")
+	ret = append(ret, "-e", "DOOD_SRC=" + p.Source_path)
+
+	ret = append(ret, "-u", "root:root")
+	ret = append(ret, "-e", "UID=" + strconv.Itoa(os.Getuid()))
+	ret = append(ret, "-e", "GID=" + strconv.Itoa(os.Getgid()))
 
 	return
 }
