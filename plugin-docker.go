@@ -115,6 +115,34 @@ func (p *PluginDef) docker_start_service() (err error) {
 	return
 }
 
+func (p *PluginDef) GetDockerDoodParamaters() (ret string, err error) {
+	if !p.Yaml.Runtime.Docker.Dood {
+		return
+	}
+	// In context of dood, the container must respect few things:
+	// - The container is started as root
+	// - the start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate unprivileged user.
+	// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
+	//   substitute.
+	// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
+	//   provided by forjj with --docker-exe
+	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
+	//   must use a sudoers so your plugin user could call docker against the host server socket.
+	if p.dockerBin == "" {
+		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
+		return
+	}
+	ret = "-v /var/run/docker.sock:/var/run/docker.sock"
+	ret += " -v " + p.dockerBin + ":/bin/docker"
+	ret += " -e DOOD_SRC=" + p.Source_path
+
+	ret += " -u root:root"
+	ret += " -e UID=" + strconv.Itoa(os.Getuid())
+	ret += " -e GID=" + strconv.Itoa(os.Getgid())
+
+	return
+}
+
 // Regularly testing the service response. fails after a timeout.
 func (p *PluginDef) check_service_ready() (err error) {
 	gotrace.Trace("Checking service status...")
