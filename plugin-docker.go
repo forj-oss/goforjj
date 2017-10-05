@@ -122,7 +122,7 @@ func (p *PluginDef) GetDockerDoodParamaters() (ret []string, err error) {
 		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
 		return
 	}
-	ret = make([]string, 12)
+	ret = make([]string, 0, 12)
 	ret = append(ret, "-v", "/var/run/docker.sock:/var/run/docker.sock")
 	ret = append(ret, "-v", p.dockerBin + ":/bin/docker")
 	ret = append(ret, "-e", "DOOD_SRC=" + p.Source_path)
