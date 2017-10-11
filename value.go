@@ -80,7 +80,9 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 	switch v.internal_type {
 	case "string":
 		if ! strings.Contains(v.value, "{{") { return nil }
-		if _, err := tmpl.Parse(v.value) ; err != nil {
+		if _, err := tmpl.Funcs(template.FuncMap{
+			"ToLower" : strings.ToLower,
+		}).Parse(v.value) ; err != nil {
 			return err
 		}
 		if err := tmpl.Execute(&doc, data) ; err != nil {
@@ -94,7 +96,9 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 			if ! strings.Contains(v.value, "{{") {
 				continue
 			}
-			if _, err := tmpl.Parse(value); err != nil {
+			if _, err := tmpl.Funcs(template.FuncMap{
+				"ToLower" : strings.ToLower,
+			}).Parse(value); err != nil {
 				return err
 			}
 			if err := tmpl.Execute(&doc, data) ; err != nil {
