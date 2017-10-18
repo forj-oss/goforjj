@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const Latest = "latest"
+
 // Load yaml raw data in YamlPlugin data structure
 func (p *PluginDef) PluginDefLoad(yaml_data []byte) error {
 	return yaml.Unmarshal([]byte(yaml_data), &p.Yaml)
@@ -83,6 +85,15 @@ func (p *PluginDef) PluginDockerBin(thePath string) error {
 		return fmt.Errorf("Invalid PluginDockerBin '%s'. %s", thePath, err)
 	}
 	return nil
+}
+
+func (p *PluginDef) PluginSetVersion(version string) {
+	if version == "" {
+		p.Version = Latest
+	} else {
+		p.Version = version
+	}
+	gotrace.Trace("Plugin version selected: %s", p.Version)
 }
 
 // This function do a load of the plugin Def Runtime section

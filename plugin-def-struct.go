@@ -91,16 +91,6 @@ type YamlPluginRuntime struct {
 	Service      YamlPluginComm `yaml:",omitempty"`
 }
 
-//data structure in /runtime/docker
-
-type DockerStruct struct {
-	Image   string
-	Dood    bool              `yaml:",omitempty"`
-	Volumes []string          `yaml:",omitempty"`
-	Env     map[string]string `yaml:",omitempty"`
-	User    string            `yaml:",omitempty"`
-}
-
 // data structure in /runtime/service
 // 'service' defines how forjj communicate with the driver
 // If service is not defined, socket will be used.
