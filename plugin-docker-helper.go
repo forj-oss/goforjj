@@ -20,17 +20,22 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
 	// Until Docker comes with a docker run --pull ... https://github.com/moby/moby/issues/34394
 	// Forjj will do the refresh only for latest image by default.
 	if p.Version == Latest { // Check and refresh image if needed.
-		if container_image, err := docker_inspect(p.docker.name, ".Image") ; err == nil {
+		gotrace.Trace("Latest image policy check:")
+		if _, err := docker_image_pull(Image); err != nil {
+			return "", err
+		}
+		if container_image, err := docker_inspect(p.docker.name, ".Image") ; err == nil && container_image != "" {
 			if image_info, err := docker_inspect(container_image, ".RepoTags") ; err != nil {
 				return "", err
 			} else {
 				if ! strings.Contains(image_info, Image) {
-					if _, err = docker_container_remove(p.docker.name) ; err != nil {
+					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
+						p.docker.name)
+					if _, err = docker_container_remove(p.docker.name); err != nil {
 						return "", err
 					}
-					if _, err = docker_image_pull(Image) ; err != nil {
-						return "", err
-					}
+				} else {
+					gotrace.Trace("'%s' do not need to be refreshed.", Image)
 				}
 			}
 		}
