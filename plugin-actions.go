@@ -12,12 +12,6 @@ import (
 // If needed in a next iteration, we can move the API to match fully the RESTFul API with forjj objects/actions.
 // else start a shell or a container to get the json data.
 func (p *PluginDef) PluginRunAction(action string, d *PluginReqData) (*PluginResult, error) {
-	return p.api_do(action, d)
-}
-
-// api_do Internally execute the REST POST Call with parameters
-// returns the decoded data into predefined recognized PluginResult sructure
-func (p *PluginDef) api_do(action string, d *PluginReqData) (*PluginResult, error) {
 	p.url.Path = action
 	var (
 		data []byte

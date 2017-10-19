@@ -14,8 +14,33 @@ func (p *PluginDef) docker_container_restart(cmd string, args []string) (string,
 	if Image == "" {
 		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
 	}
+	Image += ":" + p.Version
 
-	// TODO: Compare container inspect with requested container in order to restart or remove/start
+	// Docker pull policy: Consider latest image tag as Mutable and others as Immutable.
+	// Until Docker comes with a docker run --pull ... https://github.com/moby/moby/issues/34394
+	// Forjj will do the refresh only for latest image by default.
+	if p.Version == Latest { // Check and refresh image if needed.
+		gotrace.Trace("Latest image policy check:")
+		if _, err := docker_image_pull(Image); err != nil {
+			return "", err
+		}
+		if container_image, err := docker_inspect(p.docker.name, ".Image") ; err == nil && container_image != "" {
+			if image_info, err := docker_inspect(container_image, ".RepoTags") ; err != nil {
+				return "", err
+			} else {
+				if ! strings.Contains(image_info, Image) {
+					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
+						p.docker.name)
+					if _, err = docker_container_remove(p.docker.name); err != nil {
+						return "", err
+					}
+				} else {
+					gotrace.Trace("'%s' do not need to be refreshed.", Image)
+				}
+			}
+		}
+	}
+
 	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
 	ret, err := docker_container_status(p.docker.name)
 	if err != nil {
@@ -49,7 +74,7 @@ func (p *PluginDef) cleanup_socket(status string) {
 		file := path.Join(p.cmd.socket_path, p.cmd.socket_file)
 		if _, err := os.Stat(file); err == nil {
 			os.Remove(file)
-			gotrace.Trace("Removed socket file '%s' related toa  non running container", file)
+			gotrace.Trace("Removed socket file '%s' related to a non running container", file)
 		}
 	}
 
@@ -82,9 +107,7 @@ func docker_container_start(name string) (string, error) {
 }
 
 func docker_container_status(name string) (string, error) {
-	gotrace.Trace("Checking container '%s' status", name)
-	cmd_args := append([]string{}, "sudo", "docker", "inspect", "--format", "{{ .State.Status }}", name)
-	return cmd_run(cmd_args)
+	return docker_inspect(name, ".State.Status")
 }
 
 func docker_container_logs(name string) (string, error) {
@@ -96,5 +119,17 @@ func docker_container_logs(name string) (string, error) {
 func docker_container_remove(name string) (string, error) {
 	gotrace.Trace("Removing container '%s'", name)
 	cmd_args := append([]string{}, "sudo", "docker", "rm", "-f", name)
+	return cmd_run(cmd_args)
+}
+
+func docker_image_pull(name string) (string, error) {
+	gotrace.Trace("Pulling image '%s'", name)
+	cmd_args := append([]string{}, "sudo", "docker", "pull", name)
+	return cmd_run(cmd_args)
+}
+
+func docker_inspect(name, data string) (string, error) {
+	gotrace.Trace("Getting info '%s' from '%s'", data, name)
+	cmd_args := append([]string{}, "sudo", "docker", "inspect", "--format", "{{ " + data + " }}", name)
 	return cmd_run(cmd_args)
 }
