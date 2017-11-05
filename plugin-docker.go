@@ -84,10 +84,11 @@ func (p *PluginDef) docker_start_service() (err error) {
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if dood_opts, err := p.GetDockerDoodParamaters() ; err != nil {
+		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters() ; err != nil {
 			return err
 		} else {
-			p.docker.opts = append(p.docker.opts, dood_opts...)
+			p.docker.opts = append(p.docker.opts, dood_mt_opts...)
+			p.docker.opts = append(p.docker.opts, dood_bc_opts...)
 		}
 	} else {
 		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
@@ -105,15 +106,23 @@ func (p *PluginDef) docker_start_service() (err error) {
 	return
 }
 
-func (p *PluginDef) GetDockerDoodParamaters() (ret []string, err error) {
+// GetDockerDoodParamaters returns 2 Arrays of strings
+//
+// mount : contains mount information to share.
+// become: contains information required by a container to add user and become that user to start the process
+//         Depending on the container, `become` can be ignored if the container do not need to become user
+//         sent by forjj.
+func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error) {
 	if !p.Yaml.Runtime.Docker.Dood {
-		return nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
+		return nil, nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
 	}
 	// In context of dood, the container must respect few things:
 	// - The container is started as root
-	// - the start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate unprivileged user.
+	// - the container start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate
+	//   unprivileged user. ie useradd or equivalent.
 	// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
 	//   substitute.
+	//   ie su - <User>
 	// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
 	//   provided by forjj with --docker-exe
 	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
@@ -122,14 +131,15 @@ func (p *PluginDef) GetDockerDoodParamaters() (ret []string, err error) {
 		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
 		return
 	}
-	ret = make([]string, 0, 12)
-	ret = append(ret, "-v", "/var/run/docker.sock:/var/run/docker.sock")
-	ret = append(ret, "-v", p.dockerBin + ":/bin/docker")
-	ret = append(ret, "-e", "DOOD_SRC=" + p.Source_path)
+	mount = make([]string, 0, 6)
+	mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
+	mount = append(mount, "-v", p.dockerBin + ":/bin/docker")
+	mount = append(mount, "-e", "DOOD_SRC=" + p.Source_path)
 
-	ret = append(ret, "-u", "root:root")
-	ret = append(ret, "-e", "UID=" + strconv.Itoa(os.Getuid()))
-	ret = append(ret, "-e", "GID=" + strconv.Itoa(os.Getgid()))
+	become = make([]string, 0, 6)
+	become = append(become, "-u", "root:root")
+	become = append(become, "-e", "UID=" + strconv.Itoa(os.Getuid()))
+	become = append(become, "-e", "GID=" + strconv.Itoa(os.Getgid()))
 
 	return
 }
