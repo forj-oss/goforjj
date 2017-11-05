@@ -84,7 +84,7 @@ func (p *PluginDef) docker_start_service() (err error) {
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParamaters() ; err != nil {
+		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters() ; err != nil {
 			return err
 		} else {
 			p.docker.opts = append(p.docker.opts, dood_mt_opts...)
@@ -112,7 +112,7 @@ func (p *PluginDef) docker_start_service() (err error) {
 // become: contains information required by a container to add user and become that user to start the process
 //         Depending on the container, `become` can be ignored if the container do not need to become user
 //         sent by forjj.
-func (p *PluginDef) GetDockerDoodParamaters() (mount, become []string, err error) {
+func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error) {
 	if !p.Yaml.Runtime.Docker.Dood {
 		return nil, nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
 	}
