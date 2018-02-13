@@ -132,7 +132,7 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 		return
 	}
 
-	if v := os.Getenv("DOCKER_DOOD") ; v != "" {
+	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " ") ; v != "" {
 		mount = strings.Split(v, " ")
 	} else {
 		mount = make([]string, 0, 6)
@@ -141,7 +141,7 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 		mount = append(mount, "-e", "DOOD_SRC=" + p.Source_path)
 	}
 
-	if v := os.Getenv("DOCKER_DOOD_BECOME"); v != "" {
+	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
 		become = strings.Split(v, " ")
 	} else {
 		become = make([]string, 0, 6)
