@@ -106,7 +106,7 @@ func (p *PluginDef) docker_start_service() (err error) {
 	return
 }
 
-// GetDockerDoodParamaters returns 2 Arrays of strings
+// GetDockerDoodParameters returns 2 Arrays of strings
 //
 // mount : contains mount information to share.
 // become: contains information required by a container to add user and become that user to start the process
@@ -131,15 +131,24 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
 		return
 	}
-	mount = make([]string, 0, 6)
-	mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
-	mount = append(mount, "-v", p.dockerBin + ":/bin/docker")
-	mount = append(mount, "-e", "DOOD_SRC=" + p.Source_path)
 
-	become = make([]string, 0, 6)
-	become = append(become, "-u", "root:root")
-	become = append(become, "-e", "UID=" + strconv.Itoa(os.Getuid()))
-	become = append(become, "-e", "GID=" + strconv.Itoa(os.Getgid()))
+	if v := os.Getenv("DOCKER_DOOD") ; v != "" {
+		mount = strings.Split(v, " ")
+	} else {
+		mount = make([]string, 0, 6)
+		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
+		mount = append(mount, "-v", p.dockerBin + ":/bin/docker")
+		mount = append(mount, "-e", "DOOD_SRC=" + p.Source_path)
+	}
+
+	if v := os.Getenv("DOCKER_DOOD_BECOME"); v != "" {
+		become = strings.Split(v, " ")
+	} else {
+		become = make([]string, 0, 6)
+		become = append(become, "-u", "root:root")
+		become = append(become, "-e", "UID=" + strconv.Itoa(os.Getuid()))
+		become = append(become, "-e", "GID=" + strconv.Itoa(os.Getgid()))
+	}
 
 	return
 }
