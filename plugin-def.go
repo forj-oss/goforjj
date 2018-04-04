@@ -60,6 +60,11 @@ func (p *PluginDef) PluginSetWorkspace(path string) {
 	p.Workspace_path = path
 }
 
+func (p *PluginDef) PluginSetDeployment(path string) {
+	p.DeployPath = path
+}
+
+
 // Declare the socket path. It will be created later by function socket_prepare
 func (p *PluginDef) PluginSocketPath(path string) {
 	p.cmd.socket_path = path
