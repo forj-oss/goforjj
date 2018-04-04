@@ -11,6 +11,7 @@ type PluginDef struct {
 	Yaml           YamlPlugin            // Yaml data definition
 	Source_path    string                // Plugin source path from Forjj point of view
 	Workspace_path string                // Plugin Workspace path from Forjj point of view
+	DeployPath     string                // Plugin Deployment path 
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
 	docker         docker_container      // Define data to start the plugin as docker container
