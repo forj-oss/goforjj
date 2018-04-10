@@ -20,6 +20,7 @@ type PluginDef struct {
 	url            *url.URL              // REST API url
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
 	SourceMount    string                // Where the driver will have his source code.
+	DestMount      string                // Where the driver will have his generated code.
 	WorkspaceMount string                // where the driver has his workspace.
 	Version        string                // Plugin version to load
 	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running

@@ -2,12 +2,13 @@ package goforjj
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type DockerService struct {
@@ -26,7 +27,7 @@ func (p *PluginDef) define_socket() (remote bool, err error) {
 	return
 }
 
-// Define how to start
+// docker_start_service Define how to start
 func (p *PluginDef) docker_start_service() (err error) {
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
@@ -43,6 +44,9 @@ func (p *PluginDef) docker_start_service() (err error) {
 	p.SourceMount = "/src/"
 	p.docker.add_volume(p.Source_path + ":" + p.SourceMount)
 
+	p.DestMount = "/deploy/"
+	p.docker.add_volume(p.DeployPath + ":" + p.DestMount)
+
 	// Workspace path
 	if p.Workspace_path != "" {
 		p.WorkspaceMount = "/workspace/"
@@ -52,8 +56,10 @@ func (p *PluginDef) docker_start_service() (err error) {
 	// Define the socket
 	remote_url := false
 	remote_url, err = p.define_socket()
-	if err != nil { return }
-	if ! remote_url {
+	if err != nil {
+		return
+	}
+	if !remote_url {
 		p.docker.socket_path = "/tmp/forjj-socks"
 		p.docker.add_volume(p.cmd.socket_path + ":" + p.docker.socket_path)
 	}
@@ -84,7 +90,7 @@ func (p *PluginDef) docker_start_service() (err error) {
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters() ; err != nil {
+		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters(); err != nil {
 			return err
 		} else {
 			p.docker.opts = append(p.docker.opts, dood_mt_opts...)
@@ -132,13 +138,13 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 		return
 	}
 
-	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " ") ; v != "" {
+	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " "); v != "" {
 		mount = strings.Split(v, " ")
 	} else {
 		mount = make([]string, 0, 6)
 		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
-		mount = append(mount, "-v", p.dockerBin + ":/bin/docker")
-		mount = append(mount, "-e", "DOOD_SRC=" + p.Source_path)
+		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
+		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
@@ -146,8 +152,8 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 	} else {
 		become = make([]string, 0, 6)
 		become = append(become, "-u", "root:root")
-		become = append(become, "-e", "UID=" + strconv.Itoa(os.Getuid()))
-		become = append(become, "-e", "GID=" + strconv.Itoa(os.Getgid()))
+		become = append(become, "-e", "UID="+strconv.Itoa(os.Getuid()))
+		become = append(become, "-e", "GID="+strconv.Itoa(os.Getgid()))
 	}
 
 	return
@@ -174,7 +180,9 @@ func (p *PluginDef) check_service_ready() (err error) {
 			docker_container_remove(p.docker.name)
 			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
 			return
-		} else { return }
+		} else {
+			return
+		}
 
 	}
 	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
