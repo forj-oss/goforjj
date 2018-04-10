@@ -44,8 +44,10 @@ func (p *PluginDef) docker_start_service() (err error) {
 	p.SourceMount = "/src/"
 	p.docker.add_volume(p.Source_path + ":" + p.SourceMount)
 
-	p.DestMount = "/deploy/"
-	p.docker.add_volume(p.DeployPath + ":" + p.DestMount)
+	if p.DeployPath != "" { // For compatibility reason with old forjj.
+		p.DestMount = "/deploy/"
+		p.docker.add_volume(p.DeployPath + ":" + p.DestMount)
+	}
 
 	// Workspace path
 	if p.Workspace_path != "" {
