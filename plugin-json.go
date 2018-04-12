@@ -1,18 +1,18 @@
 package goforjj
 
 const (
-	source = "source"
-	deploy = "deploy"
+	FilesSource = "source"
+	FilesDeploy = "deploy"
 )
 
 // AddFile add a file the list of files Forjj will take care in GIT.
 //
 func (d *PluginData) AddFile(where, file string) {
 	if where == "" {
-		where = deploy
+		where = FilesDeploy
 	}
-	if where != deploy && where != source {
-		where = deploy
+	if where != FilesDeploy && where != FilesSource {
+		where = FilesDeploy
 	}
 	if d.Files == nil {
 		d.Files = make(map[string][]string)
