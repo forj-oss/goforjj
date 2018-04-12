@@ -49,7 +49,7 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 type ForjCommonStruct struct {
 	ForjjDeploymentEnv string `json:"deployment-env"` // Deployment environment name
 	// __MYPLUGIN: {{ range $FlagName, $FlagOpts := .Yaml.Tasks.common }}\
-	ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
+	ForjjInstanceName string `json:"forjj-instance-name"` // __MYPLUGIN: 	{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 	ForjjSourceMount  string `json:"forjj-source-mount"`  // __MYPLUGIN: {{ end }}\
 }
 
