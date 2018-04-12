@@ -27,7 +27,7 @@ type PluginData struct {
 	Status        string                    // Status message
 	CommitMessage string                    `json:",omitempty"` // Action commit message for Create/Update
 	ErrorMessage  string                    // Found only if error detected
-	Files         []string                  `json:",omitempty"` // List of files managed by the plugin
+	Files         map[string][]string       `json:",omitempty"` // List of files managed by the plugin
 	Options       map[string]PluginOption   `json:",omitempty"` // List of options needed at maintain use case, returned from create/update. Usually used to provide credentials.
 }
 
