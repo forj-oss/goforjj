@@ -90,6 +90,7 @@ The yaml file must be structured as follow:
 plugin: <PluginName>       // Required
 version: <PluginVersion>   // Optional
 description: <description> // Optional
+created_flag_file: "{{ .InstanceName }}/{{.Name}}.yaml" # Optional. By default "{{ .InstanceName }}/{{.Name}}.yaml". Usually is the <plugin>.yaml source file stored in the infra source repository. Ex: github/github.yaml
 runtime:   // Define how the plugin is started
   docker:  // This is the default and only way to get it working today.
     image: "string" // Docker Image name to use
