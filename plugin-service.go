@@ -2,20 +2,22 @@ package goforjj
 
 import (
 	"fmt"
-	"github.com/parnurzeal/gorequest"
-	"github.com/forj-oss/forjj-modules/trace"
 	"net"
 	"net/url"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/parnurzeal/gorequest"
 )
 
 const defaultTimeout = 32 * time.Second
 
 func (p *PluginDef) define_as_local_paths() {
 	p.SourceMount = p.Source_path
+	p.DestMount = p.DeployPath
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
@@ -30,7 +32,9 @@ func (p *PluginDef) define_as_local_paths() {
 }
 
 func (p *PluginDef) command_start_service() (err error) {
-	if _, err = p.define_socket() ; err != nil { return }
+	if _, err = p.define_socket(); err != nil {
+		return
+	}
 
 	p.define_as_local_paths()
 
@@ -59,7 +63,9 @@ func (p *PluginDef) PluginStartService() (err error) {
 		err = p.command_start_service()
 	}
 
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	// Do a ping of the service.
 	p.CheckServiceUp()
@@ -89,7 +95,9 @@ func (p *PluginDef) CheckServiceUp() bool {
 // Create the socket link for http and his path.
 func (p *PluginDef) socket_prepare() (err error) {
 	// Define it once
-	if p.req != nil { return }
+	if p.req != nil {
+		return
+	}
 
 	p.cmd.socket_file = p.Yaml.Name + ".sock"
 	socket := path.Join(p.cmd.socket_path, p.cmd.socket_file)
