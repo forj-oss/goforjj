@@ -143,10 +143,11 @@ func (p *PluginDef) GetDockerDoodParameters() (mount, become []string, err error
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " "); v != "" {
 		mount = strings.Split(v, " ")
 	} else {
-		mount = make([]string, 0, 6)
+		mount = make([]string, 0, 8)
 		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
 		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
 		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
+		mount = append(mount, "-e", "DOOD_DEPLOY="+p.DeployPath)
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
