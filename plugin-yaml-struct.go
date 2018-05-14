@@ -1,47 +1,12 @@
 package goforjj
 
 // Yaml data structure
+// See root one in yaml-plugin.go
 
-const ObjectApp = "app"
-
-// Data structure in /
-// ---
-// plugin: string - Driver name (Name)
-// version: string - driver version
-// description: string - driver description
-// runtime: struct - See YamlPluginRuntime
-// actions: hash of struct - See YamlPluginDef - must be common/create/update/maintain as hash keys only.
-type YamlPlugin struct {
-	Name        string `yaml:"plugin"`
-	Version     string
-	Description string
-	CreatedFile string `yaml:"created_flag_file"`
-	Runtime     YamlPluginRuntime
-	YamlPluginTasksObjects `yaml:",inline"`
-	instancesDetails map[string]*YamlPluginTasksObjects
-}
 
 type YamlPluginTasksObjects struct {
 	Tasks       map[string]map[string]YamlFlag `yaml:"task_flags"`
 	Objects     map[string]YamlObject
-}
-
-// data structure in /objects/<Object Name>
-//     flags:
-//       <flag name>:
-//         help: string - Help attached to the object
-//         actions: collection of forjj actions (add/update/rename/remove/list)
-type YamlObject struct { // Ex: object projects. Instances: prj1, prj2, ...
-	Actions    []string `yaml:"default-actions"` // Collection of actions for the group given.
-	Help       string
-	FlagsScope string `yaml:"flags-scope"` // 'object' by default. flag name is NOT prefixed
-	// 'instance' flag name is prefixed by instance name.
-	FieldsScope string `yaml:"fields-scope"` // 'global' by default. Means field is added at Object level.
-	// 'instance' Means fields is added at object instance level.
-	Identified_by_flag string // Multiple object configuration. each instance will have a key from a flag value
-	Groups             map[string]YamlObjectGroup
-	Flags              map[string]YamlFlag
-	Lists              map[string]YamlObjectList
 }
 
 // data structure in /objects/<Object Name>/lists/<list_name>
@@ -113,3 +78,4 @@ type YamlPluginComm struct {
 	Command    string   `yaml:",omitempty"`      // Not yet implemented
 	Parameters []string `yaml:",omitempty,flow"` // Not yet implemented
 }
+
