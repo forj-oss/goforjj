@@ -17,6 +17,11 @@ type YamlPlugin struct {
 	Description string
 	CreatedFile string `yaml:"created_flag_file"`
 	Runtime     YamlPluginRuntime
+	YamlPluginTasksObjects `yaml:",inline"`
+	instancesDetails map[string]*YamlPluginTasksObjects
+}
+
+type YamlPluginTasksObjects struct {
 	Tasks       map[string]map[string]YamlFlag `yaml:"task_flags"`
 	Objects     map[string]YamlObject
 }
