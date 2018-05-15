@@ -34,7 +34,7 @@ func (ps *Plugins) Load(instanceName, driverName, driverType string, loader func
 		if err != nil {
 			return
 		}
-		if err = yaml.Unmarshal([]byte(yaml_data), plugin); err != nil {
+		if err = yaml.Unmarshal(yaml_data, plugin); err != nil {
 			return
 		}
 	}
@@ -52,10 +52,12 @@ func (ps *Plugins) definePlugin(driverName, driverType string) (plugin *YamlPlug
 	new = true
 	if pn, ptFound := ps.plugins[driverType]; !ptFound {
 		pt := make(map[string]*YamlPlugin)
-		pt[driverName] = NewYamlPlugin()
+		plugin = NewYamlPlugin()
+		pt[driverName] = plugin
 		ps.plugins[driverType] = pt
 	} else if p, pFound := pn[driverName]; !pFound {
-		pn[driverName] = NewYamlPlugin()
+		plugin = NewYamlPlugin()
+		pn[driverName] = plugin
 		ps.plugins[driverType] = pn
 	} else {
 		plugin = p
