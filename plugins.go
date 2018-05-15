@@ -32,6 +32,7 @@ func (ps *Plugins) Load(instanceName, driverName, driverType string, loader func
 		var yaml_data []byte
 		yaml_data, err = loader()
 		if err != nil {
+			plugin = nil
 			return
 		}
 		if err = yaml.Unmarshal(yaml_data, plugin); err != nil {
