@@ -1,6 +1,7 @@
 package goforjj
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,21 +22,29 @@ func NewPlugins() (ret *Plugins) {
 // Load the instance plugin and return the driver object
 // All plugin instances can share the same plugin. So that a plugin definition is loaded only once.
 // But each driver are instance unique.
-func (ps *Plugins) Load(instanceName, driverName, driverType string, loader func() (yaml_data []byte, err error)) (driver *Plugin, err error) {
+func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[string]func() (yaml_data []byte, err error)) (driver *Plugin, err error) {
 	// check if driver already loaded
 	if d, found := ps.drivers[instanceName]; found {
 		return d, nil
 	}
 
-	plugin, new := ps.definePlugin(driverName, driverType)
-	if new {
-		var yaml_data []byte
-		yaml_data, err = loader()
+	plugin, newStatus := ps.definePlugin(pluginName, pluginType)
+	var yaml_data []byte
+	if newStatus {
+		if lfunc, found := loader["master"] ; !found {
+			delete(ps.plugins[pluginType], pluginName)
+			return nil, fmt.Errorf("Internal issue. Load requires 'master' function loader")
+		} else {
+			yaml_data, err = lfunc()
+		}
+		
 		if err != nil {
+			delete(ps.plugins[pluginType], pluginName)
 			plugin = nil
 			return
 		}
 		if err = yaml.Unmarshal(yaml_data, plugin); err != nil {
+			delete(ps.plugins[pluginType], pluginName)
 			return
 		}
 	}
@@ -45,6 +54,26 @@ func (ps *Plugins) Load(instanceName, driverName, driverType string, loader func
 	ps.drivers[instanceName] = driver
 
 	// TODO: Need to load instances details now.
+	if lfunc, found := loader["extended"] ; !found {
+		return
+	} else {
+		yaml_data, err = lfunc()
+	}
+	
+	if err != nil {
+		plugin = nil
+		return
+	}
+
+	if len(yaml_data) == 0 {
+		return
+	}
+	pluginExtend := new(YamlPluginTasksObjects)
+	if err = yaml.Unmarshal(yaml_data, pluginExtend); err != nil {
+		return
+	}
+
+	driver.Yaml = driver.Yaml.MergeWith(instanceName, pluginExtend)
 
 	return
 }
