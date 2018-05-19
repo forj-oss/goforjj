@@ -19,8 +19,8 @@ import (
 
 const Latest = "latest"
 
-// Data stored about the driver
-type Plugin struct {
+// Driver define an instance of a driver
+type Driver struct {
 	Result         *PluginResult         // Json data structured returned.
 	Yaml           *YamlPlugin            // Yaml data definition
 	Source_path    string                // Plugin source path from Forjj point of view
@@ -45,20 +45,20 @@ type Plugin struct {
 
 const defaultTimeout = 32 * time.Second
 
-func NewDriver(plugin *YamlPlugin) (p *Plugin) {
-	p = new(Plugin)
+func NewDriver(plugin *YamlPlugin) (p *Driver) {
+	p = new(Driver)
 	p.Yaml = plugin
 	return
 }
 
 // PluginDefLoad Load yaml raw data in YamlPlugin data structure
-func (p *Plugin) PluginDefLoad(yaml_data []byte) error {
+func (p *Driver) PluginDefLoad(yaml_data []byte) error {
 
 	return yaml.Unmarshal([]byte(yaml_data), p.Yaml)
 }
 
 // PluginInit Initialize Plugin with Definition data.
-func (p *Plugin) PluginInit(instance string) error {
+func (p *Driver) PluginInit(instance string) error {
 	gotrace.Trace("Initializing plugin instance '%s'", instance)
 	if p.Yaml.Name == "" {
 		return fmt.Errorf("Unable to initialize the plugin without Plugin definition.")
@@ -73,11 +73,11 @@ func (p *Plugin) PluginInit(instance string) error {
 	return nil
 }
 
-func (p *Plugin) RunningFromDebugger() {
+func (p *Driver) RunningFromDebugger() {
 	p.local_debug = true
 }
 
-func (p *Plugin) def_runtime_context() error {
+func (p *Driver) def_runtime_context() error {
 	switch p.Yaml.Runtime.Service_type {
 	case "REST API": // REST API Service started as daemon
 		p.service = true
@@ -91,25 +91,25 @@ func (p *Plugin) def_runtime_context() error {
 }
 
 // PluginSetSource Set plugin source path. Created later by docker_start_service
-func (p *Plugin) PluginSetSource(path string) {
+func (p *Driver) PluginSetSource(path string) {
 	p.Source_path = path
 }
 
-func (p *Plugin) PluginSetWorkspace(path string) {
+func (p *Driver) PluginSetWorkspace(path string) {
 	p.Workspace_path = path
 }
 
-func (p *Plugin) PluginSetDeployment(path string) {
+func (p *Driver) PluginSetDeployment(path string) {
 	p.DeployPath = path
 }
 
 
 // PluginSocketPath Declare the socket path. It will be created later by function socket_prepare
-func (p *Plugin) PluginSocketPath(path string) {
+func (p *Driver) PluginSocketPath(path string) {
 	p.cmd.socket_path = path
 }
 
-func (p *Plugin) PluginDockerBin(thePath string) error {
+func (p *Driver) PluginDockerBin(thePath string) error {
 	if thePath == "" {
 		gotrace.Trace("PluginDockerBin : '%s'.", thePath)
 		return nil
@@ -131,7 +131,7 @@ func (p *Plugin) PluginDockerBin(thePath string) error {
 	return nil
 }
 
-func (p *Plugin) PluginSetVersion(version string) {
+func (p *Driver) PluginSetVersion(version string) {
 	if version == "" {
 		p.Version = Latest
 	} else {
@@ -145,7 +145,7 @@ func (p *Plugin) PluginSetVersion(version string) {
 // A plugin already loaded is not refreshed.
 // NOTE: Workspace_path, Source_path and SourceMount must be set in PluginDef to make it work.
 // TODO: Add a Plugin refresh? Not sure if forjj could do it or not differently...
-func (p *Plugin) PluginLoadFrom(name string, runtime *YamlPluginRuntime) error {
+func (p *Driver) PluginLoadFrom(name string, runtime *YamlPluginRuntime) error {
 	if name == "" || runtime == nil {
 		return fmt.Errorf("Internal Error: PluginRuntimeReloadFrom: name cannot be empty and plugin cannot be nil.")
 	}
@@ -165,7 +165,7 @@ func (p *Plugin) PluginLoadFrom(name string, runtime *YamlPluginRuntime) error {
 // Basic RESTFul means : GET/POST, simple unique route, no version, payload with everything.
 // If needed in a next iteration, we can move the API to match fully the RESTFul API with forjj objects/actions.
 // else start a shell or a container to get the json data.
-func (p *Plugin) PluginRunAction(action string, d *PluginReqData) (*PluginResult, error) {
+func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult, error) {
 	p.url.Path = action
 	var (
 		data []byte
@@ -202,7 +202,7 @@ func (p *Plugin) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 
 
 // Function to start an existing container or create and run a new one
-func (p *Plugin) docker_container_restart(cmd string, args []string) (string, error) {
+func (p *Driver) docker_container_restart(cmd string, args []string) (string, error) {
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
 		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
@@ -259,7 +259,7 @@ func (p *Plugin) docker_container_restart(cmd string, args []string) (string, er
 
 // Function to remove any already existing socket file.
 // Usually, needs to be executed if the container is not running.
-func (p *Plugin) cleanup_socket(status string) {
+func (p *Driver) cleanup_socket(status string) {
 	if status == "running" {
 		return
 	}
@@ -273,7 +273,7 @@ func (p *Plugin) cleanup_socket(status string) {
 
 }
 
-func (p *Plugin) define_socket() (remote bool, err error) {
+func (p *Driver) define_socket() (remote bool, err error) {
 	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
 		err = p.socket_prepare()
 		return
@@ -285,7 +285,7 @@ func (p *Plugin) define_socket() (remote bool, err error) {
 }
 
 // docker_start_service Define how to start
-func (p *Plugin) docker_start_service() (err error) {
+func (p *Driver) docker_start_service() (err error) {
 	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
 
 	// initialize
@@ -377,7 +377,7 @@ func (p *Plugin) docker_start_service() (err error) {
 // become: contains information required by a container to add user and become that user to start the process
 //         Depending on the container, `become` can be ignored if the container do not need to become user
 //         sent by forjj.
-func (p *Plugin) GetDockerDoodParameters() (mount, become []string, err error) {
+func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 	if !p.Yaml.Runtime.Docker.Dood {
 		return nil, nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
 	}
@@ -420,7 +420,7 @@ func (p *Plugin) GetDockerDoodParameters() (mount, become []string, err error) {
 }
 
 // check_service_ready Regularly testing the service response. fails after a timeout.
-func (p *Plugin) check_service_ready() (err error) {
+func (p *Driver) check_service_ready() (err error) {
 	gotrace.Trace("Checking service status...")
 	for i := 1; i < 30; i++ {
 		time.Sleep(time.Second)
@@ -449,7 +449,7 @@ func (p *Plugin) check_service_ready() (err error) {
 	return
 }
 
-func (p *Plugin) define_as_local_paths() {
+func (p *Driver) define_as_local_paths() {
 	p.SourceMount = p.Source_path
 	p.DestMount = p.DeployPath
 	if _, err := os.Stat(p.Source_path); err != nil {
@@ -465,7 +465,7 @@ func (p *Plugin) define_as_local_paths() {
 
 }
 
-func (p *Plugin) command_start_service() (err error) {
+func (p *Driver) command_start_service() (err error) {
 	if _, err = p.define_socket(); err != nil {
 		return
 	}
@@ -480,7 +480,7 @@ func (p *Plugin) command_start_service() (err error) {
 
 // PluginStartService This function start the service as daemon and register it
 // If the service is already started, just use it.
-func (p *Plugin) PluginStartService() (err error) {
+func (p *Driver) PluginStartService() (err error) {
 	if !p.service {
 		// Nothing to start
 		return nil
@@ -506,7 +506,7 @@ func (p *Plugin) PluginStartService() (err error) {
 	return
 }
 
-func (p *Plugin) CheckServiceUp() bool {
+func (p *Driver) CheckServiceUp() bool {
 	gotrace.Trace("Checking service response.")
 	if p.cmd.socket_file != "" {
 		if _, err := os.Stat(path.Join(p.cmd.socket_path, p.cmd.socket_file)); os.IsNotExist(err) {
@@ -527,7 +527,7 @@ func (p *Plugin) CheckServiceUp() bool {
 }
 
 // Create the socket link for http and his path.
-func (p *Plugin) socket_prepare() (err error) {
+func (p *Driver) socket_prepare() (err error) {
 	// Define it once
 	if p.req != nil {
 		return
@@ -554,7 +554,7 @@ func (p *Plugin) socket_prepare() (err error) {
 }
 
 // PluginStopService To stop the plugin service if the service was started before by goforjj
-func (p *Plugin) PluginStopService() {
+func (p *Driver) PluginStopService() {
 	if !p.service || !p.service_booted || p.local_debug {
 		return
 	}

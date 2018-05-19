@@ -7,14 +7,14 @@ import (
 
 // Plugins define a structure to store all plugins loaded.
 type Plugins struct {
-	drivers map[string]*Plugin // key: plugin type, plugin name
+	drivers map[string]*Driver // key: plugin type, plugin name
 	plugins map[string]map[string]*YamlPlugin
 }
 
 // NewPlugins create the list of plugins in memory.
 func NewPlugins() (ret *Plugins) {
 	ret = new(Plugins)
-	ret.drivers = make(map[string]*Plugin)
+	ret.drivers = make(map[string]*Driver)
 	ret.plugins = make(map[string]map[string]*YamlPlugin)
 	return
 }
@@ -22,7 +22,7 @@ func NewPlugins() (ret *Plugins) {
 // Load the instance plugin and return the driver object
 // All plugin instances can share the same plugin. So that a plugin definition is loaded only once.
 // But each driver are instance unique.
-func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[string]func() (yaml_data []byte, err error)) (driver *Plugin, err error) {
+func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[string]func() (yaml_data []byte, err error)) (driver *Driver, err error) {
 	// check if driver already loaded
 	if d, found := ps.drivers[instanceName]; found {
 		return d, nil
