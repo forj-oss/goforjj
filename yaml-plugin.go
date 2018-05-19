@@ -11,9 +11,10 @@ const ObjectApp = "app"
 // actions: hash of struct - See YamlPluginDef - must be common/create/update/maintain as hash keys only.
 type YamlPlugin struct {
 	Name                   string `yaml:"plugin"`
-	Version                string
-	Description            string
+	Version                string `yaml:",omitempty"`
+	Description            string `yaml:",omitempty"`
 	CreatedFile            string `yaml:"created_flag_file"`
+	ExtendRelPath          string `yaml:"extend_relative_path,omitempty"`
 	Runtime                YamlPluginRuntime
 	YamlPluginTasksObjects `yaml:",inline"`
 	instancesDetails       map[string]*YamlPluginTasksObjects
