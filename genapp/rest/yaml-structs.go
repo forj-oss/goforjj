@@ -38,6 +38,10 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 	// __MYPLUGIN: {{   range $GroupName, $Group := $Object.Groups }}\
 	DataStruct // __MYPLUGIN: 	{{ go_vars $GroupName }}Struct
 	// __MYPLUGIN: {{   end }}\
+
+	// __MYPLUGIN: {{   if .Yaml.ExtendRelPath }}\
+	More map[string]string
+	// __MYPLUGIN: {{   end }}\
 }
 
 // __MYPLUGIN: {{ end }}\
