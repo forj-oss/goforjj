@@ -1,5 +1,6 @@
 package main
 
+// __MYPLUGIN: {{ $Extend := .Yaml.ExtendRelPath }}\
 // __MYPLUGIN: {{ range $ObjectName, $Object := .Yaml.Objects }}\
 // Object {{ $ObjectName }} groups structure
 
@@ -39,7 +40,7 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 	DataStruct // __MYPLUGIN: 	{{ go_vars $GroupName }}Struct
 	// __MYPLUGIN: {{   end }}\
 
-	// __MYPLUGIN: {{   if .Yaml.ExtendRelPath }}\
+	// __MYPLUGIN: {{   if $Extend }}\
 	More map[string]string
 	// __MYPLUGIN: {{   end }}\
 }
