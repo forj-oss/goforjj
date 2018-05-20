@@ -22,7 +22,7 @@ func NewPlugins() (ret *Plugins) {
 // Load the instance plugin and return the driver object
 // All plugin instances can share the same plugin. So that a plugin definition is loaded only once.
 // But each driver are instance unique.
-func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[string]func() (yaml_data []byte, err error)) (driver *Driver, err error) {
+func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[string]func(*YamlPlugin) (yaml_data []byte, err error)) (driver *Driver, err error) {
 	// check if driver already loaded
 	if d, found := ps.drivers[instanceName]; found {
 		return d, nil
@@ -35,7 +35,7 @@ func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[
 			delete(ps.plugins[pluginType], pluginName)
 			return nil, fmt.Errorf("Internal issue. Load requires 'master' function loader")
 		} else {
-			yaml_data, err = lfunc()
+			yaml_data, err = lfunc(plugin)
 		}
 		
 		if err != nil {
@@ -57,7 +57,7 @@ func (ps *Plugins) Load(instanceName, pluginName, pluginType string, loader map[
 	if lfunc, found := loader["extended"] ; !found {
 		return
 	} else {
-		yaml_data, err = lfunc()
+		yaml_data, err = lfunc(plugin)
 	}
 	
 	if err != nil {
