@@ -555,7 +555,7 @@ func (p *Driver) socket_prepare() (err error) {
 
 // PluginStopService To stop the plugin service if the service was started before by goforjj
 func (p *Driver) PluginStopService() {
-	if !p.service || !p.service_booted || p.local_debug {
+	if p == nil || !p.service || !p.service_booted || p.local_debug {
 		return
 	}
 	p.url.Path = "quit"
