@@ -142,7 +142,16 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 	// TODO: Normalize Structure name in template. For ex, - is not supported. Replace it to _ or remove it.
 	tmpl, err = template.New(file).Funcs(template.FuncMap{
 		"escape": func(str string) string {
-			return strings.Replace(strings.Replace(str, "\"", "\\\"", -1), "\n", "\\n\" +\n   \"", -1)
+			data := str
+			replacer := map[string]string{
+				"\\": "\\\\",
+				"\"": "\\\"",
+				"\n": "\\n\" +\n   \"",
+			}
+			for _, tagSel := range []string{"\\", "\"", "\n"} {
+				data = strings.Replace(data, tagSel, replacer[tagSel], -1)
+			}
+			return data
 		},
 		"go_vars": func(str string) string {
 			return strings.Replace(strings.Title(str), "-", "", -1)
@@ -158,7 +167,7 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 				}
 			}
 			for _, group := range object.Groups {
-				for _, flag:= range group.Flags {
+				for _, flag := range group.Flags {
 					if inStringList(action, flag.CliCmdActions...) == action {
 						return true
 					}
@@ -178,21 +187,21 @@ func (s *Source) apply_source(yaml *YamlData, file string) {
 			return inStringList(value, list...)
 		},
 		"object_tree": func(object goforjj.YamlObject) (ret ObjectModel) {
-				ret = ObjectModel{make(map[string]goforjj.YamlFlag), make(map[string]goforjj.YamlObjectGroup)}
-				for flag_name, flag := range object.Flags {
-					if flag.Actions == nil || len(flag.Actions) == 0 {
-						ret.Flags[flag_name] = flag
-						continue
-					}
+			ret = ObjectModel{make(map[string]goforjj.YamlFlag), make(map[string]goforjj.YamlObjectGroup)}
+			for flag_name, flag := range object.Flags {
+				if flag.Actions == nil || len(flag.Actions) == 0 {
 					ret.Flags[flag_name] = flag
+					continue
 				}
-				for group_name, group := range object.Groups {
-					if group.Actions == nil || len(group.Actions) == 0 {
-						ret.Groups[group_name] = group
-						continue
-					}
+				ret.Flags[flag_name] = flag
+			}
+			for group_name, group := range object.Groups {
+				if group.Actions == nil || len(group.Actions) == 0 {
 					ret.Groups[group_name] = group
+					continue
 				}
+				ret.Groups[group_name] = group
+			}
 			return
 		},
 	}).Parse(s.template)
