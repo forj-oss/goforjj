@@ -186,7 +186,7 @@ func TestLoad(t *testing.T) {
 
 	// --- Run the test ---
 	// Check if we can load an instance without 'master' loader. We should not.
-	plugin, err := plugins.Load(instanceName, driverName, driverType, map[string]func() ([]byte, error){})
+	plugin, err := plugins.Load(instanceName, driverName, driverType, map[string]func(*YamlPlugin) ([]byte, error){})
 
 	// --- Start testing ---
 	if plugin != nil {
@@ -203,8 +203,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// Check if we can load an instance with a basic data. We could.
 	plugin, err = plugins.Load(instanceName, driverName, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test"
 				return []byte(data), nil
 			},
@@ -231,8 +231,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// Check if a loader error is reported if we already loaded the instance. We should not have any errors.
 	plugin, err = plugins.Load(instanceName, driverName, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(_ *YamlPlugin) ([]byte, error) {
 				return []byte{}, fmt.Errorf("test")
 			},
 		})
@@ -252,8 +252,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// Check if loading the instance2 with a loader error return an error. The driver entry should not exist.
 	plugin, err = plugins.Load(instanceName2, driverName2, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(*YamlPlugin) ([]byte, error) {
 				return []byte{}, fmt.Errorf("test")
 			},
 		})
@@ -269,8 +269,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// Check if loading an instance2 with some data task and object data are properly loaded .
 	plugin, err = plugins.Load(instanceName2, driverName2, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +
@@ -320,8 +320,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// Check if an already loaded instance&plugin won't be updated by another load from master or extended
 	plugin, err = plugins.Load(instanceName2, driverName2, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +
@@ -329,7 +329,7 @@ func TestLoad(t *testing.T) {
 					"      help: bloblo\n"
 				return []byte(data), nil
 			},
-			"extended": func() ([]byte, error) {
+			"extended": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +
@@ -358,8 +358,8 @@ func TestLoad(t *testing.T) {
 	// --- Run the test ---
 	// check if instance3 with an already loaded plugin can load only extended. But others are ignored. New objects cannot be added by the extended. But new groups can.
 	plugin, err = plugins.Load(instanceName3, driverName2, driverType,
-		map[string]func() ([]byte, error){
-			"master": func() ([]byte, error) {
+		map[string]func(*YamlPlugin) ([]byte, error){
+			"master": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +
@@ -367,7 +367,7 @@ func TestLoad(t *testing.T) {
 					"      help: blibli"
 				return []byte(data), nil
 			},
-			"blabla": func() ([]byte, error) {
+			"blabla": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +
@@ -375,7 +375,7 @@ func TestLoad(t *testing.T) {
 					"      help: blabla"
 				return []byte(data), nil
 			},
-			"extended": func() ([]byte, error) {
+			"extended": func(*YamlPlugin) ([]byte, error) {
 				data := "plugin: test\n" +
 					"task_flags:\n " +
 					"  common:\n" +

@@ -42,6 +42,7 @@ func (p *YamlPlugin) MergeWith(instance string, extended *YamlPluginTasksObjects
 					if srcList == nil {
 						srcList = make(map[string]YamlFlag)
 					}
+					task.extentSource = true
 					srcList[taskName] = task
 					merged.Tasks[taskType] = srcList
 				}
@@ -57,6 +58,7 @@ func (p *YamlPlugin) MergeWith(instance string, extended *YamlPluginTasksObjects
 					if srcObject.Flags == nil {
 						srcObject.Flags = make(map[string]YamlFlag)
 					}
+					flag.extentSource = true
 					srcObject.Flags[flagName] = flag
 					merged.Objects[objectType] = srcObject
 				}
@@ -67,6 +69,10 @@ func (p *YamlPlugin) MergeWith(instance string, extended *YamlPluginTasksObjects
 					if srcObject.Groups == nil {
 						srcObject.Groups = make(map[string]YamlObjectGroup)
 					}
+					for flag_name, flag := range group.Flags {
+						flag.extentSource = true
+						group.Flags[flag_name] = flag
+					}
 					srcObject.Groups[groupName] = group
 					merged.Objects[objectType] = srcObject
 				} else {
@@ -75,6 +81,7 @@ func (p *YamlPlugin) MergeWith(instance string, extended *YamlPluginTasksObjects
 							if srcObject.Flags == nil {
 								srcObject.Flags = make(map[string]YamlFlag)
 							}
+							flag.extentSource = true
 							srcGroup.Flags[flagName] = flag
 							srcObject.Groups[groupName] = srcGroup
 							merged.Objects[objectType] = srcObject
