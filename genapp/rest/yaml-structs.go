@@ -41,7 +41,7 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 	// __MYPLUGIN: {{   end }}\
 
 	// __MYPLUGIN: {{   if $Extend }}\
-	More map[string]string
+	Extent map[string]string
 	// __MYPLUGIN: {{   end }}\
 }
 
