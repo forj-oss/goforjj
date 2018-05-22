@@ -8,7 +8,7 @@ package goforjj
 type PluginReqData struct {
 	// Collection of Forjj flags requested by the plugin or given by default by Forjj
 	Forj       map[string]string
-	ForjExtent map[string]string // Extended Forjj flags
+	ForjExtent map[string]string `json:",omitempty"` // Extended Forjj flags
 	// Define the list of Forjj objects data transmitted. object_type, instance, action.
 	Objects map[string]ObjectInstances
 }
