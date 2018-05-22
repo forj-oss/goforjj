@@ -41,7 +41,9 @@ func (r *PluginReqData) SetForjFlag(key, value string, cred, extent bool) {
 			r.Creds = make(map[string]string)
 		}
 		r.Creds[key] = value
-		// return // For compatibility, creds data are still kept in normal structure So the function do not exit.
+		if extent {
+			return // For compatibility, creds data are still kept in normal structure So the function do not exit, except for extent (New way)
+		}
 	}
 	if !extent {
 		if r.Forj == nil {
