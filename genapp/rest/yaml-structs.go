@@ -71,6 +71,8 @@ type CreateReq struct {
 	// __MYPLUGIN: {{   end }}\
 
 	Objects CreateArgReq
+
+	Creds map[string]string
 }
 
 type CreateArgReq struct {
@@ -95,6 +97,8 @@ type UpdateReq struct {
 	// __MYPLUGIN: {{   end }}\
 
 	Objects UpdateArgReq
+
+	Creds map[string]string
 }
 
 type UpdateArgReq struct {
@@ -119,6 +123,8 @@ type MaintainReq struct {
 	// __MYPLUGIN: {{   end }}\
 
 	Objects MaintainArgReq
+
+	Creds map[string]string
 }
 
 type MaintainArgReq struct {

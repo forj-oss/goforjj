@@ -11,6 +11,7 @@ type PluginReqData struct {
 	ForjExtent map[string]string `json:",omitempty"` // Extended Forjj flags
 	// Define the list of Forjj objects data transmitted. object_type, instance, action.
 	Objects map[string]ObjectInstances
+	Creds   map[string]string `json:",omitempty"` // Contains credentials requested by the plugin for a specific action.
 }
 
 // ObjectInstances is a collection of instanceKeys
@@ -31,9 +32,16 @@ func NewReqData() (r *PluginReqData) {
 }
 
 // SetForjFlag initialize forj part of the request with key/value or extent key/value.
-func (r *PluginReqData) SetForjFlag(key, value string, extent bool) {
+func (r *PluginReqData) SetForjFlag(key, value string, cred, extent bool) {
 	if r == nil {
 		return
+	}
+	if cred {
+		if r.Creds == nil {
+			r.Creds = make(map[string]string)
+		}
+		r.Creds[key] = value
+		// return // For compatibility, creds data are still kept in normal structure So the function do not exit.
 	}
 	if !extent {
 		if r.Forj == nil {
@@ -50,7 +58,7 @@ func (r *PluginReqData) SetForjFlag(key, value string, extent bool) {
 }
 
 // AddObjectActions add in the request, the collection of keys/values or extent/keys/values for each objects/instances
-func (r *PluginReqData) AddObjectActions(objectType, objectName string, keys InstanceKeys, extent InstanceExtentKeys) {
+func (r *PluginReqData) AddObjectActions(objectType, objectName string, keys InstanceKeys, extent InstanceExtentKeys, creds map[string]string) {
 	if r == nil {
 		return
 	}
@@ -62,5 +70,12 @@ func (r *PluginReqData) AddObjectActions(objectType, objectName string, keys Ins
 	}
 	keys["extent"] = extent
 	r.Objects[objectType][objectName] = keys
+
+	for cname, cdata := range creds {
+		if r.Creds == nil {
+			r.Creds = make(map[string]string)
+		}
+		r.Creds[objectType+"-"+objectName+"-"+cname] = cdata
+	}
 	return
 }
