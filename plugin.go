@@ -176,9 +176,11 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 		return nil, err
 	}
 
+	jsonData, _ :=  json.MarshalIndent(d, "", "  ")
+
 	p.define_socket()
 
-	gotrace.Trace("POST %s with '%s'", p.url.String(), string(data))
+	gotrace.Trace("POST %s with '%s'", p.url.String(), string(jsonData))
 	resp, body, errs := p.req.Post(p.url.String()).Send(string(data)).End()
 	if len(errs) > 0 {
 		return nil, errs[0]
@@ -190,7 +192,7 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 	if err := json.Unmarshal([]byte(body), &result.Data); err != nil {
 		return nil, err
 	}
-
+	
 	gotrace.Trace("data extracted: \n%#v", result.Data)
 
 	if result.Data.ErrorMessage != "" {
