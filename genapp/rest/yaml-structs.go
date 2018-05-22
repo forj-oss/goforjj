@@ -66,6 +66,10 @@ type CreateReq struct {
 		// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 		// __MYPLUGIN: {{ end }}\
 	}
+	// __MYPLUGIN: {{   if $Extend }}\
+	ForjExtent map[string]string
+	// __MYPLUGIN: {{   end }}\
+
 	Objects CreateArgReq
 }
 
@@ -86,6 +90,10 @@ type UpdateReq struct {
 		// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 		// __MYPLUGIN: {{ end }}\
 	}
+	// __MYPLUGIN: {{   if $Extend }}\
+	ForjExtent map[string]string
+	// __MYPLUGIN: {{   end }}\
+
 	Objects UpdateArgReq
 }
 
@@ -106,6 +114,10 @@ type MaintainReq struct {
 		// __MYPLUGIN: 		{{ go_vars $FlagName }} string `json:"{{ $FlagName }}"`
 		// __MYPLUGIN: {{ end }}\
 	}
+	// __MYPLUGIN: {{   if $Extend }}\
+	ForjExtent map[string]string
+	// __MYPLUGIN: {{   end }}\
+
 	Objects MaintainArgReq
 }
 
