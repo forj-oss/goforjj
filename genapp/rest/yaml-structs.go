@@ -41,7 +41,7 @@ type AppInstanceStruct struct { // __MYPLUGIN: type {{ go_vars $ObjectName}}Inst
 	// __MYPLUGIN: {{   end }}\
 
 	// __MYPLUGIN: {{   if $Extend }}\
-	Extent map[string]string
+	Extent map[string]string `json:",omitempty"`
 	// __MYPLUGIN: {{   end }}\
 }
 
@@ -67,7 +67,7 @@ type CreateReq struct {
 		// __MYPLUGIN: {{ end }}\
 	}
 	// __MYPLUGIN: {{   if $Extend }}\
-	ForjExtent map[string]string
+	ForjExtent map[string]string `json:",omitempty"`
 	// __MYPLUGIN: {{   end }}\
 
 	Objects CreateArgReq
@@ -91,7 +91,7 @@ type UpdateReq struct {
 		// __MYPLUGIN: {{ end }}\
 	}
 	// __MYPLUGIN: {{   if $Extend }}\
-	ForjExtent map[string]string
+	ForjExtent map[string]string `json:",omitempty"`
 	// __MYPLUGIN: {{   end }}\
 
 	Objects UpdateArgReq
@@ -115,7 +115,7 @@ type MaintainReq struct {
 		// __MYPLUGIN: {{ end }}\
 	}
 	// __MYPLUGIN: {{   if $Extend }}\
-	ForjExtent map[string]string
+	ForjExtent map[string]string `json:",omitempty"`
 	// __MYPLUGIN: {{   end }}\
 
 	Objects MaintainArgReq
