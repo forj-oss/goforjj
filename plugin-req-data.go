@@ -26,7 +26,6 @@ type InstanceExtentKeys map[string]*ValueStruct
 func NewReqData() (r *PluginReqData) {
 	r = new(PluginReqData)
 	r.Forj = make(map[string]string)
-	r.ForjExtent = make(map[string]string)
 	r.Objects = make(map[string]ObjectInstances)
 	return
 }
@@ -36,7 +35,7 @@ func (r *PluginReqData) SetForjFlag(key, value string, extent bool) {
 	if r == nil {
 		return
 	}
-	if extent {
+	if !extent {
 		if r.Forj == nil {
 			r.Forj = make(map[string]string)
 		}
