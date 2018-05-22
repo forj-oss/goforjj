@@ -16,8 +16,6 @@ func TestNewReqData(t *testing.T) {
 		t.Error("Expected NewReqData to return a request Object. Got nil.")
 	} else if ret.Forj == nil {
 		t.Error("Expected NewReqData.Forj to be initialized. Got nil.")
-	} else if ret.ForjExtent == nil {
-		t.Error("Expected NewReqData.ForjExtent to be initialized. Got nil.")
 	} else if ret.Objects == nil {
 		t.Error("Expected NewReqData.Objects to be initialized. Got nil.")
 	}
@@ -108,6 +106,66 @@ func TestAddObjectActions(t *testing.T) {
 		t.Errorf("Expected '%s/%s/extent' to have '%s'. Not found.", obj1, instance1, test2)
 	} else if v8.value != testValue2 {
 		t.Errorf("Expected '%s/%s/extent/%s=%s' to have '%s'. Got '%s'.", obj1, instance1, test, "*ValueStruct", testValue2, v5.value)
+	}
+
+}
+
+func TestSetForjFlag(t *testing.T) {
+	t.Log("Expect SetForjFlag to add properly data in the request.")
+
+	// --- Setting test context ---
+	req := NewReqData()
+
+	const (
+		test      = "test1"
+		testValue = "test"
+		obj1      = "obj1"
+		instance1 = "instance1"
+	)
+
+	if req == nil {
+		return
+	}
+
+	// --- Run the test ---
+	// Check if we can load an instance without 'master' loader. We should not.
+	req.SetForjFlag(test, testValue, false)
+
+	// --- Start testing ---
+	if req.Forj == nil {
+		t.Error("Expected req.Forj to be initialized. Got nil.")
+	} else if v1 := len(req.Forj); v1 != 1 {
+		t.Errorf("Expected req.Forj to contains only one element. Got %d.", v1)
+	} else if v2, f1 := req.Forj[test]; !f1 {
+		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test)
+	} else if v2 != testValue {
+		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test, testValue, v2)
+	}
+
+	// --- Setting test context ---
+	const (
+		test2      = "test2"
+		testValue2 = "testValue2"
+	)
+
+	if req == nil {
+		return
+	}
+
+	// --- Run the test ---
+	// Check if we can load an instance without 'master' loader. We should not.
+	req.SetForjFlag(test2, testValue2, true)
+
+	// --- Start testing ---
+	// --- Start testing ---
+	if req.ForjExtent == nil {
+		t.Error("Expected req.Forj to be initialized. Got nil.")
+	} else if v1 := len(req.ForjExtent); v1 != 1 {
+		t.Errorf("Expected req.Forj to contains only one element. Got %d.", v1)
+	} else if v2, f1 := req.ForjExtent[test2]; !f1 {
+		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test2)
+	} else if v2 != testValue2 {
+		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test2, testValue2, v2)
 	}
 
 }
