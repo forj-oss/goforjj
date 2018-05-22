@@ -10,7 +10,8 @@ type PluginReqData struct {
 	Forj       map[string]string
 	ForjExtent map[string]string `json:",omitempty"` // Extended Forjj flags
 	// Define the list of Forjj objects data transmitted. object_type, instance, action.
-	Objects map[string]ObjectInstances
+	Objects    map[string]ObjectInstances
+	Creds      map[string]string `json:",omitempty"` // Contains credentials requested by the plugin for a specific action.
 }
 
 // ObjectInstances is a collection of instanceKeys
