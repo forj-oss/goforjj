@@ -176,7 +176,7 @@ func TestSetForjFlag(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	// Check if we can load an instance without 'master' loader. We should not.
+	// Set basic forj value
 	req.SetForjFlag(test, testValue, false, false)
 
 	// --- Start testing ---
@@ -201,10 +201,9 @@ func TestSetForjFlag(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	// Check if we can load an instance without 'master' loader. We should not.
+	// Check we can add a new one but as extent
 	req.SetForjFlag(test2, testValue2, false, true)
 
-	// --- Start testing ---
 	// --- Start testing ---
 	if req.ForjExtent == nil {
 		t.Error("Expected req.Forj to be initialized. Got nil.")
@@ -217,8 +216,7 @@ func TestSetForjFlag(t *testing.T) {
 	}
 
 	// --- Setting test context ---
-	const (
-	)
+	const ()
 
 	req = NewReqData()
 
@@ -227,7 +225,7 @@ func TestSetForjFlag(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	// Check if we can load an instance without 'master' loader. We should not.
+	// Check if we can set a cred value. The Forj value is kept for compatibility.
 	req.SetForjFlag(test, testValue, true, false)
 
 	// --- Start testing ---
@@ -235,39 +233,33 @@ func TestSetForjFlag(t *testing.T) {
 		t.Error("Expected req.Forj to be initialized. Got nil.")
 	} else if v1 := len(req.Forj); v1 != 1 {
 		t.Errorf("Expected req.Forj to contains only one element. Got %d.", v1)
-	} else if v2, f1 := req.Forj[test]; !f1 {
+	} else if v2, f1 := req.Forj[test]; !f1 { // The Forj value is kept for compatibility.
 		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test)
 	} else if v2 != testValue {
 		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test, testValue, v2)
-	} else if v3, f2 := req.Creds[test] ; !f2 {
+	} else if v3, f2 := req.Creds[test]; !f2 {
 		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test)
 	} else if v3 != testValue {
 		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test, testValue, v3)
 	}
 
 	// --- Setting test context ---
-	const (
-	)
+	const ()
 
 	if req == nil {
 		return
 	}
 
 	// --- Run the test ---
-	// Check if we can load an instance without 'master' loader. We should not.
+	// Check if we can set an extent cred.
 	req.SetForjFlag(test2, testValue2, true, true)
 
 	// --- Start testing ---
-	// --- Start testing ---
-	if req.ForjExtent == nil {
-		t.Error("Expected req.Forj to be initialized. Got nil.")
-	} else if v1 := len(req.ForjExtent); v1 != 1 {
-		t.Errorf("Expected req.Forj to contains only one element. Got %d.", v1)
-	} else if v2, f1 := req.ForjExtent[test2]; !f1 {
-		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test2)
-	} else if v2 != testValue2 {
-		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test2, testValue2, v2)
-	}else if v3, f2 := req.Creds[test] ; !f2 {
+	if req.ForjExtent != nil {
+		t.Error("Expected req.Extent to be nil. Got initialized.")
+	} else if req.Creds == nil {
+		t.Error("Expected req.Creds to be initialized. Got nil.")
+	} else if v3, f2 := req.Creds[test]; !f2 {
 		t.Errorf("Expected req.Forj to contain '%s'. Not found.", test)
 	} else if v3 != testValue {
 		t.Errorf("Expected '%s' to have '%s'. Got '%s'.", test, testValue, v3)
