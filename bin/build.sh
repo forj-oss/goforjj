@@ -22,9 +22,4 @@ glide i
 
 # Requires forjj to be static.
 export CGO_ENABLED=0
-go install
-
-if [ -f .publish_lacws ]
-then
-   scp  -P5001 $GOPATH/bin/forjj lacws.emea.hpqcorp.net:/storage/install/published/larsonsh/forjj
-fi
+go build
