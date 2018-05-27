@@ -200,7 +200,7 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 
 	if result.Data.ErrorMessage != "" {
 		result.State_code = resp.StatusCode
-		return &result, fmt.Errorf("Plugin issue detected: %s", result.Data.ErrorMessage)
+		return &result, nil
 	}
 	return &result, nil
 }
