@@ -1,20 +1,21 @@
 package goforjj
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
-	"gopkg.in/yaml.v2"
+	"net"
+	"net/url"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
-	"os/user"
-	"github.com/parnurzeal/gorequest"
-	"net/url"
-	"time"
-	"encoding/json"
-	"strings"
 	"strconv"
-	"net"
+	"strings"
+	"time"
+
+	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/parnurzeal/gorequest"
+	"gopkg.in/yaml.v2"
 )
 
 const Latest = "latest"
@@ -22,10 +23,10 @@ const Latest = "latest"
 // Driver define an instance of a driver
 type Driver struct {
 	Result         *PluginResult         // Json data structured returned.
-	Yaml           *YamlPlugin            // Yaml data definition
+	Yaml           *YamlPlugin           // Yaml data definition
 	Source_path    string                // Plugin source path from Forjj point of view
 	Workspace_path string                // Plugin Workspace path from Forjj point of view
-	DeployPath     string                // Plugin Deployment path 
+	DeployPath     string                // Plugin Deployment path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
 	docker         docker_container      // Define data to start the plugin as docker container
@@ -38,9 +39,9 @@ type Driver struct {
 	WorkspaceMount string                // where the driver has his workspace.
 	Version        string                // Plugin version to load
 	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
-										 // instance of the driver from a debugger
-	sourceDefPath  string                // Path to the source file to complete driver definition
-										 // Loaded in 
+	// instance of the driver from a debugger
+	sourceDefPath string // Path to the source file to complete driver definition
+	// Loaded in
 }
 
 const defaultTimeout = 32 * time.Second
@@ -103,7 +104,6 @@ func (p *Driver) PluginSetDeployment(path string) {
 	p.DeployPath = path
 }
 
-
 // PluginSocketPath Declare the socket path. It will be created later by function socket_prepare
 func (p *Driver) PluginSocketPath(path string) {
 	p.cmd.socket_path = path
@@ -147,7 +147,7 @@ func (p *Driver) PluginSetVersion(version string) {
 // TODO: Add a Plugin refresh? Not sure if forjj could do it or not differently...
 func (p *Driver) PluginLoadFrom(name string, runtime *YamlPluginRuntime) error {
 	if name == "" || runtime == nil {
-		return fmt.Errorf("Internal Error: PluginRuntimeReloadFrom: name cannot be empty and plugin cannot be nil.")
+		return fmt.Errorf("Internal Error: PluginRuntimeReloadFrom: name cannot be empty and plugin cannot be nil")
 	}
 	if p.Yaml.Name != "" {
 		gotrace.Trace("'%s' is not loaded from the workspace cache.", p.Yaml.Name)
@@ -176,7 +176,7 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 		return nil, err
 	}
 
-	jsonData, _ :=  json.MarshalIndent(d, "", "  ")
+	jsonData, _ := json.MarshalIndent(d, "", "  ")
 
 	p.define_socket()
 
@@ -186,28 +186,30 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 		return nil, errs[0]
 	}
 
-	gotrace.Trace("Json data returned: \n%s", body)
 	var result PluginResult
 
 	if err := json.Unmarshal([]byte(body), &result.Data); err != nil {
 		return nil, err
 	}
-	
-	gotrace.Trace("data extracted: \n%#v", result.Data)
+
+	if dataDisplayed, err := json.MarshalIndent(&result.Data, "", "  "); err == nil {
+		gotrace.Trace("data returned: \n%s", string(dataDisplayed))
+	} else {
+		gotrace.Trace("data returned: \n%#v", result.Data)
+	}
 
 	if result.Data.ErrorMessage != "" {
 		result.State_code = resp.StatusCode
-		return &result, fmt.Errorf("Plugin issue detected: %s", result.Data.ErrorMessage)
+		return &result, nil
 	}
 	return &result, nil
 }
-
 
 // Function to start an existing container or create and run a new one
 func (p *Driver) docker_container_restart(cmd string, args []string) (string, error) {
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
-		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored.\n")
+		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored")
 	}
 	Image += ":" + p.Version
 
@@ -219,11 +221,11 @@ func (p *Driver) docker_container_restart(cmd string, args []string) (string, er
 		if _, err := docker_image_pull(Image); err != nil {
 			return "", err
 		}
-		if container_image, err := docker_inspect(p.docker.name, ".Image") ; err == nil && container_image != "" {
-			if image_info, err := docker_inspect(container_image, ".RepoTags") ; err != nil {
+		if container_image, err := docker_inspect(p.docker.name, ".Image"); err == nil && container_image != "" {
+			if image_info, err := docker_inspect(container_image, ".RepoTags"); err != nil {
 				return "", err
 			} else {
-				if ! strings.Contains(image_info, Image) {
+				if !strings.Contains(image_info, Image) {
 					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
 						p.docker.name)
 					if _, err = docker_container_remove(p.docker.name); err != nil {
