@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/forj-oss/goforjj"
 	"net/http"
+
+	"github.com/forj-oss/goforjj"
 )
 
 // Do creating plugin task
@@ -10,7 +11,7 @@ import (
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
+func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
 	var p *__MYPLUGIN__Plugin
 
 	// This is where you shoud write your Create code. Following lines are typical code for a basic plugin.
@@ -41,7 +42,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (httpCode int) {
+func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (httpCode int) {
 	var p *__MYPLUGIN__Plugin
 
 	// This is where you shoud write your Update code. Following lines are typical code for a basic plugin.
@@ -76,7 +77,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 // ret_data contains the response structure to return back to forjj.
 //
 // By default, if httpCode is not set (ie equal to 0), the function caller will set it to 422 in case of errors (error_message != "") or 200
-func DoMaintain(w http.ResponseWriter, r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
+func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
 	// This is where you shoud write your Maintain code. Following lines are typical code for a basic plugin.
 	if !req.check_source_existence(ret) {
 		return

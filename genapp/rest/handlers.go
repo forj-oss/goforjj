@@ -3,32 +3,44 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/forj-oss/goforjj"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
+
+	"github.com/forj-oss/goforjj"
 )
+
+// RESTReaderLimit is the maximun supported REST API request size.
+const RESTReaderLimit = 65535
 
 // PluginData response object creator
 func newPluginData() *goforjj.PluginData {
-	var r goforjj.PluginData = goforjj.PluginData{
-		Repos:     make(map[string]goforjj.PluginRepo),
-		Options:   make(map[string]goforjj.PluginOption),
-		Services:  goforjj.PluginService{make(map[string]string)},
+	r := goforjj.PluginData{
+		Repos:   make(map[string]goforjj.PluginRepo),
+		Options: make(map[string]goforjj.PluginOption),
+		Services: goforjj.PluginService{
+			Urls: make(map[string]string),
+		},
 	}
 	return &r
 }
 
 // Function to detect header content-type matching
 // return true if match
-func content_type_match(header http.Header, match string) bool {
-	for _, v := range header["Content-Type"] {
+func contentTypeMatch(header http.Header, match string) (string, bool) {
+	contentType, found := header["Content-Type"]
+	if !found {
+		return "Header 'Content-Type' missing.", false
+	}
+
+	for _, v := range contentType {
 		if v == match {
-			return true
+			return "", true
 		}
 	}
-	return false
+	return strings.Join(contentType, ", "), false
 }
 
 func panicIfError(w http.ResponseWriter, err error, message string, pars ...interface{}) {
@@ -44,128 +56,113 @@ func panicIfError(w http.ResponseWriter, err error, message string, pars ...inte
 	}
 }
 
-// Create handler
-func Create(w http.ResponseWriter, r *http.Request) {
-	var data *goforjj.PluginData = newPluginData()
-	var req_data CreateReq
-
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10240))
-
-	if err != nil {
-		panic(err)
-	}
-
-	if content_type_match(r.Header, "application/json") {
-		err := json.Unmarshal(body, &req_data)
-		panicIfError(w, err, "Unable to decode '%#v' as json.", string(body))
-	} else {
-		panicIfError(w, *new(error), "Invalid payload format. Must be 'application/json'. Got %#v", r.Header["Content-Type"])
-	}
-
-	// Create the github.yaml source file.
-	// See goforjj/plugin-json-struct.go for json data structure recognized by forjj.
-
-	err_code := DoCreate(w, r, &req_data, data)
-
-	req_data.Objects.SaveMaintainOptions(data)
-
+func requestResponse(w http.ResponseWriter, data *goforjj.PluginData, code int) {
 	if data.ErrorMessage != "" {
-		if err_code == 0 {
-			err_code = 422 // unprocessable entity
+		if code == 0 {
+			code = 422 // unprocessable entity
 		}
-		log.Print("HTTP ERROR: ", err_code, " - ", data.ErrorMessage)
+		log.Print("HTTP ERROR: ", code, " - ", data.ErrorMessage)
 	} else {
-		err_code = 200
+		code = 200
 	}
-	w.WriteHeader(err_code)
+	w.WriteHeader(code)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		panic(err)
 	}
+
+}
+
+func doPluginAction(w http.ResponseWriter, r *http.Request,
+	requestUnmarshal func([]byte) error,
+	requestDo func(*goforjj.PluginData) int) {
+
+	data := newPluginData()
+	var errCode int
+
+	// Respond to the request in json format except if fatal
+	defer requestResponse(w, data, errCode)
+
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, RESTReaderLimit))
+
+	if err != nil {
+		data.Errorf("Unable to read request buffer. %s", err)
+		return
+	}
+
+	if contentType, found := contentTypeMatch(r.Header, "application/json"); !found {
+		data.Errorf("Invalid request payload format. Must be 'application/json'. Got %s", contentType)
+		return
+	}
+
+	err = requestUnmarshal(body)
+	if err != nil {
+		if err.Error() == "unexpected end of JSON input" && len(body) == RESTReaderLimit {
+			err = fmt.Errorf("%s. The plugin reach REST API request buffer limit (%d)", err, RESTReaderLimit)
+		}
+		data.Errorf("Unable to decode json. %s", err)
+		return
+	}
+
+	errCode = requestDo(data)
+
+	// defer will respond, with data and errCode
+}
+
+// request Handlers
+
+// Create handler
+func Create(w http.ResponseWriter, r *http.Request) {
+	var reqData CreateReq
+
+	doPluginAction(w, r,
+		func(body []byte) error {
+			return json.Unmarshal(body, &reqData)
+		},
+		func(data *goforjj.PluginData) (errCode int) {
+			errCode = DoCreate(r, &reqData, data)
+
+			reqData.Objects.SaveMaintainOptions(data)
+			return
+		})
 }
 
 // Update handler
 func Update(w http.ResponseWriter, r *http.Request) {
-	var data *goforjj.PluginData = newPluginData()
-	var req_data UpdateReq
+	var reqData UpdateReq
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10240))
+	doPluginAction(w, r,
+		func(body []byte) error {
+			return json.Unmarshal(body, &reqData)
+		},
+		func(data *goforjj.PluginData) (errCode int) {
+			errCode = DoUpdate(r, &reqData, data)
 
-	if err != nil {
-		panic(err)
-	}
-
-	if content_type_match(r.Header, "application/json") {
-		err := json.Unmarshal(body, &req_data)
-		panicIfError(w, err, "Unable to decode '%#v' as json.", string(body))
-	} else {
-		panicIfError(w, *new(error), "Invalid payload format. Must be 'application/json'. Got %#v", r.Header["Content-Type"])
-	}
-
-	// Update the github.yaml source file.
-	// See goforjj/plugin-json-struct.go for json data structure recognized by forjj.
-
-	err_code := DoUpdate(w, r, &req_data, data)
-
-	req_data.Objects.SaveMaintainOptions(data)
-
-	if data.ErrorMessage != "" {
-		if err_code == 0 {
-			err_code = 422 // unprocessable entity
-		}
-		log.Print("HTTP ERROR: ", err_code, " - ", data.ErrorMessage)
-	} else {
-		err_code = 200
-	}
-	w.WriteHeader(err_code)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
+			reqData.Objects.SaveMaintainOptions(data)
+			return
+		})
 }
 
 // Maintain handler
 func Maintain(w http.ResponseWriter, r *http.Request) {
-	var req_data MaintainReq
-	var data *goforjj.PluginData = newPluginData()
+	var reqData MaintainReq
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10240))
-
-	if err != nil {
-		panic(err)
-	}
-
-	if content_type_match(r.Header, "application/json") {
-		err := json.Unmarshal(body, &req_data)
-		panicIfError(w, err, "Unable to decode '%#v' as json.", string(body))
-	} else {
-		panicIfError(w, *new(error), "Invalid payload format. Must be 'application/json'. Got %#v", r.Header["Content-Type"])
-	}
-
-	err_code := DoMaintain(w, r, &req_data, data)
-
-	if data.ErrorMessage != "" {
-		if err_code == 0 {
-			err_code = 422 // unprocessable entity
-		}
-		log.Print("HTTP ERROR: ", err_code, " - ", data.ErrorMessage)
-	} else {
-		err_code = 200
-	}
-	w.WriteHeader(err_code)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
+	doPluginAction(w, r,
+		func(body []byte) error {
+			return json.Unmarshal(body, &reqData)
+		},
+		func(data *goforjj.PluginData) int {
+			return DoMaintain(r, &reqData, data)
+		})
 }
 
 // Index Handler
 //
 func Index(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprintf(w, "FORJJ - {{.Yaml.Name}} driver for FORJJ. It is Implemented as a REST API.")
+	fmt.Fprintf(w, "FORJJ - jenkins driver for FORJJ. It is Implemented as a REST API.")
 }
 
-// Quit
+// Quit handler
 func Quit(w http.ResponseWriter, _ *http.Request) {
 	goforjj.DefaultQuit(w, "")
 }
