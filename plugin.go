@@ -27,6 +27,7 @@ type Driver struct {
 	Source_path    string                // Plugin source path from Forjj point of view
 	Workspace_path string                // Plugin Workspace path from Forjj point of view
 	DeployPath     string                // Plugin Deployment path
+	DeployName     string                // Plugin Deployment name in path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
 	docker         docker_container      // Define data to start the plugin as docker container
@@ -102,6 +103,10 @@ func (p *Driver) PluginSetWorkspace(path string) {
 
 func (p *Driver) PluginSetDeployment(path string) {
 	p.DeployPath = path
+}
+
+func (p *Driver) PluginSetDeploymentName(name string) {
+	p.DeployName = name
 }
 
 // PluginSocketPath Declare the socket path. It will be created later by function socket_prepare
@@ -408,7 +413,7 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
 		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
 		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
-		mount = append(mount, "-e", "DOOD_DEPLOY="+p.DeployPath)
+		mount = append(mount, "-e", "DOOD_DEPLOY="+path.Join(p.DeployPath, p.DeployName))
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
