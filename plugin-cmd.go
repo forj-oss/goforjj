@@ -2,10 +2,11 @@ package goforjj
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // Generic start command.

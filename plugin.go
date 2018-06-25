@@ -20,8 +20,8 @@ import (
 
 const Latest = "latest"
 
-// Driver define an instance of a driver
 type Driver struct {
+	// Driver define an instance of a driver
 	Result         *PluginResult         // Json data structured returned.
 	Yaml           *YamlPlugin           // Yaml data definition
 	Source_path    string                // Plugin source path from Forjj point of view
@@ -30,8 +30,8 @@ type Driver struct {
 	DeployName     string                // Plugin Deployment name in path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
-	docker         docker_container      // Define data to start the plugin as docker container
-	cmd            cmd_data              // Define data to start the service process
+	docker         DockerContainer       // Define data to start the plugin as docker container
+	cmd            commandRun            // Define data to start the service process
 	req            *gorequest.SuperAgent // REST API request
 	url            *url.URL              // REST API url
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
@@ -39,6 +39,7 @@ type Driver struct {
 	DestMount      string                // Where the driver will have his generated code.
 	WorkspaceMount string                // where the driver has his workspace.
 	Version        string                // Plugin version to load
+	key64          string                // Base64 symetric key
 	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
 	// instance of the driver from a debugger
 	sourceDefPath string // Path to the source file to complete driver definition
@@ -77,19 +78,6 @@ func (p *Driver) PluginInit(instance string) error {
 
 func (p *Driver) RunningFromDebugger() {
 	p.local_debug = true
-}
-
-func (p *Driver) def_runtime_context() error {
-	switch p.Yaml.Runtime.Service_type {
-	case "REST API": // REST API Service started as daemon
-		p.service = true
-
-	case "shell": // Shell/json process
-		p.service = false
-	default:
-		return fmt.Errorf("Error! Invalid '%s' service_type. Supports only 'REST API' and 'shell'. Use shell as default.", p.Yaml.Runtime.Service_type)
-	}
-	return nil
 }
 
 // PluginSetSource Set plugin source path. Created later by docker_start_service
@@ -210,176 +198,6 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 	return &result, nil
 }
 
-// Function to start an existing container or create and run a new one
-func (p *Driver) docker_container_restart(cmd string, args []string) (string, error) {
-	Image := p.Yaml.Runtime.Docker.Image
-	if Image == "" {
-		return "", fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored")
-	}
-	Image += ":" + p.Version
-
-	// Docker pull policy: Consider latest image tag as Mutable and others as Immutable.
-	// Until Docker comes with a docker run --pull ... https://github.com/moby/moby/issues/34394
-	// Forjj will do the refresh only for latest image by default.
-	if p.Version == Latest { // Check and refresh image if needed.
-		gotrace.Trace("Latest image policy check:")
-		if _, err := docker_image_pull(Image); err != nil {
-			return "", err
-		}
-		if container_image, err := docker_inspect(p.docker.name, ".Image"); err == nil && container_image != "" {
-			if image_info, err := docker_inspect(container_image, ".RepoTags"); err != nil {
-				return "", err
-			} else {
-				if !strings.Contains(image_info, Image) {
-					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
-						p.docker.name)
-					if _, err = docker_container_remove(p.docker.name); err != nil {
-						return "", err
-					}
-				} else {
-					gotrace.Trace("'%s' do not need to be refreshed.", Image)
-				}
-			}
-		}
-	}
-
-	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
-	ret, err := docker_container_status(p.docker.name)
-	if err != nil {
-		return "", err
-	}
-	status := strings.Trim(ret, " \n")
-	p.cleanup_socket(status)
-	switch status {
-	case "running":
-		return "", nil
-	case "":
-		dopts := []string{"--name", p.docker.name}
-		p.docker.complete_opts_with(p.docker.volumes, p.docker.envs)
-		dopts = append(dopts, p.docker.opts...)
-		gotrace.Trace("Booting container '%s' status", p.docker.name)
-		return docker_container_run(dopts, Image, cmd, args)
-	default:
-		gotrace.Trace("Starting container '%s' status", p.docker.name)
-		return docker_container_start(p.docker.name)
-	}
-
-}
-
-// Function to remove any already existing socket file.
-// Usually, needs to be executed if the container is not running.
-func (p *Driver) cleanup_socket(status string) {
-	if status == "running" {
-		return
-	}
-	if p.cmd.socket_file != "" {
-		file := path.Join(p.cmd.socket_path, p.cmd.socket_file)
-		if _, err := os.Stat(file); err == nil {
-			os.Remove(file)
-			gotrace.Trace("Removed socket file '%s' related to a non running container", file)
-		}
-	}
-
-}
-
-func (p *Driver) define_socket() (remote bool, err error) {
-	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
-		err = p.socket_prepare()
-		return
-	}
-
-	err = fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
-	remote = true
-	return
-}
-
-// docker_start_service Define how to start
-func (p *Driver) docker_start_service() (err error) {
-	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
-
-	// initialize
-	p.docker.init()
-
-	// mode daemon
-	p.docker.opts = append(p.docker.opts, "-d")
-
-	// Source path
-	if _, err := os.Stat(p.Source_path); err != nil {
-		os.MkdirAll(p.Source_path, 0755)
-	}
-	p.SourceMount = "/src/"
-	p.docker.add_volume(p.Source_path + ":" + p.SourceMount)
-
-	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		p.DestMount = "/deploy/"
-		p.docker.add_volume(p.DeployPath + ":" + p.DestMount)
-	}
-
-	// Workspace path
-	if p.Workspace_path != "" {
-		p.WorkspaceMount = "/workspace/"
-		p.docker.add_volume(p.Workspace_path + ":" + p.WorkspaceMount)
-	}
-
-	// Define the socket
-	remote_url := false
-	remote_url, err = p.define_socket()
-	if err != nil {
-		return
-	}
-	if !remote_url {
-		p.docker.socket_path = "/tmp/forjj-socks"
-		p.docker.add_volume(p.cmd.socket_path + ":" + p.docker.socket_path)
-	}
-
-	if p.Yaml.Runtime.Docker.Volumes != nil {
-		for _, v := range p.Yaml.Runtime.Docker.Volumes {
-			p.docker.add_volume(v)
-		}
-	}
-
-	if p.Yaml.Runtime.Docker.Env != nil {
-		for k, v := range p.Yaml.Runtime.Docker.Env {
-			if env := os.ExpandEnv(v); v != env && env != "" {
-				gotrace.Trace("expand and set %s from %s to %s", k, v, env)
-				p.docker.add_env(k, env)
-			} else {
-				gotrace.Trace("set %s to %s", k, v)
-				p.docker.add_env(k, v)
-			}
-		}
-	}
-
-	if p.Yaml.Runtime.Docker.Dood {
-		if p.dockerBin == "" {
-			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
-			return
-		}
-		gotrace.Trace("Adding docker dood information...")
-		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
-
-		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters(); err != nil {
-			return err
-		} else {
-			p.docker.opts = append(p.docker.opts, dood_mt_opts...)
-			p.docker.opts = append(p.docker.opts, dood_bc_opts...)
-		}
-	} else {
-		p.docker.opts = append(p.docker.opts, "-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
-	}
-
-	// Check if the container exists and is started.
-	// TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
-	// Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
-	if _, err = p.docker_container_restart(p.Yaml.Runtime.Service.Command, p.Yaml.Runtime.Service.Parameters); err != nil {
-		return
-	}
-
-	err = p.check_service_ready()
-
-	return
-}
-
 // GetDockerDoodParameters returns 2 Arrays of strings
 //
 // mount : contains mount information to share.
@@ -425,65 +243,6 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 		become = append(become, "-e", "GID="+strconv.Itoa(os.Getgid()))
 	}
 
-	return
-}
-
-// check_service_ready Regularly testing the service response. fails after a timeout.
-func (p *Driver) check_service_ready() (err error) {
-	gotrace.Trace("Checking service status...")
-	for i := 1; i < 30; i++ {
-		time.Sleep(time.Second)
-
-		out := ""
-		if out, err = docker_container_status(p.docker.name); err != nil {
-			return
-		}
-
-		if strings.Trim(out, " \n") != "running" {
-			out, err = docker_container_logs(p.docker.name)
-			if err == nil {
-				out = fmt.Sprintf("docker logs:\n---\n%s---\n", out)
-			} else {
-				out = fmt.Sprintf("%s\n", err)
-			}
-			docker_container_remove(p.docker.name)
-			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
-			return
-		} else {
-			return
-		}
-
-	}
-	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
-	return
-}
-
-func (p *Driver) define_as_local_paths() {
-	p.SourceMount = p.Source_path
-	p.DestMount = p.DeployPath
-	if _, err := os.Stat(p.Source_path); err != nil {
-		os.MkdirAll(p.Source_path, 0755)
-	}
-
-	// Workspace path
-	if p.Workspace_path != "" {
-		p.WorkspaceMount = p.Workspace_path
-	} else {
-		p.WorkspaceMount = ""
-	}
-
-}
-
-func (p *Driver) command_start_service() (err error) {
-	if _, err = p.define_socket(); err != nil {
-		return
-	}
-
-	p.define_as_local_paths()
-
-	cmd_args := []string{p.cmd.command}
-	cmd_args = append(cmd_args, p.cmd.args...)
-	_, err = cmd_run(cmd_args)
 	return
 }
 
@@ -535,6 +294,295 @@ func (p *Driver) CheckServiceUp() bool {
 	return strings.Trim(body, " \n") == "OK"
 }
 
+// PluginStopService To stop the plugin service if the service was started before by goforjj
+func (p *Driver) PluginStopService() {
+	if p == nil || !p.service || !p.service_booted || p.local_debug {
+		return
+	}
+	p.url.Path = "quit"
+	p.req.Get(p.url.String()).End()
+
+	if p.Yaml.Runtime.Docker.Image != "" {
+		for i := 0; i <= 10; i++ {
+			time.Sleep(time.Second)
+			if out, _ := p.docker.Status(); out != "started" {
+				return
+			}
+		}
+		if out, _ := p.docker.Status(); out == "started" {
+			p.docker.Stop()
+		}
+	}
+}
+
+// ServiceAddEnv add environment variable to the service runner
+func (p *Driver) ServiceAddEnv(name, value string, hidden bool) {
+
+}
+
+// --------------- Internal functions
+
+func (p *Driver) def_runtime_context() error {
+	switch p.Yaml.Runtime.Service_type {
+	case "REST API": // REST API Service started as daemon
+		p.service = true
+
+	case "shell": // Shell/json process
+		p.service = false
+	default:
+		return fmt.Errorf("Error! Invalid '%s' service_type. Supports only 'REST API' and 'shell'. Use shell as default.", p.Yaml.Runtime.Service_type)
+	}
+	return nil
+}
+
+// Function to start an existing container or create and run a new one
+func (p *Driver) docker_container_restart(cmd string, args []string) error {
+	Image := p.Yaml.Runtime.Docker.Image
+	if Image == "" {
+		return fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored")
+	}
+	Image += ":" + p.Version
+
+	// Docker pull policy: Consider latest image tag as Mutable and others as Immutable.
+	// Until Docker comes with a docker run --pull ... https://github.com/moby/moby/issues/34394
+	// Forjj will do the refresh only for latest image by default.
+	if p.Version == Latest { // Check and refresh image if needed.
+		gotrace.Trace("Latest image policy check:")
+		if err := p.docker.Pull(); err != nil {
+			return err
+		}
+		if container_image, err := p.docker.Inspect(p.docker.name, ".Image"); err == nil && container_image != "" {
+			if image_info, err := p.docker.Inspect(container_image, ".RepoTags"); err != nil {
+				return err
+			} else {
+				if !strings.Contains(image_info, Image) {
+					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
+						p.docker.name)
+					if err = p.docker.Remove(); err != nil {
+						return err
+					}
+				} else {
+					gotrace.Trace("'%s' do not need to be refreshed.", Image)
+				}
+			}
+		}
+	}
+
+	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
+	ret, err := p.docker.Status()
+	if err != nil {
+		return err
+	}
+	status := strings.Trim(ret, " \n")
+	p.cleanup_socket(status)
+	switch status {
+	case "running":
+		return nil
+	case "":
+		dopts := []string{"--name", p.docker.name}
+		p.docker.complete_opts_with(p.docker.volumes, p.docker.envs)
+		dopts = append(dopts, p.docker.opts...)
+		gotrace.Trace("Booting container '%s' status", p.docker.name)
+		return p.docker.Run(dopts, cmd, args)
+	default:
+		gotrace.Trace("Starting container '%s' status", p.docker.name)
+		return p.docker.Start()
+	}
+
+}
+
+// Function to remove any already existing socket file.
+// Usually, needs to be executed if the container is not running.
+func (p *Driver) cleanup_socket(status string) {
+	if status == "running" {
+		return
+	}
+	if p.cmd.socket_file != "" {
+		file := path.Join(p.cmd.socket_path, p.cmd.socket_file)
+		if _, err := os.Stat(file); err == nil {
+			os.Remove(file)
+			gotrace.Trace("Removed socket file '%s' related to a non running container", file)
+		}
+	}
+
+}
+
+func (p *Driver) define_socket() (remote bool, err error) {
+	if p.Yaml.Runtime.Service.Port == 0 && p.cmd.socket_path != "" {
+		err = p.socket_prepare()
+		return
+	}
+
+	err = fmt.Errorf("Forjj connect to remote url - Not yet implemented\n")
+	remote = true
+	return
+}
+
+// docker_start_service Define how to start
+func (p *Driver) docker_start_service() (err error) {
+	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
+
+	// initialize
+	p.docker.Init()
+
+	p.PluginSetVersion(p.Yaml.Version)
+	Image := p.Yaml.Runtime.Docker.Image
+	if Image == "" {
+		return fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored")
+	}
+	Image += ":" + p.Version
+	p.docker.SetImageName(Image)
+	p.docker.SetName(p.docker.name)
+
+	// mode daemon
+	p.docker.AddOpts("-d")
+
+	// Source path
+	if _, err := os.Stat(p.Source_path); err != nil {
+		os.MkdirAll(p.Source_path, 0755)
+	}
+	p.SourceMount = "/src/"
+	p.docker.AddVolume(p.Source_path + ":" + p.SourceMount)
+
+	if p.DeployPath != "" { // For compatibility reason with old forjj.
+		p.DestMount = "/deploy/"
+		p.docker.AddVolume(p.DeployPath + ":" + p.DestMount)
+	}
+
+	// Workspace path
+	if p.Workspace_path != "" {
+		p.WorkspaceMount = "/workspace/"
+		p.docker.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+	}
+
+	// Define the socket
+	remote_url := false
+	remote_url, err = p.define_socket()
+	if err != nil {
+		return
+	}
+	if !remote_url {
+		p.docker.socket_path = "/tmp/forjj-socks"
+		p.docker.AddVolume(p.cmd.socket_path + ":" + p.docker.socket_path)
+	}
+
+	if p.Yaml.Runtime.Docker.Volumes != nil {
+		for _, v := range p.Yaml.Runtime.Docker.Volumes {
+			p.docker.AddVolume(v)
+		}
+	}
+
+	if p.Yaml.Runtime.Docker.Env != nil {
+		for k, v := range p.Yaml.Runtime.Docker.Env {
+			if env := os.ExpandEnv(v); v != env && env != "" {
+				gotrace.Trace("expand and set %s from %s to %s", k, v, env)
+				p.docker.AddEnv(k, env)
+			} else {
+				gotrace.Trace("set %s to %s", k, v)
+				p.docker.AddEnv(k, v)
+			}
+		}
+	}
+
+	if p.key64 != "" {
+		p.docker.AddHiddenEnv("FORJJ_KEY", p.key64)
+	}
+
+	if p.Yaml.Runtime.Docker.Dood {
+		if p.dockerBin == "" {
+			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
+			return
+		}
+		gotrace.Trace("Adding docker dood information...")
+		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
+
+		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters(); err != nil {
+			return err
+		} else {
+			p.docker.AddOpts(dood_mt_opts...)
+			p.docker.AddOpts(dood_bc_opts...)
+		}
+	} else {
+		p.docker.AddOpts("-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
+	}
+
+	// Check if the container exists and is started.
+	// TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
+	// Ex: all p.cmd_data .* in a golang template would give {{ .socket_path }}, etc...
+	if err = p.docker_container_restart(p.Yaml.Runtime.Service.Command, p.Yaml.Runtime.Service.Parameters); err != nil {
+		return
+	}
+
+	err = p.check_service_ready()
+
+	return
+}
+
+// check_service_ready Regularly testing the service response. fails after a timeout.
+func (p *Driver) check_service_ready() (err error) {
+	gotrace.Trace("Checking service status...")
+	for i := 1; i < 30; i++ {
+		time.Sleep(time.Second)
+
+		out := ""
+		if out, err = p.docker.Status(); err != nil {
+			return
+		}
+
+		if strings.Trim(out, " \n") != "running" {
+			err = p.docker.Logs(func(line string) {
+				if out == "" {
+					out = line
+				} else {
+					out += "\n" + line
+				}
+			})
+			if err == nil {
+				out = fmt.Sprintf("docker logs:\n---\n%s---\n", out)
+			} else {
+				out = fmt.Sprintf("%s\n", err)
+			}
+			p.docker.Remove()
+			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
+			return
+		} else {
+			return
+		}
+
+	}
+	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
+	return
+}
+
+func (p *Driver) define_as_local_paths() {
+	p.SourceMount = p.Source_path
+	p.DestMount = p.DeployPath
+	if _, err := os.Stat(p.Source_path); err != nil {
+		os.MkdirAll(p.Source_path, 0755)
+	}
+
+	// Workspace path
+	if p.Workspace_path != "" {
+		p.WorkspaceMount = p.Workspace_path
+	} else {
+		p.WorkspaceMount = ""
+	}
+
+}
+
+func (p *Driver) command_start_service() (err error) {
+	if _, err = p.define_socket(); err != nil {
+		return
+	}
+
+	p.define_as_local_paths()
+
+	cmd_args := p.cmd.command
+	cmd_args = append(cmd_args, p.cmd.args...)
+	_, err = cmd_run(cmd_args)
+	return
+}
+
 // Create the socket link for http and his path.
 func (p *Driver) socket_prepare() (err error) {
 	// Define it once
@@ -560,25 +608,4 @@ func (p *Driver) socket_prepare() (err error) {
 		}
 	}
 	return nil
-}
-
-// PluginStopService To stop the plugin service if the service was started before by goforjj
-func (p *Driver) PluginStopService() {
-	if p == nil || !p.service || !p.service_booted || p.local_debug {
-		return
-	}
-	p.url.Path = "quit"
-	p.req.Get(p.url.String()).End()
-
-	if p.Yaml.Runtime.Docker.Image != "" {
-		for i := 0; i <= 10; i++ {
-			time.Sleep(time.Second)
-			if out, _ := docker_container_status(p.docker.name); out != "started" {
-				return
-			}
-		}
-		if out, _ := docker_container_status(p.docker.name); out == "started" {
-			docker_container_stop(p.docker.name)
-		}
-	}
 }
