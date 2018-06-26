@@ -1,6 +1,7 @@
 package goforjj
 
 import (
+	"strings"
 	"os"
 )
 
@@ -14,7 +15,7 @@ func dockerCmd() (commands []string) {
 	commands = make([]string, 0, size)
 
 	if sudo != "" {
-		commands = append(commands, sudo)
+		commands = append(commands, strings.Split(sudo, " ")...)
 	}
 	commands = append(commands, "docker")
 	return
