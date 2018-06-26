@@ -1,23 +1,24 @@
 package goforjj
 
 import (
-	"syscall"
-	"strings"
 	"bufio"
-	"github.com/forj-oss/forjj-modules/trace"
 	"fmt"
 	"os/exec"
+	"strings"
+	"syscall"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type commandRun struct {
-	command     []string   // Command to start
+	command     []string // Command to start
 	args        []string // Arrays of args to provide to the command
 	socket_path string   // Path to store the socket file
 	socket_file string
 	envs        map[string]string // Collection of environment variable to set
 }
 
-func (c *commandRun)Init(cmd ...string) error {
+func (c *commandRun) Init(cmd ...string) error {
 	if c == nil {
 		return fmt.Errorf("cmdData object is nil")
 	}
@@ -47,7 +48,7 @@ func (c *commandRun) AddEnv(name, value string) {
 }
 
 // runFlowCmd execute a command and transmit output to dedicated function to display it properly anywhere needed.
-func (c *commandRun)runFlow(errFct func(string), outFct func(string)) (err error) {
+func (c *commandRun) runFlow(errFct func(string), outFct func(string)) (err error) {
 	if c == nil {
 		return fmt.Errorf("cmdData is nil")
 	}
@@ -56,7 +57,7 @@ func (c *commandRun)runFlow(errFct func(string), outFct func(string)) (err error
 		return fmt.Errorf("Command cannot be empty")
 	}
 	command := c.command[0]
-	args := make([]string, 0, len(c.args) + len(c.command[1:]))
+	args := make([]string, 0, len(c.args)+len(c.command[1:]))
 	args = append(args, c.command[1:]...)
 	args = append(args, c.args...)
 
@@ -67,10 +68,10 @@ func (c *commandRun)runFlow(errFct func(string), outFct func(string)) (err error
 	cmd.Env = make([]string, len(c.envs))
 	iCount := 0
 	for key, value := range c.envs {
-		cmd.Env[iCount] = key+"="+value
+		cmd.Env[iCount] = key + "=" + value
 		iCount++
 	}
-	gotrace.Trace("RUNNING: %s %s", c.command, strings.Join(c.args, " "))
+	gotrace.Trace("RUNNING: %s %s", command, strings.Join(args, " "))
 
 	go func() {
 		outScanner := bufio.NewScanner(outReader)
