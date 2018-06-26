@@ -1,9 +1,9 @@
 package goforjj
 
 import (
-	"os"
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -37,7 +37,7 @@ func (c *commandRun) SetArgs(args []string) {
 	if c == nil {
 		return
 	}
-	c.args = append(c.args, args...)
+	c.args = args
 }
 
 func (c *commandRun) AddEnv(name, value string) {
@@ -66,9 +66,9 @@ func (c *commandRun) runFlow(errFct func(string), outFct func(string)) (err erro
 	outReader, _ := cmd.StdoutPipe()
 	errReader, _ := cmd.StderrPipe()
 
-	cmd.Env = make([]string, 0, len(c.envs) + len(os.Environ()))
+	cmd.Env = make([]string, 0, len(c.envs)+len(os.Environ()))
 	cmd.Env = append(cmd.Env, os.Environ()...)
-	iCount := len(os.Environ())-1
+	iCount := len(os.Environ()) - 1
 	for key, value := range c.envs {
 		cmd.Env[iCount] = key + "=" + value
 		iCount++
