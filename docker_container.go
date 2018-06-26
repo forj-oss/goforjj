@@ -32,7 +32,7 @@ func (d *DockerContainer) Init(name string) {
 	if d == nil {
 		return
 	}
-	
+
 	d.opts = make([]string, 2)
 	d.opts[0] = "--name"
 	d.opts[1] = name
@@ -41,10 +41,10 @@ func (d *DockerContainer) Init(name string) {
 	d.envs = make(map[string]byte)
 	d.dockerCmd.Init(dockerCmd()...)
 	d.outFunc = func(line string) {
-		fmt.Printf(line)
+		fmt.Print(line, "\n")
 	}
 	d.errFunc = func(line string) {
-		fmt.Printf(line)
+		fmt.Print(line, "\n")
 	}
 }
 
@@ -105,7 +105,7 @@ func (d *DockerContainer) SetImageName(image string) {
 
 // complete_opts_with add volumes and environments to the docker run opts
 func (d *DockerContainer) complete_opts_with() {
-	val := []map[string]byte{d.volumes, d.envs }
+	val := []map[string]byte{d.volumes, d.envs}
 	// Calculate the expected array size
 	tot := len(d.opts)
 

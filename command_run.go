@@ -1,6 +1,7 @@
 package goforjj
 
 import (
+	"os"
 	"bufio"
 	"fmt"
 	"os/exec"
@@ -65,13 +66,14 @@ func (c *commandRun) runFlow(errFct func(string), outFct func(string)) (err erro
 	outReader, _ := cmd.StdoutPipe()
 	errReader, _ := cmd.StderrPipe()
 
-	cmd.Env = make([]string, len(c.envs))
-	iCount := 0
+	cmd.Env = make([]string, 0, len(c.envs) + len(os.Environ()))
+	cmd.Env = append(cmd.Env, os.Environ()...)
+	iCount := len(os.Environ())-1
 	for key, value := range c.envs {
 		cmd.Env[iCount] = key + "=" + value
 		iCount++
 	}
-	gotrace.Trace("RUNNING: %s %s", command, strings.Join(args, " "))
+	gotrace.Trace("RUNNING: %s '%s'", command, strings.Join(args, "' '"))
 
 	go func() {
 		outScanner := bufio.NewScanner(outReader)

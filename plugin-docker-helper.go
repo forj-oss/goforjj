@@ -1,8 +1,8 @@
 package goforjj
 
 import (
-	"strings"
 	"os"
+	"strings"
 )
 
 func dockerCmd() (commands []string) {
