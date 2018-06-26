@@ -49,7 +49,7 @@ func (c *commandRun) AddEnv(name, value string) {
 }
 
 // runFlowCmd execute a command and transmit output to dedicated function to display it properly anywhere needed.
-func (c *commandRun) runFlow(errFct func(string), outFct func(string)) (err error) {
+func (c *commandRun) runFlow(outFct func(string), errFct func(string)) (err error) {
 	if c == nil {
 		return fmt.Errorf("cmdData is nil")
 	}
