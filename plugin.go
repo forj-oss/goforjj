@@ -24,13 +24,14 @@ type Driver struct {
 	// Driver define an instance of a driver
 	Result         *PluginResult         // Json data structured returned.
 	Yaml           *YamlPlugin           // Yaml data definition
+	name           string                // container name
 	Source_path    string                // Plugin source path from Forjj point of view
 	Workspace_path string                // Plugin Workspace path from Forjj point of view
 	DeployPath     string                // Plugin Deployment path
 	DeployName     string                // Plugin Deployment name in path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
-	docker         DockerContainer       // Define data to start the plugin as docker container
+	container      DockerContainer       // Define data to start the plugin as docker container
 	cmd            commandRun            // Define data to start the service process
 	req            *gorequest.SuperAgent // REST API request
 	url            *url.URL              // REST API url
@@ -71,7 +72,7 @@ func (p *Driver) PluginInit(instance string) error {
 	}
 
 	// To define a unique container name based on workspace name.
-	p.docker.name = instance + "-" + p.Yaml.Name
+	p.name = instance + "-" + p.Yaml.Name
 	gotrace.Trace("Service mode : %t", p.service)
 	return nil
 }
@@ -220,7 +221,7 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
 	//   must use a sudoers so your plugin user could call docker against the host server socket.
 	if p.dockerBin == "" {
-		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
+		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
 		return
 	}
 
@@ -305,12 +306,12 @@ func (p *Driver) PluginStopService() {
 	if p.Yaml.Runtime.Docker.Image != "" {
 		for i := 0; i <= 10; i++ {
 			time.Sleep(time.Second)
-			if out, _ := p.docker.Status(); out != "started" {
+			if out, _ := p.container.Status(); out != "started" {
 				return
 			}
 		}
-		if out, _ := p.docker.Status(); out == "started" {
-			p.docker.Stop()
+		if out, _ := p.container.Status(); out == "started" {
+			p.container.Stop(nil)
 		}
 	}
 }
@@ -348,17 +349,17 @@ func (p *Driver) docker_container_restart(cmd string, args []string) error {
 	// Forjj will do the refresh only for latest image by default.
 	if p.Version == Latest { // Check and refresh image if needed.
 		gotrace.Trace("Latest image policy check:")
-		if err := p.docker.Pull(); err != nil {
+		if err := p.container.Pull(nil); err != nil {
 			return err
 		}
-		if container_image, err := p.docker.Inspect(p.docker.name, ".Image"); err == nil && container_image != "" {
-			if image_info, err := p.docker.Inspect(container_image, ".RepoTags"); err != nil {
+		if container_image, err := p.container.Inspect(p.container.Name(), ".Image"); err == nil && container_image != "" {
+			if image_info, err := p.container.Inspect(container_image, ".RepoTags"); err != nil {
 				return err
 			} else {
 				if !strings.Contains(image_info, Image) {
 					gotrace.Trace("The container '%s' is going to be removed as the image has been updated.",
-						p.docker.name)
-					if err = p.docker.Remove(); err != nil {
+						p.container.Name())
+					if err = p.container.Remove(); err != nil {
 						return err
 					}
 				} else {
@@ -368,8 +369,8 @@ func (p *Driver) docker_container_restart(cmd string, args []string) error {
 		}
 	}
 
-	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.docker.name, cmd, args)
-	ret, err := p.docker.Status()
+	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.container.Name(), cmd, args)
+	ret, err := p.container.Status()
 	if err != nil {
 		return err
 	}
@@ -379,14 +380,11 @@ func (p *Driver) docker_container_restart(cmd string, args []string) error {
 	case "running":
 		return nil
 	case "":
-		dopts := []string{"--name", p.docker.name}
-		p.docker.complete_opts_with(p.docker.volumes, p.docker.envs)
-		dopts = append(dopts, p.docker.opts...)
-		gotrace.Trace("Booting container '%s' status", p.docker.name)
-		return p.docker.Run(dopts, cmd, args)
+		gotrace.Trace("Booting container '%s' status", p.container.Name())
+		return p.container.Run(cmd, args)
 	default:
-		gotrace.Trace("Starting container '%s' status", p.docker.name)
-		return p.docker.Start()
+		gotrace.Trace("Starting container '%s' status", p.container.Name())
+		return p.container.Start(nil)
 	}
 
 }
@@ -420,39 +418,37 @@ func (p *Driver) define_socket() (remote bool, err error) {
 
 // docker_start_service Define how to start
 func (p *Driver) docker_start_service() (err error) {
-	gotrace.Trace("Starting it as docker container '%s'", p.docker.name)
+	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
 
-	// initialize
-	p.docker.Init()
+	// Initialize forjj plugins docker container.
+	p.container.Init(p.name)
 
-	p.PluginSetVersion(p.Yaml.Version)
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
 		return fmt.Errorf("runtime/docker/image is missing in the driver definition. driver ignored")
 	}
 	Image += ":" + p.Version
-	p.docker.SetImageName(Image)
-	p.docker.SetName(p.docker.name)
+	p.container.SetImageName(Image)
 
 	// mode daemon
-	p.docker.AddOpts("-d")
+	p.container.AddOpts("-d")
 
 	// Source path
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
 	p.SourceMount = "/src/"
-	p.docker.AddVolume(p.Source_path + ":" + p.SourceMount)
+	p.container.AddVolume(p.Source_path + ":" + p.SourceMount)
 
 	if p.DeployPath != "" { // For compatibility reason with old forjj.
 		p.DestMount = "/deploy/"
-		p.docker.AddVolume(p.DeployPath + ":" + p.DestMount)
+		p.container.AddVolume(p.DeployPath + ":" + p.DestMount)
 	}
 
 	// Workspace path
 	if p.Workspace_path != "" {
 		p.WorkspaceMount = "/workspace/"
-		p.docker.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+		p.container.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
 	}
 
 	// Define the socket
@@ -462,13 +458,13 @@ func (p *Driver) docker_start_service() (err error) {
 		return
 	}
 	if !remote_url {
-		p.docker.socket_path = "/tmp/forjj-socks"
-		p.docker.AddVolume(p.cmd.socket_path + ":" + p.docker.socket_path)
+		p.container.socket_path = "/tmp/forjj-socks"
+		p.container.AddVolume(p.cmd.socket_path + ":" + p.container.socket_path)
 	}
 
 	if p.Yaml.Runtime.Docker.Volumes != nil {
 		for _, v := range p.Yaml.Runtime.Docker.Volumes {
-			p.docker.AddVolume(v)
+			p.container.AddVolume(v)
 		}
 	}
 
@@ -476,21 +472,21 @@ func (p *Driver) docker_start_service() (err error) {
 		for k, v := range p.Yaml.Runtime.Docker.Env {
 			if env := os.ExpandEnv(v); v != env && env != "" {
 				gotrace.Trace("expand and set %s from %s to %s", k, v, env)
-				p.docker.AddEnv(k, env)
+				p.container.AddEnv(k, env)
 			} else {
 				gotrace.Trace("set %s to %s", k, v)
-				p.docker.AddEnv(k, v)
+				p.container.AddEnv(k, v)
 			}
 		}
 	}
 
 	if p.key64 != "" {
-		p.docker.AddHiddenEnv("FORJJ_KEY", p.key64)
+		p.container.AddHiddenEnv("FORJJ_KEY", p.key64)
 	}
 
 	if p.Yaml.Runtime.Docker.Dood {
 		if p.dockerBin == "" {
-			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.docker.name)
+			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
 			return
 		}
 		gotrace.Trace("Adding docker dood information...")
@@ -499,12 +495,14 @@ func (p *Driver) docker_start_service() (err error) {
 		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters(); err != nil {
 			return err
 		} else {
-			p.docker.AddOpts(dood_mt_opts...)
-			p.docker.AddOpts(dood_bc_opts...)
+			p.container.AddOpts(dood_mt_opts...)
+			p.container.AddOpts(dood_bc_opts...)
 		}
 	} else {
-		p.docker.AddOpts("-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
+		p.container.AddOpts("-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
 	}
+
+	p.container.complete_opts_with()
 
 	// Check if the container exists and is started.
 	// TODO: Be able to interpret some variables written in the <plugin>.yaml and interpreted here to start the daemon correctly.
@@ -525,12 +523,12 @@ func (p *Driver) check_service_ready() (err error) {
 		time.Sleep(time.Second)
 
 		out := ""
-		if out, err = p.docker.Status(); err != nil {
+		if out, err = p.container.Status(); err != nil {
 			return
 		}
 
 		if strings.Trim(out, " \n") != "running" {
-			err = p.docker.Logs(func(line string) {
+			err = p.container.Logs(nil, func(line string) {
 				if out == "" {
 					out = line
 				} else {
@@ -542,7 +540,7 @@ func (p *Driver) check_service_ready() (err error) {
 			} else {
 				out = fmt.Sprintf("%s\n", err)
 			}
-			p.docker.Remove()
+			p.container.Remove()
 			err = fmt.Errorf("%sContainer '%s' has stopped unexpectedely.", out, p.Yaml.Name)
 			return
 		} else {
@@ -550,7 +548,7 @@ func (p *Driver) check_service_ready() (err error) {
 		}
 
 	}
-	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.docker.name)
+	err = fmt.Errorf("Plugin Service '%s' not started successfully as docker container '%s'. check docker logs\n", p.Yaml.Name, p.container.Name())
 	return
 }
 

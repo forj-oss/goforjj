@@ -7,10 +7,17 @@ import (
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
+/*
+This module is a docker helper for most of forjj command.
+It is not a generic docker wrapper. If you want to call docker, I suggest to use the docker library directly
+
+In the future, I expect to remove this code and replace by the docker library directly.
+*/
+
 // DockerContainer is the named container information
 type DockerContainer struct {
 	name        string
-	opts        []string
+	opts        []string // docker RUN Options
 	image       string
 	socket_path string
 	volumes     map[string]byte
@@ -21,8 +28,15 @@ type DockerContainer struct {
 }
 
 // Init initialize the DockerContainer structure.
-func (d *DockerContainer) Init() {
-	d.opts = make([]string, 0, 5)
+func (d *DockerContainer) Init(name string) {
+	if d == nil {
+		return
+	}
+	
+	d.opts = make([]string, 2)
+	d.opts[0] = "--name"
+	d.opts[1] = name
+	d.name = name
 	d.volumes = make(map[string]byte)
 	d.envs = make(map[string]byte)
 	d.dockerCmd.Init(dockerCmd()...)
@@ -36,25 +50,16 @@ func (d *DockerContainer) Init() {
 
 // AddOpts add some docker options (passed before the image name)
 func (d *DockerContainer) AddOpts(opts ...string) {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return
 	}
 
 	d.opts = append(d.opts, opts...)
 }
 
-// SetName defines the docker container name
-func (d *DockerContainer) SetName(name string) {
-	if d == nil {
-		return
-	}
-
-	d.name = name
-}
-
 // Name return the container name to use.
 func (d *DockerContainer) Name() string {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return ""
 	}
 
@@ -63,12 +68,8 @@ func (d *DockerContainer) Name() string {
 
 // AddVolume add a volume for a docker container
 func (d *DockerContainer) AddVolume(volume string) {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return
-	}
-
-	if d.envs == nil {
-		d.Init()
 	}
 	if ok, _ := regexp.MatchString("^.*(:.*(:(ro|rw))?)?$", volume); ok {
 		d.volumes[volume] = 'v'
@@ -77,11 +78,8 @@ func (d *DockerContainer) AddVolume(volume string) {
 
 // AddEnv add an environment variable to the container via -e key=value
 func (d *DockerContainer) AddEnv(key, value string) {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return
-	}
-	if d.envs == nil {
-		d.Init()
 	}
 	env := key + "=" + value
 	d.envs[env] = 'e'
@@ -89,11 +87,8 @@ func (d *DockerContainer) AddEnv(key, value string) {
 
 // AddHiddenEnv add an environment variable to the container via -e key and the environment variable to the docker run command.
 func (d *DockerContainer) AddHiddenEnv(key, value string) {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return
-	}
-	if d.envs == nil {
-		d.Init()
 	}
 	env := key
 	d.envs[env] = 'e'
@@ -102,13 +97,15 @@ func (d *DockerContainer) AddHiddenEnv(key, value string) {
 
 // SetImageName define the image name to use for the container.
 func (d *DockerContainer) SetImageName(image string) {
-	if d == nil {
+	if d == nil || d.envs == nil {
 		return
 	}
 	d.image = image
 }
 
-func (d *DockerContainer) complete_opts_with(val ...map[string]byte) {
+// complete_opts_with add volumes and environments to the docker run opts
+func (d *DockerContainer) complete_opts_with() {
+	val := []map[string]byte{d.volumes, d.envs }
 	// Calculate the expected array size
 	tot := len(d.opts)
 
@@ -131,18 +128,27 @@ func (d *DockerContainer) complete_opts_with(val ...map[string]byte) {
 }
 
 // Run the container
-func (d *DockerContainer) Run(dockerOpts []string, cmd string, args []string) error {
+func (d *DockerContainer) Run(cmd string, args []string) error {
 	gotrace.Trace("Starting container from image '%s'", d.image)
 
-	d.dockerCmd.SetArgs(d.configureDockerCli("run", dockerOpts, cmd, args))
+	d.dockerCmd.SetArgs(d.configureDockerRunCli("run", d.opts, d.image, cmd, args))
 	return d.dockerCmd.runFlow(d.outFunc, d.errFunc)
 }
 
-// configureDockerCli Helps to configure docker cli call
-func (d *DockerContainer) configureDockerCli(action string, dopts []string, command string, cmdArgs []string) (args []string) {
+// configureDockerCli Helps to configure docker cli run call
+//
+// - action then
+// - action options then
+// - object then
+// - command then
+// - commands arg
+//
+// Following docker actions follow this format.
+// docker run : https://docs.docker.com/engine/reference/commandline/run/
+func (d *DockerContainer) configureDockerRunCli(action string, dopts []string, image, command string, cmdArgs []string) (args []string) {
 	args = make([]string, 0, 3+len(dopts)+len(d.opts)+len(cmdArgs))
 	args = append(args, action)
-	if d.opts != nil {
+	if d.opts != nil && action == "run" {
 		args = append(args, d.opts...)
 	}
 	if dopts != nil {
@@ -155,17 +161,50 @@ func (d *DockerContainer) configureDockerCli(action string, dopts []string, comm
 	return
 }
 
+// configureDockerObjectCli
+//
+// - action then
+// - action options then
+// - object
+//
+// Following docker actions follow this format
+// docker logs : https://docs.docker.com/engine/reference/commandline/logs/
+// docker pull : https://docs.docker.com/engine/reference/commandline/pull/
+func (d *DockerContainer) configureDockerObjectCli(action string, dopts []string, object string) []string {
+	return d.configureDockerObjectsCli(action, dopts, object)
+}
+
+// configureDockerObjectsCli Helps to configure docker cli run call
+//
+// - action then
+// - action options then
+// - objects
+//
+// Following docker actions follow this format
+// docker stop    : https://docs.docker.com/engine/reference/commandline/stop/
+// docker start   : https://docs.docker.com/engine/reference/commandline/start/
+// docker inspect : https://docs.docker.com/engine/reference/commandline/inspect/
+func (d *DockerContainer) configureDockerObjectsCli(action string, dopts []string, objects ...string) (args []string) {
+	args = make([]string, 0, 1+len(dopts)+len(objects))
+	args = append(args, action)
+	if dopts != nil {
+		args = append(args, dopts...)
+	}
+	args = append(args, objects...)
+	return
+}
+
 // Stop stop the named container
-func (d *DockerContainer) Stop() error {
+func (d *DockerContainer) Stop(dopts []string) error {
 	gotrace.Trace("Stopping container '%s'", d.name)
-	d.dockerCmd.SetArgs(d.configureDockerCli("stop", nil, d.Name(), nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectsCli("stop", dopts, d.Name()))
 	return d.dockerCmd.runFlow(d.outFunc, d.errFunc)
 }
 
 // Start the named container
-func (d *DockerContainer) Start() error {
+func (d *DockerContainer) Start(dopts []string) error {
 	gotrace.Trace("Starting container '%s'", d.name)
-	d.dockerCmd.SetArgs(d.configureDockerCli("start", nil, d.Name(), nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectsCli("start", dopts, d.Name()))
 	return d.dockerCmd.runFlow(d.outFunc, d.errFunc)
 }
 
@@ -175,30 +214,30 @@ func (d *DockerContainer) Status() (string, error) {
 }
 
 // Logs printout the log to the out function.
-func (d *DockerContainer) Logs(out func(string)) error {
+func (d *DockerContainer) Logs(dopts []string, out func(string)) error {
 	gotrace.Trace("Getting container '%s' logs", d.Name())
-	d.dockerCmd.SetArgs(d.configureDockerCli("logs", nil, d.Name(), nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectCli("logs", dopts, d.Name()))
 	return d.dockerCmd.runFlow(out, d.errFunc)
 }
 
 // Remove a container
 func (d *DockerContainer) Remove() error {
 	gotrace.Trace("Removing container '%s'", d.name)
-	d.dockerCmd.SetArgs(d.configureDockerCli("rm", []string{"-f"}, d.name, nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectCli("rm", []string{"-f"}, d.name))
 	return d.dockerCmd.runFlow(d.outFunc, d.errFunc)
 }
 
 // Pull the container image
-func (d *DockerContainer) Pull() error {
+func (d *DockerContainer) Pull(dopts []string) error {
 	gotrace.Trace("Pulling image '%s'", d.image)
-	d.dockerCmd.SetArgs(d.configureDockerCli("pull", nil, d.image, nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectCli("pull", dopts, d.image))
 	return d.dockerCmd.runFlow(d.outFunc, d.errFunc)
 }
 
 // Inspect the named container.
 func (d *DockerContainer) Inspect(name string, data string) (ret string, _ error) {
 	gotrace.Trace("Getting info '%s' from '%s'", data, name)
-	d.dockerCmd.SetArgs(d.configureDockerCli("inspect", []string{"--format", "{{ " + data + " }}"}, name, nil))
+	d.dockerCmd.SetArgs(d.configureDockerObjectsCli("inspect", []string{"--format", "{{ " + data + " }}"}, name))
 	return ret, d.dockerCmd.runFlow(func(line string) {
 		if ret == "" {
 			ret = line
@@ -207,4 +246,3 @@ func (d *DockerContainer) Inspect(name string, data string) (ret string, _ error
 		}
 	}, d.errFunc)
 }
-
