@@ -148,9 +148,6 @@ func (d *DockerContainer) Run(cmd string, args []string) error {
 func (d *DockerContainer) configureDockerRunCli(action string, dopts []string, image, command string, cmdArgs []string) (args []string) {
 	args = make([]string, 0, 3+len(dopts)+len(d.opts)+len(cmdArgs))
 	args = append(args, action)
-	if d.opts != nil && action == "run" {
-		args = append(args, d.opts...)
-	}
 	if dopts != nil {
 		args = append(args, dopts...)
 	}
