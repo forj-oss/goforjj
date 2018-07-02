@@ -154,7 +154,10 @@ func (d *DockerContainer) configureDockerRunCli(action string, dopts []string, i
 	if dopts != nil {
 		args = append(args, dopts...)
 	}
-	args = append(args, d.image, command)
+	args = append(args, d.image)
+	if command != "" {
+		args = append(args, command)
+	}
 	if cmdArgs != nil {
 		args = append(args, cmdArgs...)
 	}
