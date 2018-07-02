@@ -146,7 +146,7 @@ func (d *DockerContainer) Run(cmd string, args []string) error {
 // Following docker actions follow this format.
 // docker run : https://docs.docker.com/engine/reference/commandline/run/
 func (d *DockerContainer) configureDockerRunCli(action string, dopts []string, image, command string, cmdArgs []string) (args []string) {
-	args = make([]string, 0, 3+len(dopts)+len(d.opts)+len(cmdArgs))
+	args = make([]string, 0, 3+len(dopts)+len(cmdArgs))
 	args = append(args, action)
 	if dopts != nil {
 		args = append(args, dopts...)
