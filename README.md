@@ -1,22 +1,24 @@
-# Introduction
+# GO Forjj
+
+## Introduction
 
 This repo contains several golang packages and a golang generator to create a FORJJ plugin and implements the FORJJ plugin protocol in golang.
 
-# What's this repo provides?
+## What's this repo provides?
 
 2 things:
 
 - go-forjj package
 - a GO generate code from yaml file to build/maintain FORJJ plugin.
 
-##  go-forjj package
+### go-forjj package
 
 This code provides several generic functions and the Plugin CLI default structure to create your plugin in GO.
 
 list to TDB. Probably built from `godoc`
 For now, I suggest you to read the [main goforjj source file] (forjj-plugin-app.go)
 
-# Why creating your forjj plugin
+## Why creating your forjj plugin
 
 Why will I need to create a forjj plugin?
 Well, usually, you won't need it.
@@ -24,6 +26,7 @@ Well, usually, you won't need it.
 But if you want to add an application that is not covered by current FORJJ plugins, then you will certainly need to write your own plugin to manage the new application (create/configure and maintain it) and share it.
 
 You have 2 possibilities:
+
 1. create your own plugin in any language that must respect forjj plugin protocol. It can be a REST API or a simple script which return a json data and can be started from docker or natively where forjj is running.
 2. Use `goforjj` to create your plugin in golang.
 
@@ -34,36 +37,78 @@ This code will implement the FORJJ plugin protocol.
 
 # Create your FORJJ plugin with GO
 
-1. Optional. Write your FORJJ plugin yaml file as described in [forjj-contribs README](https://github.hpe.com/forjj/forjj-contribs#description-of-yaml)
+1. Create an empty repository. The recommendation is to name it `forjj-<pluginName>`. But this is not a requirement. 
+    The core requirement is that your repository name is your plugin name.
 
-This file mainly will define a list of flags to provide to the plugin through `forjj` cli
+    ```bash
+    git init forjj-myplugin
+    cd forjj-myplugin
+    printf "# forjj-myplugin\n\n## Introduction\n\nThis is my first forjj plugin\n" > README.md
+    git add README.md
+    git commit -m "Initial commit"
+    ```
 
-**If you do not create it, go generate will create one for you.**
+2. If you want your plugin to be part of Forjj ecosystem, the repository needs to be hosted in forj-oss organization.
+    To create it, clone git@github.com:forj-oss/forj-oss-infra, and add your repository in the `deployments/production/Forjfile` (`repositories`) and a repository team (`groups/<forjj-<pluginName>/members[]`)
+    This team will be owner of the repo.
 
-2. Clone forjj-contribs and create a directory as follow:
-   each FORJJ plugins are categorized. Example: Github is an `upstream` plugin. Jenkins is a `ci` plugin
-   you can create a subdirectory under existing one or create a new category and a sub directory.
-   The directory name in your choosen category must be the plugin name.
-3. Move to your plugin directory and create a `plugin.go` with the following:
+    You have example in [forj-oss-infra](https://github.com/forj-oss/forj-oss-infra/blob/master/deployments/production/Forjfile)
+
+    To attach your initial git repo to your new forj-oss/forjj-myplugin, do the following:
+
+    ```bash
+    git remote add origin git@github.com:<yourName>/forjj-myplugin
+    git remote add upstream git@github.com:forjj-oss/forjj-myplugin
+    ```
+
+    As soon as forj-oss has created your repo, we should be able to 
+3. Optionnally, with GO, a build-env repo helps to build forj-oss projects with your code/build specification. We assume, you are using bash as shell.
+  
+    Do the following:
+
+    ```bash
+    git clone git@github.com:forj-oss/build-env ../build-env
+    ../build-env/configure-build-env.sh forjj-myplugin go
+    ```
+
+    Load the new build-env (bash script)
+
+    ```bash
+    source build-env.sh
+    ```
+    And create your GO build container
+
+    ```bash
+    create-go-build-env.sh
+    ```
+
+    As soon as your build-env is loaded, you have direct access via docker of `go`, `glide` and `inenv`
+
+    When you want to unload your build environment, call `build-env-unset`
+
+    When you want to load it again, call `build-env` (alias added your `.bashrc`)
+
+    If you do not take care, the GO binary you will produce will have some dependency to the build environment libraries.
+    To avoid that, edit `build-env.sh` and add `export CGO_ENABLED=0` and edit `build-unset.sh` and add `unset CGO_ENABLED`
+
+4. Move to your plugin directory and create a `plugin.go` with the following:
 
     ```go
     package main
 
-    //go:generate go get github.com/forj-oss/goforjj gopkg.in/yaml.v2
-    //go:generate go build -o $GOPATH/bin/genapp github.com/forj-oss/goforjj/genapp
-    //go:generate genapp <PluginName>.yaml
+    //go:generate go build -o /go/bin/forjj-genapp forjj-jenkins/vendor/github.com/forj-oss/goforjj/genapp
+    //go:generate /go/bin/forjj-genapp jenkins.yaml vendor/github.com/forj-oss/goforjj/genapp
 
     ```
     Replace `<PluginName>.yaml` by your own plugin definition yaml file created at step 1.
 
-3. Then do :
+5. Then do :
 
     ```bash
     go generate           # To generate the flags management code.
     ```
   Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
 
-- `shell` :
 - `REST API` : Default.
 
 If you have added some extra commands, a `<command>.go` will be also created the first time with initial code. So, you will just need to edit it and add your specific command code.
@@ -73,7 +118,6 @@ If you have added some extra commands, a `<command>.go` will be also created the
 So, now you can start your plugin development!!!
 
 **NOTE**: A lot of features and flags values are managed by the `goforjj` package, please read the `goforjj` package [documentation above] (#go-forjj-package).
-
 
 ## Writing your `<plugin>.yaml` file
 
