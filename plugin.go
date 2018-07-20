@@ -418,7 +418,7 @@ func (p *Driver) docker_start_service() (err error) {
 	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
 
 	// Initialize forjj plugins docker container.
-	p.container.Init(p.name)
+	p.container.Init(p.DeployName + "-" + p.name)
 
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
