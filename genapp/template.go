@@ -268,4 +268,6 @@ task_flags:
   maintain:
     deploy-to:
       default: docker
+
+# plugin yaml documentation on https://github.com/forj-oss/goforjj/blob/master/README.md#writing-your-pluginyaml-file
 `
