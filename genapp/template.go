@@ -254,28 +254,16 @@ runtime:
     #socket: "{{ .Yaml.Name }}.sock"
     parameters: [ "service", "start" ]
 created_flag_file: "{{ "{{ .InstanceName }}" }}/forjj-{{ "{{ .Name }}" }}.yaml"
-actions:
+task_flags:
   common:
     flags:
       forjj-infra:
-        help: "Name of the Infra repository to use"
       {{ .Yaml.Name }}-debug:
         help: "To activate {{ .Yaml.Name }} debug information"
-      forjj-source-mount: # Used by the plugin to store plugin data in yaml. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
-        help: "Where the source dir is located for {{ .Yaml.Name }} plugin."
-  create:
-    help: "Create a {{ .Yaml.Name }} instance source code."
-    flags:
-      # Options related to source code
-      forjj-instance-name: # Used by the plugin to store plugin data in yaml for the current instance. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
-        help: "Name of the {{ .Yaml.Name }} instance given by forjj."
-        group: "source"
-  update:
-    help: "Update a {{ .Yaml.Name }} instance source code"
-    flags:
-      forjj-instance-name: # Used by the plugin to store plugin data in yaml for the current instance. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
-        help: "Name of the {{ .Yaml.Name }} instance given by forjj."
-        group: "source"
+	  forjj-source-mount: # Used by the plugin to store plugin data in yaml. See {{ go_vars_underscored .Yaml.Name }}_plugin.go
+	  forjj-instance-name:
   maintain:
-    help: "Instantiate {{ .Yaml.Name }} thanks to source code."
+	help: "Instantiate {{ .Yaml.Name }} thanks to source code."
+
+# plugin yaml documentation on https://github.com/forj-oss/goforjj/blob/master/README.md#writing-your-pluginyaml-file
 `
