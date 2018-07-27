@@ -93,21 +93,43 @@ This code will implement the FORJJ plugin protocol.
 
 4. Move to your plugin directory and create a `plugin.go` with the following:
 
+    You need the genapp binary in the /bin of your go tree 
+    genapp is part of goforjj project, currently you need to build it from the source. [goforjj build doc]
+
+	TODO: @Christophe Create a binary release of genapp in github
+
     ```go
     package main
 
-    //go:generate go build -o /go/bin/forjj-genapp forjj-jenkins/vendor/github.com/forj-oss/goforjj/genapp
-    //go:generate /go/bin/forjj-genapp jenkins.yaml vendor/github.com/forj-oss/goforjj/genapp
+    //go:generate go build -o /go/bin/genapp forjj-myplugin/vendor/github.com/forj-oss/goforjj/genapp
+    //go:generate /go/bin/genapp myplugin.yaml vendor/github.com/forj-oss/goforjj/genapp
 
     ```
-    Replace `<PluginName>.yaml` by your own plugin definition yaml file created at step 1.
 
 5. Then do :
 
     ```bash
+    glide init           # Initialize of glide.yaml and glide.lock
+    ```
+
+    ```bash
+    glide get github.com/forj-oss/goforjj         # Get the goforjj project in te tree to access the template
+    ```
+
+    ```bash
     go generate           # To generate the flags management code.
     ```
-  Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
+    Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
+
+    ```bash
+    glide update           # Update dependencies
+    ```
+
+    ```bash
+    build.sh           # Build plugin
+    ```
+
+  Now you should have a hello-world plugin 
 
 - `REST API` : Default.
 
