@@ -49,12 +49,6 @@ function be_docker_setup {
     source build-env.sh --sudo ..."
        return 1
     fi
-
-    $BUILD_ENV_DOCKER inspect forjj-golang-env > /dev/null
-    if [ $? -ne 0 ]
-    then
-       bin/create-build-env.sh
-    fi
 }
 
 function be_common_load {
@@ -257,6 +251,26 @@ function docker_build_env {
     then
         be_create_${1}_docker_build
     fi
+
+    if [[ $1 = core ]]
+    then
+        _be_gitignore
+    fi
+}
+
+function _be_gitignore {
+    if [[ -f .gitignore ]]
+    then
+       if [[ "$(grep '^.be-\*$' .gitignore)" = "" ]]
+       then
+           echo ".be-*" >> .gitignore
+           echo ".gitignore updated."
+       fi
+    else
+        echo ".be-*" > .gitignore
+        echo ".gitignore created."
+    fi
+
 }
 
 function _be_set_debug {
