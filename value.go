@@ -159,6 +159,12 @@ func (v *ValueStruct)GetStringSlice() ([]string) {
 // - string : string equality
 // - []string : same list of elements and each elements are at the same position
 func (v *ValueStruct)Equal(value *ValueStruct) (bool) {
+	if v == nil && value == nil {
+		return true
+	}
+	if v == nil || value == nil {
+		return false
+	}
 	if v.internal_type != value.internal_type {
 		return false
 	}
