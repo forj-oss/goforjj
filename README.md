@@ -91,31 +91,50 @@ This code will implement the FORJJ plugin protocol.
     If you do not take care, the GO binary you will produce will have some dependency to the build environment libraries.
     To avoid that, edit `build-env.sh` and add `export CGO_ENABLED=0` and edit `build-unset.sh` and add `unset CGO_ENABLED`
 
-4. Move to your plugin directory and create a `plugin.go` with the following:
+
+4.  You need the genapp binary in the /bin of your go tree 
+    genapp is part of goforjj project, currently you need to build it from the source.
+
+    [Build genapp instructions](build_genapp.md)
+   
+5. Move to your plugin directory and create a `plugin.go` with the following:
 
     ```go
     package main
 
-    //go:generate go build -o /go/bin/forjj-genapp forjj-jenkins/vendor/github.com/forj-oss/goforjj/genapp
-    //go:generate /go/bin/forjj-genapp jenkins.yaml vendor/github.com/forj-oss/goforjj/genapp
+    //go:generate go build -o /go/bin/genapp forjj-myplugin/vendor/github.com/forj-oss/goforjj/genapp
+    //go:generate /go/bin/genapp myplugin.yaml vendor/github.com/forj-oss/goforjj/genapp
 
     ```
-    Replace `<PluginName>.yaml` by your own plugin definition yaml file created at step 1.
 
-5. Then do :
+6. Then do :
+
+    ```bash
+    glide init           # Initialize of glide.yaml and glide.lock
+    glide cc 		 # Optional, Clear glide cache if you have already download a template 
+    glide get github.com/forj-oss/goforjj         # Get the goforjj project in te tree to access the template
+    ```
 
     ```bash
     go generate           # To generate the flags management code.
     ```
-  Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
+    Depending on your plugin definition (`/runtime/service_type`), `go generate` will create several files:
+
+    ```bash
+    glide update           # Update dependencies
+    ```
+
+    the initial generated code is functionnal! So, you can do:
+
+    ```bash
+    go build           # Build plugin
+    ```
+
+  Now you should have a hello-world plugin 
 
 - `REST API` : Default.
 
 If you have added some extra commands, a `<command>.go` will be also created the first time with initial code. So, you will just need to edit it and add your specific command code.
-
-**NOTE**: the initial generated code is functionnal!!! So, you can do a `go build` and run the binary generated to make a basic try!
-
-So, now you can start your plugin development!!!
 
 **NOTE**: A lot of features and flags values are managed by the `goforjj` package, please read the `goforjj` package [documentation above] (#go-forjj-package).
 
