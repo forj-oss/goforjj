@@ -95,7 +95,7 @@ This code will implement the FORJJ plugin protocol.
 4.  You need the genapp binary in the /bin of your go tree 
     genapp is part of goforjj project, currently you need to build it from the source.
 
-    [Build genapp](build_genapp.md)
+    [Build genapp instructions](build_genapp.md)
    
 5. Move to your plugin directory and create a `plugin.go` with the following:
 
