@@ -96,7 +96,9 @@ This code will implement the FORJJ plugin protocol.
     You need the genapp binary in the /bin of your go tree 
     genapp is part of goforjj project, currently you need to build it from the source. [goforjj build doc]
 
-	TODO: @Christophe Create a binary release of genapp in github
+    ```
+    go get github.com/forj-oss/goforjj
+    ```
 
     ```go
     package main
@@ -110,9 +112,7 @@ This code will implement the FORJJ plugin protocol.
 
     ```bash
     glide init           # Initialize of glide.yaml and glide.lock
-    ```
-
-    ```bash
+    glide cc 		 # Optional, Clear glide cache if you have already download a template 
     glide get github.com/forj-oss/goforjj         # Get the goforjj project in te tree to access the template
     ```
 
@@ -125,8 +125,10 @@ This code will implement the FORJJ plugin protocol.
     glide update           # Update dependencies
     ```
 
+    the initial generated code is functionnal! So, you can do:
+
     ```bash
-    build.sh           # Build plugin
+    go build           # Build plugin
     ```
 
   Now you should have a hello-world plugin 
@@ -134,10 +136,6 @@ This code will implement the FORJJ plugin protocol.
 - `REST API` : Default.
 
 If you have added some extra commands, a `<command>.go` will be also created the first time with initial code. So, you will just need to edit it and add your specific command code.
-
-**NOTE**: the initial generated code is functionnal!!! So, you can do a `go build` and run the binary generated to make a basic try!
-
-So, now you can start your plugin development!!!
 
 **NOTE**: A lot of features and flags values are managed by the `goforjj` package, please read the `goforjj` package [documentation above] (#go-forjj-package).
 
