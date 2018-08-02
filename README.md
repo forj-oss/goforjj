@@ -91,14 +91,13 @@ This code will implement the FORJJ plugin protocol.
     If you do not take care, the GO binary you will produce will have some dependency to the build environment libraries.
     To avoid that, edit `build-env.sh` and add `export CGO_ENABLED=0` and edit `build-unset.sh` and add `unset CGO_ENABLED`
 
-4. Move to your plugin directory and create a `plugin.go` with the following:
 
-    You need the genapp binary in the /bin of your go tree 
-    genapp is part of goforjj project, currently you need to build it from the source. [goforjj build doc]
+4.  You need the genapp binary in the /bin of your go tree 
+    genapp is part of goforjj project, currently you need to build it from the source.
 
-    ```
-    go get github.com/forj-oss/goforjj
-    ```
+    [Build genapp]()
+   
+5. Move to your plugin directory and create a `plugin.go` with the following:
 
     ```go
     package main
@@ -108,7 +107,7 @@ This code will implement the FORJJ plugin protocol.
 
     ```
 
-5. Then do :
+6. Then do :
 
     ```bash
     glide init           # Initialize of glide.yaml and glide.lock
