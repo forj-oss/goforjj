@@ -18,6 +18,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const SocketPathLimit = 108 // See syscall.RawSockaddrUnix.Path in ztypes_linux_amd64.go - Linux limit
+
 const Latest = "latest"
 
 type Driver struct {
@@ -587,6 +589,10 @@ func (p *Driver) socket_prepare() (err error) {
 
 	p.cmd.socket_file = p.Yaml.Name + ".sock"
 	socket := path.Join(p.cmd.socket_path, p.cmd.socket_file)
+	if s := len(socket); s >= SocketPathLimit {
+		// Eliminate the Invalid Argument standard message due to this linux socket limit.
+		return fmt.Errorf("Socket path exceed linux array size limit (%d). socket '%s' length is %d", SocketPathLimit, socket, s)
+	}
 	p.req = gorequest.New()
 	p.req.Transport.Dial = func(_, _ string) (net.Conn, error) {
 		return net.DialTimeout("unix", socket, defaultTimeout)
