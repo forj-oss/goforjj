@@ -3,8 +3,11 @@ package goforjj
 import (
 	"fmt"
 	"regexp"
+	"context"
 
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 )
 
 /*
@@ -25,6 +28,8 @@ type DockerContainer struct {
 	dockerCmd   commandRun
 	outFunc     func(line string)
 	errFunc     func(line string)
+	inspect     types.ContainerJSON
+	cli         *client.Client
 }
 
 // Init initialize the DockerContainer structure.
@@ -245,4 +250,27 @@ func (d *DockerContainer) Inspect(name string, data string) (ret string, _ error
 			ret += "\n" + line
 		}
 	}, d.errFunc)
+}
+
+// ContainerHasChanged simply return true is the container
+func (d *DockerContainer) ContainerHasChanged() bool {
+	d.doInspect()
+	return false
+}
+
+func (d *DockerContainer) cliInit() (err error) {
+	if d.cli != nil {
+		return
+	}
+	d.cli, err = client.NewEnvClient()
+	return
+}
+
+func (d *DockerContainer) doInspect() (err error) {
+	if err = d.cliInit() ; err != nil {
+		return
+	}
+
+	d.inspect, err = d.cli.ContainerInspect(context.Background(), d.name)
+	return
 }
