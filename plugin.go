@@ -201,6 +201,29 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 	return &result, nil
 }
 
+// GetForjjDockerSocketPath provides the path to mount on docker container if this container is going to run
+// some forjj commands
+// Ex:
+// when forjj-jenkins container is started, it starts Jenkins-master as a container configured to do DooD.
+// That means, jenkins-master starts container beside Jenkins-master container.
+//
+// Jenkins itself run forjj to check & update Jenkins. So, when forjj will be started, it will start docker 
+// in the context of Jenkins master DooD.
+// So, because of that, if socket is used by forjj, it must be mounted with path host reference, ie 
+// the path known in the docker daemon context
+//
+// So thanks to this function, forjj will provide a DOCKER_FORJJ env variable with forjj docker setup 
+// The plugin will need to take care of that variable if required (like forjj-jenkins)
+// 
+// But if forjj is running in such container context, it needs to detect if such variable is set, to 
+// adapt his behavior when running a forjj plugin container
+func (p *Driver) GetForjjDockerSocketPath() (socketPath []string, err error) {
+	if p.cmd.socket_file == "" { // No socket used by this driver
+		return
+	}
+	return
+}
+
 // GetDockerDoodParameters returns 2 Arrays of strings
 //
 // mount : contains mount information to share.
