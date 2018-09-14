@@ -1,13 +1,15 @@
 package goforjj
 
 import (
+	"context"
 	"fmt"
 	"regexp"
-	"context"
+	"strings"
+	"path"
 
-	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 /*
@@ -253,9 +255,42 @@ func (d *DockerContainer) Inspect(name string, data string) (ret string, _ error
 }
 
 // ContainerHasChanged simply return true is the container
-func (d *DockerContainer) ContainerHasChanged() bool {
-	d.doInspect()
-	return false
+func (d *DockerContainer) ContainerHasChanged() (changed bool) {
+	found, err := d.doInspect()
+	if err != nil {
+		gotrace.Error("Inspect Error: %s", err)
+		return
+	}
+	if !found {
+		return true
+	}
+
+	// check mount points
+	if len(d.volumes) != len(d.inspect.Mounts) {
+		return true
+	}
+
+	found = false
+	for volumeMount := range d.volumes {
+		mount := strings.SplitN(volumeMount, ":", 3)
+		for _, containerMount := range d.inspect.Mounts {
+			if path.Clean(mount[0]) == path.Clean(containerMount.Source) {
+				found = true
+				if path.Clean(mount[1]) != path.Clean(containerMount.Destination) {
+					return true
+				}
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+		found = false
+	}
+
+	// TODO: Detect Environment variable change
+	// TODO: Detect Parameters change
+	return
 }
 
 func (d *DockerContainer) cliInit() (err error) {
@@ -266,11 +301,19 @@ func (d *DockerContainer) cliInit() (err error) {
 	return
 }
 
-func (d *DockerContainer) doInspect() (err error) {
-	if err = d.cliInit() ; err != nil {
+func (d *DockerContainer) doInspect() (found bool, err error) {
+	if err = d.cliInit(); err != nil {
 		return
 	}
 
 	d.inspect, err = d.cli.ContainerInspect(context.Background(), d.name)
+	if err != nil {
+		if !strings.Contains(err.Error(), "No such container") {
+			return
+		}
+		err = nil
+		return
+	}
+	found = true
 	return
 }
