@@ -374,6 +374,10 @@ func (p *Driver) docker_container_restart(cmd string, args []string) error {
 	gotrace.Trace("Restarting container '%s' with action: %s, args: %s", p.container.Name(), cmd, args)
 	ret, _ := p.container.Status()
 	status := strings.Trim(ret, " \n")
+	if p.container.ContainerHasChanged() {
+		p.container.Remove()
+		status = ""
+	}
 	p.cleanup_socket(status)
 	switch status {
 	case "running":

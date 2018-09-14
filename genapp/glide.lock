@@ -1,5 +1,5 @@
-hash: 5f1588ee91a980873cbe01d14d256ea4414c8eb1c3fba6f3ee2347cf495d3e1e
-updated: 2018-05-20T19:13:40.217636457Z
+hash: 019d130915b01348baa80d5107583e2f0576aede62b8d0aca1771e695b18bfb3
+updated: 2018-09-14T13:36:39.199092767Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: 947dcec5ba9c011838740e680966fd7087a71d0d
@@ -9,6 +9,11 @@ imports:
   - parse
 - name: github.com/alecthomas/units
   version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
+- name: github.com/docker/docker
+  version: 90d35abf7b3535c1c319c872900fbd76374e521c
+  subpackages:
+  - api/types
+  - client
 - name: github.com/fatih/color
   version: 2d684516a8861da43017284349b7e303e809ac21
 - name: github.com/forj-oss/forjj-modules
