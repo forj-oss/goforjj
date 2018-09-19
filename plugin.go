@@ -110,7 +110,13 @@ func (p *Driver) PluginDockerBin(thePath string) error {
 		gotrace.Trace("PluginDockerBin : '%s'.", thePath)
 		return nil
 	}
-	// Check in case of paths like "/something/~/something/"
+
+	if os.Getenv("DOCKER_DOOD") != "" {
+		gotrace.Info("DooD context: workspace 'docker-bin-path' setup is ignored.")
+		return nil
+	}
+
+	// Check in case of paths like '^~/'
 	if thePath[:2] == "~/" {
 		usr, err := user.Current()
 		if err != nil {
