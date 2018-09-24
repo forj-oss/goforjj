@@ -511,18 +511,14 @@ func (p *Driver) docker_start_service() (err error) {
 	}
 
 	if p.Yaml.Runtime.Docker.Dood {
-		if p.dockerBin == "" {
-			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
-			return
-		}
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if dood_mt_opts, dood_bc_opts, err := p.GetDockerDoodParameters(); err != nil {
+		if doodMountOpts, doodBecomeOpts, err := p.GetDockerDoodParameters(); err != nil {
 			return err
 		} else {
-			p.container.AddOpts(dood_mt_opts...)
-			p.container.AddOpts(dood_bc_opts...)
+			p.container.AddOpts(doodMountOpts...)
+			p.container.AddOpts(doodBecomeOpts...)
 		}
 	} else {
 		p.container.AddOpts("-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
