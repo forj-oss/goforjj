@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/forj-oss/forjj-modules/trace"
@@ -221,26 +222,41 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 	// - The container is started as root
 	// - the container start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate
 	//   unprivileged user. ie useradd or equivalent.
-	// - The plugin MUST be executed with UID/GID user context. You can use either su, sudo, or any other user account
-	//   substitute.
+	// - The plugin MUST be executed with UID/GID user context. So, the plugin container entrypoint should use either su, sudo, or any other user account
+	//   substitute to become and start the plugin process.
 	//   ie su - <User>
 	// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
-	//   provided by forjj with --docker-exe
-	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, no shared group. so you
-	//   must use a sudoers so your plugin user could call docker against the host server socket.
-	if p.dockerBin == "" {
-		err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
-		return
+	//   provided by forjj with --docker-exe-path or workspace docker-bin-path
+	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, with shared group.
+	//   To run the docker against this socket, your entrypoint must have a docker group with same id as docker.sock host.
+
+	// TODO: Ignore this step if docker have to use a tcp connection instead.
+
+	var dockerGrpID uint32
+
+	if s, err := os.Stat("/var/run/docker.sock"); err != nil {
+		return nil, nil, err
+	} else {
+		if v, ok := s.Sys().(*syscall.Stat_t); ok {
+			dockerGrpID = v.Gid
+		}
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " "); v != "" {
+		// We can ignore dockerBin test, if we are already in DooD container context (forjj running in a container)
 		mount = strings.Split(v, " ")
 	} else {
+		if p.dockerBin == "" {
+			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path or setup in 'forjj workspace docker-bin-path', or DOCKER_DOOD is empty", p.container.Name())
+			return
+		}
+
 		mount = make([]string, 0, 8)
 		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
 		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
 		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
 		mount = append(mount, "-e", "DOOD_DEPLOY="+path.Join(p.DeployPath, p.DeployName))
+		mount = append(mount, "-e", fmt.Sprintf("DOCKER_GROUP=%d", dockerGrpID))
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
@@ -250,6 +266,7 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 		become = append(become, "-u", "root:root")
 		become = append(become, "-e", "UID="+strconv.Itoa(os.Getuid()))
 		become = append(become, "-e", "GID="+strconv.Itoa(os.Getgid()))
+
 	}
 
 	return
