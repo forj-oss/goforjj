@@ -234,11 +234,19 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 
 	var dockerGrpID uint32
 
-	if s, err := os.Stat("/var/run/docker.sock"); err != nil {
-		return nil, nil, err
+	if v := strings.Trim(os.Getenv("DOCKER_DOOD_GROUP"), " "); v != "" {
+		if i, convErr := strconv.ParseInt(v, 10, 32); err != nil {
+			err = fmt.Errorf("Unable to convert '%s' defined by %s. %s", v, "DOCKER_DOOD_GROUP", convErr)
+		} else {
+			dockerGrpID = uint32(i)
+		}
 	} else {
-		if v, ok := s.Sys().(*syscall.Stat_t); ok {
-			dockerGrpID = v.Gid
+		if s, err := os.Stat("/var/run/docker.sock"); err != nil {
+			return nil, nil, err
+		} else {
+			if v, ok := s.Sys().(*syscall.Stat_t); ok {
+				dockerGrpID = v.Gid
+			}
 		}
 	}
 
@@ -256,7 +264,7 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
 		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
 		mount = append(mount, "-e", "DOOD_DEPLOY="+path.Join(p.DeployPath, p.DeployName))
-		mount = append(mount, "-e", fmt.Sprintf("DOCKER_GROUP=%d", dockerGrpID))
+		mount = append(mount, "-e", fmt.Sprintf("DOCKER_DOOD_GROUP=%d", dockerGrpID))
 	}
 
 	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
