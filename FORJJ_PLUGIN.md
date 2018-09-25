@@ -147,17 +147,19 @@ The container will have the following environment:
 - LOGNAME                         : Current user name used to run forjj.
 - UID                             : DooD - Current user ID which has started forjj.
 - GID                             : DooD - Current user group ID which has started forjj.
-- DOCKER_GROUP
+- DOCKER_DOOD_GROUP               : DooD - Group ID of the docker socket file. We assume name to be `docker`.
 - DOCKER_DOOD                     : DooD - String of docker run options to mount and set environment. Used to run a DooD container from a DooD container. The list of options are:
     - `-v <hostDockerSocket        >:/var/run/docker.sock`
     - `-v <hostDockerBinPath       >:/usr/bin/docker`
     - `-e DOOD_SRC=<hostInfraPluginSource>`
     - `-e DOOD_DEPLOY=<hostPluginSource>`
-    - `-e DOCKER_GROUP=<hostDockerGroup>`
+    - `-e DOCKER_DOOD_GROUP=<hostDockerGroup>`
 - DOCKER_DOOD_BECOME              : DooD - String of docker run option to become root and set environment variable UID/GID/DOCKER_DOOD_GROUP. In details:
     - `-u root:root`
     - `-e UID=<hostCurrentUserUID`
     - `-e GID=<hostCurrentUserGID`
+
+**NOTE**: UID/GID can be set outside DooD Context, if the container started as root needs to become a user with a different UID/GID.
 
 The container will be started with :
 - the user/group ID used to start forjj. (docker -u UID:GID)
@@ -168,13 +170,13 @@ The container will be started with :
 ### plugin Dockerfile
 
 In this DooD Context, The plugin image must take care of the DooD environments variables given 
-(UID, GID, DOCKER_GROUP, DOCKER_DOOD & DOCKER_DOOD_BECOME)
+(UID, GID, DOCKER_DOOD_GROUP, DOCKER_DOOD & DOCKER_DOOD_BECOME)
 
 When the forjj plugin container start, if:
 - UID & GID are set:
     - the plugin process will need to be started with those UID & GID
     - if needed, the current container user must be updated with those UID/GID
-- DOCKER_GROUP is set:
+- DOCKER_DOOD_GROUP is set:
     - a docker group must exist or update with the id given in this variable.
 - DOCKER_DOOD, DOCKER_DOOD_BECOME are set or not:
     - nothing to do, but if that container needs to create a container in DooD mode, those variables can be used as is to the docker run command. Ex: `docker run $DOCKER_DOOD $DOCKER_DOOD_BECOME [...]`
@@ -210,7 +212,8 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["--help"]
 ```
 
-entrypoint.sh
+entrypoint.sh:
+
 ```sh
 #!/bin/sh
 
@@ -218,7 +221,7 @@ docker-lu -u devops $UID -g devops $GID -G docker $DOCKER_GROUP
 exec /bin/su devops -c "/bin/aPlugin $@"
 ```
 
-With UID/GID/DOCKER_GROUP, you can use `sed` and `groupadd`/`addgroup` depending on the linux release used to create/update properly. 
+With UID/GID/DOCKER_DOOD_GROUP, you can use `sed` and `groupadd`/`addgroup` depending on the linux release used to create/update properly. 
 But you can use instead which do this in a single line more securily: [`docker-lu`](https://github.com/forj-oss/docker-lu) was written for that perspective.
 
 Enjoy
