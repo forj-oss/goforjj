@@ -3,6 +3,7 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
+	"goforjj/runcontext"
 	"net"
 	"net/url"
 	"os"
@@ -208,15 +209,37 @@ func (p *Driver) PluginRunAction(action string, d *PluginReqData) (*PluginResult
 	return &result, nil
 }
 
-// GetDockerDoodParameters returns 2 Arrays of strings
-//
-// mount : contains mount information to share.
-// become: contains information required by a container to add user and become that user to start the process
-//         Depending on the container, `become` can be ignored if the container do not need to become user
-//         sent by forjj.
-func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
+func (p *Driver) checkDockerDooD() (err error) {
 	if !p.Yaml.Runtime.Docker.Dood {
-		return nil, nil, fmt.Errorf("Dood not defined by the plugin. Required to use it.")
+		return fmt.Errorf("Dood not defined by the plugin. Required to use it")
+	}
+	return
+}
+
+// getDockerDooDGroupID determine the Docker Group ID of /var/run/docker.sock
+func (p *Driver) getDockerDooDGroupID() (dockerGrpID uint32, err error) {
+	if v := strings.Trim(os.Getenv("DOCKER_DOOD_GROUP"), " "); v != "" {
+		if i, convErr := strconv.ParseInt(v, 10, 32); err != nil {
+			err = fmt.Errorf("Unable to convert '%s' defined by %s. %s", v, "DOCKER_DOOD_GROUP", convErr)
+		} else {
+			dockerGrpID = uint32(i)
+		}
+	} else {
+		if s, err := os.Stat("/var/run/docker.sock"); err != nil {
+			return 0, err
+		} else {
+			if v, ok := s.Sys().(*syscall.Stat_t); ok {
+				dockerGrpID = v.Gid
+			}
+		}
+	}
+	return
+}
+
+// Deprecated: GetDockerDoodParameters is kept for build compatibility. It is replaced by DefineDockerDooD()
+func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
+	if err = p.checkDockerDooD(); err != nil {
+		return
 	}
 	// In context of dood, the container must respect few things:
 	// - The container is started as root
@@ -234,49 +257,124 @@ func (p *Driver) GetDockerDoodParameters() (mount, become []string, err error) {
 
 	var dockerGrpID uint32
 
-	if v := strings.Trim(os.Getenv("DOCKER_DOOD_GROUP"), " "); v != "" {
-		if i, convErr := strconv.ParseInt(v, 10, 32); err != nil {
-			err = fmt.Errorf("Unable to convert '%s' defined by %s. %s", v, "DOCKER_DOOD_GROUP", convErr)
-		} else {
-			dockerGrpID = uint32(i)
-		}
-	} else {
-		if s, err := os.Stat("/var/run/docker.sock"); err != nil {
-			return nil, nil, err
-		} else {
-			if v, ok := s.Sys().(*syscall.Stat_t); ok {
-				dockerGrpID = v.Gid
-			}
-		}
+	dockerGrpID, err = p.getDockerDooDGroupID()
+	if err != nil {
+		return
 	}
 
-	if v := strings.Trim(os.Getenv("DOCKER_DOOD"), " "); v != "" {
-		// We can ignore dockerBin test, if we are already in DooD container context (forjj running in a container)
-		mount = strings.Split(v, " ")
-	} else {
+	dockerDooD := runcontext.NewRunContext("DOCKER_DOOD", 12)
+	dockerDooD, err = p.defineDockerDooD(dockerDooD, dockerGrpID)
+	if err != nil {
+		return
+	}
+	mount = dockerDooD.BuildOptions()
+
+	become = p.defineDockerDooDBecome(runcontext.NewRunContext("DOCKER_DOOD_BECOME", 6)).BuildOptions()
+	return
+}
+
+// defineDockerDooD detect and build the DOCKER_DOOD setup
+func (p *Driver) defineDockerDooD(dockerDooD *runcontext.RunContext, dockerGrpID uint32) (ret *runcontext.RunContext, err error) {
+	ret = dockerDooD
+	if !dockerDooD.GetFrom() {
 		if p.dockerBin == "" {
 			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path or setup in 'forjj workspace docker-bin-path', or DOCKER_DOOD is empty", p.container.Name())
 			return
 		}
 
-		mount = make([]string, 0, 8)
-		mount = append(mount, "-v", "/var/run/docker.sock:/var/run/docker.sock")
-		mount = append(mount, "-v", p.dockerBin+":/bin/docker")
-		mount = append(mount, "-e", "DOOD_SRC="+p.Source_path)
-		mount = append(mount, "-e", "DOOD_DEPLOY="+path.Join(p.DeployPath, p.DeployName))
-		mount = append(mount, "-e", fmt.Sprintf("DOCKER_DOOD_GROUP=%d", dockerGrpID))
+		dockerDooD.AddVolume("/var/run/docker.sock:/var/run/docker.sock").
+			AddVolume("/var/run/docker.sock:/var/run/docker.sock").
+			AddVolume(p.dockerBin+":/bin/docker").
+			AddEnv("DOOD_SRC", p.Source_path).
+			AddEnv("DOOD_DEPLOY", path.Join(p.DeployPath, p.DeployName))
+		if dockerGrpID != 0 {
+			dockerDooD.AddEnv("DOCKER_GROUP", fmt.Sprintf("%d", dockerGrpID))
+		}
+	}
+	return
+}
+
+// defineDockerDooDBecome detect and build the DOCKER_DOOD_BECOME setup
+func (p *Driver) defineDockerDooDBecome(dockerDooDBecome *runcontext.RunContext) *runcontext.RunContext {
+	if !dockerDooDBecome.GetFrom() {
+		dockerDooDBecome.AddOptions("-u", "root:root").
+			AddEnv("UID", strconv.Itoa(os.Getuid())).
+			AddEnv("GID", strconv.Itoa(os.Getgid()))
+	}
+	return dockerDooDBecome
+}
+
+// DefineDockerDood detect and/or define DooD required parameters if the plugin requires it.
+//
+// It uses goforjj/runcontext module to define and share for new DooD containers the DooD setup.
+//
+// It manages 2 different context:
+// - DOCKER_DOOD. It regroups options to enable DooD with docker socket, docker static binary and docker group ID
+//   Those data are set in the new container that forjj will create thanks to addVolume/Env/Opts functions given
+//   and "DOCKER_DOOD" will be the last docker env variable which contains all docker run options for the same,
+//   shared in the new container to be started by forjj.
+//   It requires the container to start as root , in order to update/create the docker group in the container if missing
+//   if the container have to be used as a user (non root) it must be created/assigned in the docker image.
+//
+// - DOCKER_DOOD_BECOME. It regroups options to enable impersonation in the container. The container started as root
+//   will ask the container to update few things and become the wanted user with a specific UID/GID given.
+//   The container have to update the wanted user UID and GID
+func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, string), addOptions func(...string)) (err error) {
+	if err = p.checkDockerDooD(); err != nil {
+		return
+	}
+	// In context of dood, the container must respect few things:
+	// - The container is started as root
+	// - the container start/entrypoint must grab the UID/GID environment sent by forjj to set the appropriate
+	//   unprivileged user. ie useradd or equivalent.
+	// - The plugin MUST be executed with UID/GID user context. So, the plugin container entrypoint should use either su, sudo, or any other user account
+	//   substitute to become and start the plugin process.
+	//   ie su - <User>
+	// - Usually the container should have access to a /bin/docker binary compatible with host docker version.
+	//   provided by forjj with --docker-exe-path or workspace docker-bin-path
+	// - forjj will mount /var/run/docker.sock to /var/run/docker.sock root access limited, with shared group.
+	//   To run the docker against this socket, your entrypoint must have a docker group with same id as docker.sock host.
+
+	// TODO: Ignore this step if docker have to use a tcp connection instead.
+
+	var dockerGrpID uint32
+
+	dockerGrpID, err = p.getDockerDooDGroupID()
+	if err != nil {
+		return
 	}
 
-	if v := strings.Trim(os.Getenv("DOCKER_DOOD_BECOME"), ""); v != "" {
-		become = strings.Split(v, " ")
-	} else {
-		become = make([]string, 0, 6)
-		become = append(become, "-u", "root:root")
-		become = append(become, "-e", "UID="+strconv.Itoa(os.Getuid()))
-		become = append(become, "-e", "GID="+strconv.Itoa(os.Getgid()))
+	dockerDooD := runcontext.NewRunContext("DOCKER_DOOD", 12)
+	dockerDooD.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	dockerDooD, err = p.defineDockerDooD(dockerDooD, dockerGrpID)
+	if err != nil {
+		return
+	}
+	dockerDooD.AddShared()
 
+	dockerDooDBecome := runcontext.NewRunContext("DOCKER_DOOD_BECOME", 6)
+	dockerDooDBecome.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	p.defineDockerDooDBecome(dockerDooDBecome)
+	dockerDooDBecome.AddShared()
+
+	return
+}
+
+// GetDockerProxyParameters return the list of Proxy parameters
+// Shared as DOCKER_DOOD_PROXY
+func (p *Driver) GetDockerProxyParameters(addVolume func(string), addEnv func(string, string), addOptions func(...string)) {
+	if p == nil {
+		return
 	}
 
+	dockerDooDProxy := runcontext.NewRunContext("DOCKER_DOOD_PROXY", 6)
+	dockerDooDProxy.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	if !dockerDooDProxy.GetFrom() {
+		dockerDooDProxy.AddFromEnv("https_proxy").
+			AddFromEnv("http_proxy").
+			AddFromEnv("no_proxy")
+	}
+	dockerDooDProxy.AddShared()
 	return
 }
 
@@ -519,14 +617,15 @@ func (p *Driver) docker_start_service() (err error) {
 	}
 
 	if p.Yaml.Runtime.Docker.Dood {
+		if p.dockerBin == "" {
+			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
+			return
+		}
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if doodMountOpts, doodBecomeOpts, err := p.GetDockerDoodParameters(); err != nil {
+		if err := p.DefineDockerDood(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts); err != nil {
 			return err
-		} else {
-			p.container.AddOpts(doodMountOpts...)
-			p.container.AddOpts(doodBecomeOpts...)
 		}
 	} else {
 		p.container.AddOpts("-u", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()))
