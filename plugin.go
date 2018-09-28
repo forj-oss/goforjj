@@ -3,7 +3,7 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	"goforjj/runcontext"
+	"github.com/forj-oss/goforjj/runcontext"
 	"net"
 	"net/url"
 	"os"
