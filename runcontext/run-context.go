@@ -181,20 +181,22 @@ func (r *RunContext) BuildOptions() (ret []string) {
 
 // buildSharedName creates a shell string to use with `docker run`
 func (r *RunContext) buildSharedName() (sharedValue string) {
+	values := make([]string, 0, len(r.volumes)+len(r.options)+len(r.env))
+
 	for _, volume := range r.volumes {
-		sharedValue += "-v '" + volume + "'"
+		values = append(values, "-v '"+volume+"'")
 	}
 
 	for _, option := range r.options {
-		sharedValue += "'" + option + "'"
+		values = append(values, "'"+option+"'")
 	}
 
 	for key, value := range r.env {
-		if value != "" {
-			sharedValue += "-e '" + key + "'"
+		if value == "" {
+			values = append(values, "-e '"+key+"'")
 		} else {
-			sharedValue += "-e '" + key + "=" + value + "'"
+			values = append(values, "-e '"+key+"="+value+"'")
 		}
 	}
-	return
+	return strings.Join(values, " ")
 }
