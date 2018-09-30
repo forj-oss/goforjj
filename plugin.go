@@ -287,7 +287,7 @@ func (p *Driver) defineDockerDooD(dockerDooD *runcontext.RunContext, dockerGrpID
 			AddEnv("DOOD_SRC", p.Source_path).
 			AddEnv("DOOD_DEPLOY", path.Join(p.DeployPath, p.DeployName))
 		if dockerGrpID != 0 {
-			dockerDooD.AddEnv("DOCKER_GROUP", fmt.Sprintf("%d", dockerGrpID))
+			dockerDooD.AddEnv("DOCKER_DOOD_GROUP", fmt.Sprintf("%d", dockerGrpID))
 		}
 	}
 	return
