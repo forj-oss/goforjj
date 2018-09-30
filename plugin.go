@@ -283,7 +283,6 @@ func (p *Driver) defineDockerDooD(dockerDooD *runcontext.RunContext, dockerGrpID
 		}
 
 		dockerDooD.AddVolume("/var/run/docker.sock:/var/run/docker.sock").
-			AddVolume("/var/run/docker.sock:/var/run/docker.sock").
 			AddVolume(p.dockerBin+":/bin/docker").
 			AddEnv("DOOD_SRC", p.Source_path).
 			AddEnv("DOOD_DEPLOY", path.Join(p.DeployPath, p.DeployName))
