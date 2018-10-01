@@ -624,10 +624,10 @@ func (p *Driver) define_socket() (remote bool, err error) {
 
 // docker_start_service Define how to start
 func (p *Driver) docker_start_service() (err error) {
-	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
-
 	// Initialize forjj plugins docker container.
 	p.container.Init(p.DeployName + "-" + p.name)
+
+	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
 
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
