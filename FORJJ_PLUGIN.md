@@ -135,6 +135,7 @@ Then forjj will configure the plugin container as follow:
 `forjj` will run the plugin with `docker run` to create the container or with `docker start` to restart the container.
 
 The container will have the following mount:
+
 - /tmp/forj_socks      : where the plugin will create the socket, so that forjj can communicate with the plugin
 - /workspace           : mount of the infra/.forj-workspace directory
 - /src                 : mount of plugin source code stored in your infra repository.
@@ -143,21 +144,23 @@ The container will have the following mount:
 - /usr/bin/docker      : DooD - static binary as described by `forjj workspace` `docker-bin-path`
 
 The container will have the following environment:
+
 - http_proxy/https_proxy/no_proxy : if set in your workstation.
 - LOGNAME                         : Current user name used to run forjj.
 - UID                             : DooD - Current user ID which has started forjj.
 - GID                             : DooD - Current user group ID which has started forjj.
 - DOCKER_DOOD_GROUP               : DooD - Group ID of the docker socket file. We assume name to be `docker`.
+- DOOD_BASE                       : DooD - HostPath:ContainerPath. Respect docker run -v syntax. Ex: Jenkins can mount a base directory where forjj sources will be stored. So, forjj must start forjj-jenkins with that context.
 - DOCKER_DOOD                     : DooD - String of docker run options to mount and set environment. Used to run a DooD container from a DooD container. The list of options are:
-    - `-v <hostDockerSocket        >:/var/run/docker.sock`
-    - `-v <hostDockerBinPath       >:/usr/bin/docker`
-    - `-e DOOD_SRC=<hostInfraPluginSource>`
-    - `-e DOOD_DEPLOY=<hostPluginSource>`
-    - `-e DOCKER_DOOD_GROUP=<hostDockerGroup>`
+  - `-v <hostDockerSocket        >:/var/run/docker.sock`
+  - `-v <hostDockerBinPath       >:/usr/bin/docker`
+  - `-e DOOD_SRC=<hostInfraPluginSource>`
+  - `-e DOOD_DEPLOY=<hostPluginSource>`
+  - `-e DOCKER_DOOD_GROUP=<hostDockerGroup>`
 - DOCKER_DOOD_BECOME              : DooD - String of docker run option to become root and set environment variable UID/GID/DOCKER_DOOD_GROUP. In details:
-    - `-u root:root`
-    - `-e UID=<hostCurrentUserUID`
-    - `-e GID=<hostCurrentUserGID`
+  - `-u root:root`
+  - `-e UID=<hostCurrentUserUID`
+  - `-e GID=<hostCurrentUserGID`
 
 **NOTE**: UID/GID can be set outside DooD Context, if the container started as root needs to become a user with a different UID/GID.
 

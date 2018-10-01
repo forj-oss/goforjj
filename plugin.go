@@ -29,10 +29,6 @@ type Driver struct {
 	Result         *PluginResult         // Json data structured returned.
 	Yaml           *YamlPlugin           // Yaml data definition
 	name           string                // container name
-	Source_path    string                // Plugin source path from Forjj point of view
-	Workspace_path string                // Plugin Workspace path from Forjj point of view
-	DeployPath     string                // Plugin Deployment path
-	DeployName     string                // Plugin Deployment name in path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
 	container      DockerContainer       // Define data to start the plugin as docker container
@@ -40,9 +36,25 @@ type Driver struct {
 	req            *gorequest.SuperAgent // REST API request
 	url            *url.URL              // REST API url
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
+
+	// in docker run syntax, -v BasePath:BaseMount
+	basePath       string
+	baseMount      string
+
+	// in docker run syntax, -v Source_path:SourceMount
+	Source_path    string                // Plugin source path from Forjj point of view
 	SourceMount    string                // Where the driver will have his source code.
-	DestMount      string                // Where the driver will have his generated code.
+
+	// in docker run syntax, -v Workspace_path:WorkspaceMount
+	Workspace_path string                // Plugin Workspace path from Forjj point of view
 	WorkspaceMount string                // where the driver has his workspace.
+
+	// in docker run syntax, -v DeployPath:DestMount
+	DeployPath     string                // Plugin Deployment path
+	DestMount      string                // Where the driver will have his generated code.
+
+	DeployName     string                // Plugin Deployment name in path
+
 	Version        string                // Plugin version to load
 	key64          string                // Base64 symetric key
 	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
@@ -85,17 +97,44 @@ func (p *Driver) RunningFromDebugger() {
 	p.local_debug = true
 }
 
-// PluginSetSource Set plugin source path. Created later by docker_start_service
+// PluginSetSource Set plugin source path from forjj perspective. Created later by docker_start_service
 func (p *Driver) PluginSetSource(path string) {
 	p.Source_path = path
 }
 
+// PluginSetSourceMount Set plugin source path mount where source will be mounted in the plugin container.
+func (p *Driver) PluginSetSourceMount(path string) {
+	p.SourceMount = path
+}
+
+// PluginSetWorkspaceMount set workspace path from forjj perspective
+func (p *Driver) PluginSetWorkspaceMount(path string) {
+	p.WorkspaceMount = path
+}
+
+// PluginSetDeploymentMount set Deploy path from forjj perspective
+func (p *Driver) PluginSetDeploymentMount(path string) {
+	p.DestMount = path
+}
+
+// PluginSetWorkspace set workspace path from forjj perspective
 func (p *Driver) PluginSetWorkspace(path string) {
 	p.Workspace_path = path
 }
 
+// PluginSetDeployment set Deploy path from forjj perspective
 func (p *Driver) PluginSetDeployment(path string) {
 	p.DeployPath = path
+}
+
+// PluginBase define the source Base mount to use for DooD mount
+func (p *Driver) PluginBase(mount string) {
+	paths := strings.Split(mount, ":")
+	if len(paths) < 2 {
+		return
+	}
+	p.basePath = path.Clean(paths[0])
+	p.baseMount = path.Clean(paths[1])
 }
 
 func (p *Driver) PluginSetDeploymentName(name string) {
@@ -568,17 +607,23 @@ func (p *Driver) docker_start_service() (err error) {
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
-	p.SourceMount = "/src/"
+	if p.SourceMount == "" {
+		p.SourceMount = "/src/"
+	}
 	p.container.AddVolume(p.Source_path + ":" + p.SourceMount)
 
 	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		p.DestMount = "/deploy/"
+		if p.DestMount == "" {
+			p.DestMount = "/deploy/"
+		}
 		p.container.AddVolume(p.DeployPath + ":" + p.DestMount)
 	}
 
 	// Workspace path
 	if p.Workspace_path != "" {
-		p.WorkspaceMount = "/workspace/"
+		if p.WorkspaceMount == "" {
+			p.WorkspaceMount = "/workspace/"
+		}
 		p.container.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
 	}
 
