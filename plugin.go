@@ -3,7 +3,6 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/forj-oss/goforjj/runcontext"
 	"net"
 	"net/url"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/forj-oss/goforjj/runcontext"
 
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/parnurzeal/gorequest"
@@ -38,26 +39,26 @@ type Driver struct {
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
 
 	// in docker run syntax, -v BasePath:BaseMount
-	basePath       string
-	baseMount      string
+	basePath  string
+	baseMount string
 
 	// in docker run syntax, -v Source_path:SourceMount
-	Source_path    string                // Plugin source path from Forjj point of view
-	SourceMount    string                // Where the driver will have his source code.
+	Source_path string // Plugin source path from Forjj point of view
+	SourceMount string // Where the driver will have his source code.
 
 	// in docker run syntax, -v Workspace_path:WorkspaceMount
-	Workspace_path string                // Plugin Workspace path from Forjj point of view
-	WorkspaceMount string                // where the driver has his workspace.
+	Workspace_path string // Plugin Workspace path from Forjj point of view
+	WorkspaceMount string // where the driver has his workspace.
 
 	// in docker run syntax, -v DeployPath:DestMount
-	DeployPath     string                // Plugin Deployment path
-	DestMount      string                // Where the driver will have his generated code.
+	DeployPath string // Plugin Deployment path
+	DestMount  string // Where the driver will have his generated code.
 
-	DeployName     string                // Plugin Deployment name in path
+	DeployName string // Plugin Deployment name in path
 
-	Version        string                // Plugin version to load
-	key64          string                // Base64 symetric key
-	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
+	Version     string // Plugin version to load
+	key64       string // Base64 symetric key
+	local_debug bool   // true to bypass starting container or binary. Expect it be started in a running
 	// instance of the driver from a debugger
 	sourceDefPath string // Path to the source file to complete driver definition
 	// Loaded in
@@ -416,6 +417,41 @@ func (p *Driver) DefineDockerProxyParameters() {
 	return
 }
 
+// DefineDockerForjjMounts create a share of forjj driver mounts
+func (p *Driver) DefineDockerForjjMounts() {
+	srcContext := runcontext.NewRunContext("DOOD_SOURCE", 12)
+	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
+
+	// Source path
+	if _, err := os.Stat(p.Source_path); err != nil {
+		os.MkdirAll(p.Source_path, 0755)
+	}
+	if p.SourceMount == "" {
+		p.SourceMount = "/src/"
+	}
+	srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
+	srcContext.AddEnv("SELF_SRC", p.SourceMount)
+
+	if p.DeployPath != "" { // For compatibility reason with old forjj.
+		if p.DestMount == "" {
+			p.DestMount = "/deploy/"
+		}
+		srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
+		srcContext.AddEnv("SELF_DEPLOY", p.DestMount)
+	}
+
+	// Workspace path
+	if p.Workspace_path != "" {
+		if p.WorkspaceMount == "" {
+			p.WorkspaceMount = "/workspace/"
+		}
+		srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+		srcContext.AddEnv("SELF_WORKSPACE", p.WorkspaceMount)
+	}
+	srcContext.AddShared()
+
+}
+
 // PluginStartService This function start the service as daemon and register it
 // If the service is already started, just use it.
 func (p *Driver) PluginStartService() (err error) {
@@ -607,25 +643,8 @@ func (p *Driver) docker_start_service() (err error) {
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
-	if p.SourceMount == "" {
-		p.SourceMount = "/src/"
-	}
-	p.container.AddVolume(p.Source_path + ":" + p.SourceMount)
 
-	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		if p.DestMount == "" {
-			p.DestMount = "/deploy/"
-		}
-		p.container.AddVolume(p.DeployPath + ":" + p.DestMount)
-	}
-
-	// Workspace path
-	if p.Workspace_path != "" {
-		if p.WorkspaceMount == "" {
-			p.WorkspaceMount = "/workspace/"
-		}
-		p.container.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
-	}
+	p.DefineDockerForjjMounts()
 
 	// Define the socket
 	remote_url := false
