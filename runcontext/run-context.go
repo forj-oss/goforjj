@@ -57,6 +57,8 @@ func (r *RunContext) GetFrom() (shared bool) {
 				switch element {
 				case "-v":
 					volume = true
+				case "-e":
+					env = true
 				}
 				continue
 			}
@@ -79,6 +81,7 @@ func (r *RunContext) GetFrom() (shared bool) {
 				env = false
 				continue
 			}
+			r.AddOptions(element)
 
 		}
 		shared = true
