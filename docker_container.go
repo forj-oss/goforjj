@@ -288,7 +288,16 @@ func (d *DockerContainer) ContainerHasChanged() (changed bool) {
 		found = false
 	}
 
-	// TODO: Detect Environment variable change
+	// check env 
+	if len(d.envs) != len(d.inspect.Config.Env) {
+		return true
+	}
+
+	for _, envpair := range d.inspect.Config.Env {
+		if _, match := d.envs[envpair] ; !match {
+			return true
+		}
+	}
 	// TODO: Detect Parameters change
 	return
 }

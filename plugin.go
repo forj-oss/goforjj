@@ -3,7 +3,6 @@ package goforjj
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/forj-oss/goforjj/runcontext"
 	"net"
 	"net/url"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/forj-oss/goforjj/runcontext"
 
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/parnurzeal/gorequest"
@@ -29,10 +30,6 @@ type Driver struct {
 	Result         *PluginResult         // Json data structured returned.
 	Yaml           *YamlPlugin           // Yaml data definition
 	name           string                // container name
-	Source_path    string                // Plugin source path from Forjj point of view
-	Workspace_path string                // Plugin Workspace path from Forjj point of view
-	DeployPath     string                // Plugin Deployment path
-	DeployName     string                // Plugin Deployment name in path
 	service        bool                  // True if the service is started as daemon
 	service_booted bool                  // True if the service is started
 	container      DockerContainer       // Define data to start the plugin as docker container
@@ -40,12 +37,28 @@ type Driver struct {
 	req            *gorequest.SuperAgent // REST API request
 	url            *url.URL              // REST API url
 	dockerBin      string                // Docker Path Binary to a docker binary to mount in a dood container.
-	SourceMount    string                // Where the driver will have his source code.
-	DestMount      string                // Where the driver will have his generated code.
-	WorkspaceMount string                // where the driver has his workspace.
-	Version        string                // Plugin version to load
-	key64          string                // Base64 symetric key
-	local_debug    bool                  // true to bypass starting container or binary. Expect it be started in a running
+
+	// in docker run syntax, -v BasePath:BaseMount
+	basePath  string
+	baseMount string
+
+	// in docker run syntax, -v Source_path:SourceMount
+	Source_path string // Plugin source path from Forjj point of view
+	SourceMount string // Where the driver will have his source code.
+
+	// in docker run syntax, -v Workspace_path:WorkspaceMount
+	Workspace_path string // Plugin Workspace path from Forjj point of view
+	WorkspaceMount string // where the driver has his workspace.
+
+	// in docker run syntax, -v DeployPath:DestMount
+	DeployPath string // Plugin Deployment path
+	DestMount  string // Where the driver will have his generated code.
+
+	DeployName string // Plugin Deployment name in path
+
+	Version     string // Plugin version to load
+	key64       string // Base64 symetric key
+	local_debug bool   // true to bypass starting container or binary. Expect it be started in a running
 	// instance of the driver from a debugger
 	sourceDefPath string // Path to the source file to complete driver definition
 	// Loaded in
@@ -85,17 +98,44 @@ func (p *Driver) RunningFromDebugger() {
 	p.local_debug = true
 }
 
-// PluginSetSource Set plugin source path. Created later by docker_start_service
+// PluginSetSource Set plugin source path from forjj perspective. Created later by docker_start_service
 func (p *Driver) PluginSetSource(path string) {
 	p.Source_path = path
 }
 
+// PluginSetSourceMount Set plugin source path mount where source will be mounted in the plugin container.
+func (p *Driver) PluginSetSourceMount(path string) {
+	p.SourceMount = path
+}
+
+// PluginSetWorkspaceMount set workspace path from forjj perspective
+func (p *Driver) PluginSetWorkspaceMount(path string) {
+	p.WorkspaceMount = path
+}
+
+// PluginSetDeploymentMount set Deploy path from forjj perspective
+func (p *Driver) PluginSetDeploymentMount(path string) {
+	p.DestMount = path
+}
+
+// PluginSetWorkspace set workspace path from forjj perspective
 func (p *Driver) PluginSetWorkspace(path string) {
 	p.Workspace_path = path
 }
 
+// PluginSetDeployment set Deploy path from forjj perspective
 func (p *Driver) PluginSetDeployment(path string) {
 	p.DeployPath = path
+}
+
+// PluginBase define the source Base mount to use for DooD mount
+func (p *Driver) PluginBase(mount string) {
+	paths := strings.Split(mount, ":")
+	if len(paths) < 2 {
+		return
+	}
+	p.basePath = path.Clean(paths[0])
+	p.baseMount = path.Clean(paths[1])
 }
 
 func (p *Driver) PluginSetDeploymentName(name string) {
@@ -359,15 +399,15 @@ func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, st
 	return
 }
 
-// GetDockerProxyParameters return the list of Proxy parameters
+// DefineDockerProxyParameters return the list of Proxy parameters
 // Shared as DOCKER_DOOD_PROXY
-func (p *Driver) GetDockerProxyParameters(addVolume func(string), addEnv func(string, string), addOptions func(...string)) {
+func (p *Driver) DefineDockerProxyParameters() {
 	if p == nil {
 		return
 	}
 
 	dockerDooDProxy := runcontext.NewRunContext("DOCKER_DOOD_PROXY", 6)
-	dockerDooDProxy.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	dockerDooDProxy.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
 	if !dockerDooDProxy.GetFrom() {
 		dockerDooDProxy.AddFromEnv("https_proxy").
 			AddFromEnv("http_proxy").
@@ -375,6 +415,41 @@ func (p *Driver) GetDockerProxyParameters(addVolume func(string), addEnv func(st
 	}
 	dockerDooDProxy.AddShared()
 	return
+}
+
+// DefineDockerForjjMounts create a share of forjj driver mounts
+func (p *Driver) DefineDockerForjjMounts() {
+	srcContext := runcontext.NewRunContext("DOOD_SOURCE", 12)
+	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
+
+	// Source path
+	if _, err := os.Stat(p.Source_path); err != nil {
+		os.MkdirAll(p.Source_path, 0755)
+	}
+	if p.SourceMount == "" {
+		p.SourceMount = "/src/"
+	}
+	srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
+	srcContext.AddEnv("SELF_SRC", p.SourceMount)
+
+	if p.DeployPath != "" { // For compatibility reason with old forjj.
+		if p.DestMount == "" {
+			p.DestMount = "/deploy/"
+		}
+		srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
+		srcContext.AddEnv("SELF_DEPLOY", p.DestMount)
+	}
+
+	// Workspace path
+	if p.Workspace_path != "" {
+		if p.WorkspaceMount == "" {
+			p.WorkspaceMount = "/workspace/"
+		}
+		srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+		srcContext.AddEnv("SELF_WORKSPACE", p.WorkspaceMount)
+	}
+	srcContext.AddShared()
+
 }
 
 // PluginStartService This function start the service as daemon and register it
@@ -549,10 +624,10 @@ func (p *Driver) define_socket() (remote bool, err error) {
 
 // docker_start_service Define how to start
 func (p *Driver) docker_start_service() (err error) {
-	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
-
 	// Initialize forjj plugins docker container.
 	p.container.Init(p.DeployName + "-" + p.name)
+
+	gotrace.Trace("Starting it as docker container '%s'", p.container.Name())
 
 	Image := p.Yaml.Runtime.Docker.Image
 	if Image == "" {
@@ -568,19 +643,8 @@ func (p *Driver) docker_start_service() (err error) {
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
-	p.SourceMount = "/src/"
-	p.container.AddVolume(p.Source_path + ":" + p.SourceMount)
 
-	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		p.DestMount = "/deploy/"
-		p.container.AddVolume(p.DeployPath + ":" + p.DestMount)
-	}
-
-	// Workspace path
-	if p.Workspace_path != "" {
-		p.WorkspaceMount = "/workspace/"
-		p.container.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
-	}
+	p.DefineDockerForjjMounts()
 
 	// Define the socket
 	remote_url := false
@@ -614,6 +678,8 @@ func (p *Driver) docker_start_service() (err error) {
 	if p.key64 != "" {
 		p.container.AddHiddenEnv("FORJJ_KEY", p.key64)
 	}
+
+	p.DefineDockerProxyParameters()
 
 	if p.Yaml.Runtime.Docker.Dood {
 		if p.dockerBin == "" {
