@@ -18,3 +18,8 @@ import:
   subpackages:
   - client
   - api/types
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.2.2
+  subpackages:
+  - assert
