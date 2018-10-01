@@ -1,0 +1,9 @@
+package: goforjj/genapp
+import:
+- package: github.com/forj-oss/goforjj
+- package: github.com/gorilla/mux
+  version: ^1.6.2
+- package: gopkg.in/alecthomas/kingpin.v2
+  version: ^2.2.6
+- package: gopkg.in/yaml.v2
+  version: ^2.2.1
