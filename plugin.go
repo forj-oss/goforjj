@@ -398,15 +398,15 @@ func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, st
 	return
 }
 
-// GetDockerProxyParameters return the list of Proxy parameters
+// DefineDockerProxyParameters return the list of Proxy parameters
 // Shared as DOCKER_DOOD_PROXY
-func (p *Driver) GetDockerProxyParameters(addVolume func(string), addEnv func(string, string), addOptions func(...string)) {
+func (p *Driver) DefineDockerProxyParameters() {
 	if p == nil {
 		return
 	}
 
 	dockerDooDProxy := runcontext.NewRunContext("DOCKER_DOOD_PROXY", 6)
-	dockerDooDProxy.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	dockerDooDProxy.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
 	if !dockerDooDProxy.GetFrom() {
 		dockerDooDProxy.AddFromEnv("https_proxy").
 			AddFromEnv("http_proxy").
@@ -659,6 +659,8 @@ func (p *Driver) docker_start_service() (err error) {
 	if p.key64 != "" {
 		p.container.AddHiddenEnv("FORJJ_KEY", p.key64)
 	}
+
+	p.DefineDockerProxyParameters()
 
 	if p.Yaml.Runtime.Docker.Dood {
 		if p.dockerBin == "" {
