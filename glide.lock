@@ -1,5 +1,5 @@
 hash: 4bf30c01ac5060af2799d0af10a7134889b1d7b1c87905aefa6ad93b60889e51
-updated: 2018-10-01T15:20:15.782439695Z
+updated: 2018-10-01T19:10:24.925708933Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: 947dcec5ba9c011838740e680966fd7087a71d0d
@@ -10,7 +10,7 @@ imports:
 - name: github.com/alecthomas/units
   version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
 - name: github.com/docker/distribution
-  version: 16128bbac47f75050e82f7e91b04df33775e0c23
+  version: 17b3ff188dfde7d5b59a94ab99e6a967b3a59563
   subpackages:
   - digestset
   - reference
@@ -54,7 +54,9 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: d04d7b9487800f877bb9dca8f69d647d0c3a463c
+  version: caeaecef0a994fc51648bfed24036f0bf80ad9c6
+  subpackages:
+  - runcontext
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -76,13 +78,13 @@ imports:
 - name: github.com/pkg/errors
   version: c059e472caf75dbe73903f6521a20abac245b17f
 - name: github.com/Sirupsen/logrus
-  version: 33a1e118e113c7d1dd24a80f80670864cd598519
+  version: 1ed61965b9e594bf37539680d7f63eccd060314f
 - name: golang.org/x/crypto
-  version: 0e37d006457bf46f9e6692014ba72ef82c33022c
+  version: 5295e8364332db77d75fce11f1d19c053919a9c9
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
-  version: 2f5d2388922f370f4355f327fcf4cfe9f5583908
+  version: 4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de
   subpackages:
   - context
   - context/ctxhttp
@@ -90,7 +92,7 @@ imports:
   - proxy
   - publicsuffix
 - name: golang.org/x/sys
-  version: d47a0f3392421c5624713c9a19fe781f651f8a50
+  version: e4b3c5e9061176387e7cea65e4dc5853801f3fb7
   subpackages:
   - unix
   - windows
