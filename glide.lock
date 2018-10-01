@@ -1,5 +1,5 @@
-hash: eed5144f5c19b49796a38f7730d7d22cf6b2aa07ae4c10019ed4088120a5adc4
-updated: 2018-09-30T19:56:39.857601Z
+hash: 4bf30c01ac5060af2799d0af10a7134889b1d7b1c87905aefa6ad93b60889e51
+updated: 2018-10-01T15:20:15.782439695Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: 947dcec5ba9c011838740e680966fd7087a71d0d
@@ -54,9 +54,7 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: d77fd21c843cfde4d7da04e5cf40f998e0e71a6b
-  subpackages:
-  - runcontext
+  version: d04d7b9487800f877bb9dca8f69d647d0c3a463c
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -79,10 +77,6 @@ imports:
   version: c059e472caf75dbe73903f6521a20abac245b17f
 - name: github.com/Sirupsen/logrus
   version: 33a1e118e113c7d1dd24a80f80670864cd598519
-- name: github.com/stretchr/testify
-  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
-  subpackages:
-  - assert
 - name: golang.org/x/crypto
   version: 0e37d006457bf46f9e6692014ba72ef82c33022c
   subpackages:
@@ -104,4 +98,16 @@ imports:
   version: 947dcec5ba9c011838740e680966fd7087a71d0d
 - name: gopkg.in/yaml.v2
   version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
+  subpackages:
+  - assert

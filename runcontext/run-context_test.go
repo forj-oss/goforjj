@@ -1,8 +1,8 @@
 package runcontext_test
 
 import (
-	"os"
 	"goforjj/runcontext"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -64,10 +64,9 @@ func TestRunContext(t *testing.T) {
 	runC.AddVolume("volume1")
 	runC.AddOptions("-h")
 
-	assert.Containsf(container.envs, map[string]rune {"key1=value": 'e'}, "Expect key1=value to be found %s", testCase)
-	assert.Containsf(container.volumes, map[string]rune {"volume1": 'v'}, "Expect volume1 to be found %s", testCase)
-	assert.Containsf(container.opts, []string {"-h"}, "Expect -h to be found %s", testCase)
-
+	assert.Containsf(container.envs, "key1=value1", "Expect key1=value to be found %s", testCase)
+	assert.Containsf(container.volumes, "volume1", "Expect volume1 to be found %s", testCase)
+	assert.Containsf(container.opts, "-h", "Expect -h to be found %s", testCase)
 
 	// ---------------------------------------
 	container = newContainerMock()
@@ -78,8 +77,8 @@ func TestRunContext(t *testing.T) {
 	ret := runC.GetFrom()
 
 	assert.Truef(ret, "Expect to get values from TEST")
-	assert.Containsf(container.envs, map[string]rune {"key2=value1": 'e'}, "Expect key2=value1 to be found %s", testCase)
-	assert.Containsf(container.volumes, map[string]rune {"volume2": 'v'}, "Expect volume1 to be found %s", testCase)
-	assert.Containsf(container.opts, []string {"-x"}, "Expect -x to be found %s", testCase)
+	assert.Containsf(container.envs, "key2=value1", "Expect key2=value1 to be found %s", testCase)
+	assert.Containsf(container.volumes, "volume2", "Expect volume1 to be found %s", testCase)
+	assert.Containsf(container.opts, "-x", "Expect -x to be found %s", testCase)
 
 }

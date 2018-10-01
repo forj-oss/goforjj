@@ -59,6 +59,8 @@ func (r *RunContext) GetFrom() (shared bool) {
 					volume = true
 				case "-e":
 					env = true
+				default:
+					r.AddOptions(element)
 				}
 				continue
 			}
@@ -67,21 +69,19 @@ func (r *RunContext) GetFrom() (shared bool) {
 				volume = false
 				continue
 			}
-			if env {
-				if element != "" {
-					env = false
-					continue
-				}
-				vals := strings.Split(element, "=")
-				if len(vals) == 1 {
-					r.AddEnv(vals[0], "")
-				} else {
-					r.AddEnv(vals[0], vals[1])
-				}
+
+			if element == "" {
 				env = false
 				continue
 			}
-			r.AddOptions(element)
+			vals := strings.Split(element, "=")
+			if len(vals) == 1 {
+				r.AddEnv(vals[0], "")
+			} else {
+				r.AddEnv(vals[0], vals[1])
+			}
+			env = false
+			continue
 
 		}
 		shared = true
@@ -168,7 +168,7 @@ func (r *RunContext) BuildOptions() (ret []string) {
 
 	for key, value := range r.env {
 		ret = append(ret, "-e")
-		if value != "" {
+		if value == "" {
 			ret = append(ret, key)
 		} else {
 			ret = append(ret, key+"="+value)
