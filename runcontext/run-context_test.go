@@ -31,6 +31,10 @@ func (d *containerMock) addEnv(key, value string) {
 	d.envs[env] = 'e'
 }
 
+func (d *containerMock) addHiddenEnv(key, _ string) {
+	d.envs[key] = 'e'
+}
+
 func (d *containerMock) AddVolume(volume string) {
 	d.volumes[volume] = 'v'
 }
@@ -59,7 +63,7 @@ func TestRunContext(t *testing.T) {
 	container := newContainerMock()
 
 	runC = runcontext.NewRunContext("TEST", 3)
-	runC.DefineContainerFuncs(container.AddVolume, container.addEnv, container.addOpts)
+	runC.DefineContainerFuncs(container.AddVolume, container.addEnv, container.addHiddenEnv, container.addOpts)
 	runC.AddEnv("key1", "value1")
 	runC.AddVolume("volume1")
 	runC.AddOptions("-h")
@@ -72,8 +76,7 @@ func TestRunContext(t *testing.T) {
 	container = newContainerMock()
 	runC = runcontext.NewRunContext("TEST", 3)
 	os.Setenv("TEST", "-e key2=value1 -v volume2 -x")
-	runC = runcontext.NewRunContext("TEST", 3)
-	runC.DefineContainerFuncs(container.AddVolume, container.addEnv, container.addOpts)
+	runC.DefineContainerFuncs(container.AddVolume, container.addEnv, container.addHiddenEnv, container.addOpts)
 	ret := runC.GetFrom()
 
 	assert.Truef(ret, "Expect to get values from TEST")
@@ -81,4 +84,12 @@ func TestRunContext(t *testing.T) {
 	assert.Containsf(container.volumes, "volume2", "Expect volume1 to be found %s", testCase)
 	assert.Containsf(container.opts, "-x", "Expect -x to be found %s", testCase)
 
+	// ---------------------------------------
+	container = newContainerMock()
+	runC = runcontext.NewRunContext("TEST", 3)
+	os.Setenv("proxy", "value")
+	runC.DefineContainerFuncs(container.AddVolume, container.addEnv, container.addHiddenEnv, container.addOpts)
+	runC.AddFromEnv("proxy")
+
+	assert.Containsf(container.envs, "proxy", "Expect proxy to be found %s", testCase)
 }
