@@ -16,6 +16,7 @@ type RunContext struct {
 	hasContainerAdds bool
 	addVolume        func(string)
 	addEnv           func(string, string)
+	addHiddenEnv     func(string, string)
 	addOptions       func(...string)
 }
 
@@ -33,10 +34,11 @@ func NewRunContext(sharedName string, volumeSize int) (ret *RunContext) {
 }
 
 // DefineContainerFuncs define 3 container functions to update container options automatically.
-func (r *RunContext) DefineContainerFuncs(addVolume func(string), addEnv func(string, string), addoptions func(...string)) {
+func (r *RunContext) DefineContainerFuncs(addVolume func(string), addEnv func(string, string), addHiddenEnv func(string, string), addOptions func(...string)) {
 	r.addEnv = addEnv
+	r.addHiddenEnv = addHiddenEnv
 	r.addVolume = addVolume
-	r.addOptions = addoptions
+	r.addOptions = addOptions
 	r.hasContainerAdds = true
 }
 
@@ -134,7 +136,7 @@ func (r *RunContext) AddFromEnv(key string) *RunContext {
 	if v := strings.Trim(os.Getenv(key), " "); v != "" {
 		r.env[key] = ""
 		if r.hasContainerAdds {
-			r.addEnv(key, "")
+			r.addHiddenEnv(key, v)
 		}
 	}
 	return r
