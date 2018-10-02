@@ -40,6 +40,7 @@ func (c *commandRun) SetArgs(args []string) {
 	c.args = args
 }
 
+// AddEnv set an environment variable to the command to run.
 func (c *commandRun) AddEnv(name, value string) {
 	if c == nil {
 		return

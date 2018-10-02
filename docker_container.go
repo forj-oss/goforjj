@@ -3,9 +3,9 @@ package goforjj
 import (
 	"context"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
-	"path"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -288,13 +288,13 @@ func (d *DockerContainer) ContainerHasChanged() (changed bool) {
 		found = false
 	}
 
-	// check env 
+	// check env
 	if len(d.envs) != len(d.inspect.Config.Env) {
 		return true
 	}
 
 	for _, envpair := range d.inspect.Config.Env {
-		if _, match := d.envs[envpair] ; !match {
+		if _, match := d.envs[envpair]; !match {
 			return true
 		}
 	}
