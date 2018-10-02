@@ -417,8 +417,24 @@ func (p *Driver) DefineDockerProxyParameters() {
 	return
 }
 
+// SetDefaultMounts defines container (src/deploy/workspace) mounts to default path
+func (p *Driver) SetDefaultMounts() {
+	if p == nil {
+		return
+	}
+	p.DestMount = "/deploy/"
+	p.SourceMount = "/src/"
+	p.WorkspaceMount = "/workspace/"
+}
+
 // DefineDockerForjjMounts create a share of forjj driver mounts
-func (p *Driver) DefineDockerForjjMounts() {
+func (p *Driver) DefineDockerForjjMounts() error {
+	if p == nil {
+		return fmt.Errorf("driver is nil")
+	}
+	if p.SourceMount == "" || p.DestMount == "" || p.WorkspaceMount == "" {
+		return fmt.Errorf("Container mounts not set")
+	}
 	srcContext := runcontext.NewRunContext("DOOD_SOURCE", 12)
 	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
 
@@ -430,14 +446,12 @@ func (p *Driver) DefineDockerForjjMounts() {
 		p.SourceMount = "/src/"
 	}
 	srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
-	srcContext.AddEnv("SELF_SRC", p.SourceMount)
 
 	if p.DeployPath != "" { // For compatibility reason with old forjj.
 		if p.DestMount == "" {
 			p.DestMount = "/deploy/"
 		}
 		srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
-		srcContext.AddEnv("SELF_DEPLOY", p.DestMount)
 	}
 
 	// Workspace path
@@ -446,10 +460,9 @@ func (p *Driver) DefineDockerForjjMounts() {
 			p.WorkspaceMount = "/workspace/"
 		}
 		srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
-		srcContext.AddEnv("SELF_WORKSPACE", p.WorkspaceMount)
 	}
 	srcContext.AddShared()
-
+	return nil
 }
 
 // PluginStartService This function start the service as daemon and register it
@@ -644,7 +657,9 @@ func (p *Driver) docker_start_service() (err error) {
 		os.MkdirAll(p.Source_path, 0755)
 	}
 
-	p.DefineDockerForjjMounts()
+	if err = p.DefineDockerForjjMounts() ; err != nil {
+		return
+	}
 
 	// Define the socket
 	remote_url := false
