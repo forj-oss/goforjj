@@ -72,18 +72,31 @@ If your plugin do not use `Docker DooD`, then forjj will create a container with
 `forjj` will run the plugin with `docker run`, to create the container or with `docker start` to restart the container.
 
 The container will have the following mount:
+
 - /tmp/forj_socks : where the plugin will create the socket, so that forjj can communicate with the plugin
 - /workspace      : mount of the infra/.forj-workspace directory
 - /src            : mount of plugin source code stored in your infra repository.
 - /deploy         : mount of deployments parent directory, containing all deployment reposistories.
 
+if forjj is called with `FORJJ_SOURCE_BASE`, mounts are different:
+
+- /tmp/forj_socks    : where the plugin will create the socket, so that forjj can communicate with the plugin
+- $FORJJ_SOURCE_BASE : unique and base directory which contains src, deploy and workspace. Jenkins service uses that variable to mount the jenkins_home.
+                       Forjj will take this global path in account to determine where sources, deploys, and workspace are located in the plugin container
+
+
 The container will have the following environment:
+
 - http_proxy/https_proxy/no_proxy : if set in your workstation.
 - LOGNAME                         : Username used to run forjj.
+- SELF_SRC                        : Container source path.
+- SELF_DEPLOY                     : Container Deployments parent directory, containing all deployment reposistories.
+- SELF_WORKSPACE                  : Container workspace path
 
 The container will be started with :
+
 - the user/group ID used to start forjj. (docker -u UID:GID)
-- default directory (pwd) to /src
+- default directory (pwd) to /src (or source relative path if FORJJ_SOURCE_BASE is set). SELF_SRC, SELF_DEPLOY and SELF_WORKSPACE are set to the container path.
 - command defined by `runtime/service/command`. If not set, you will need to define it with CMD or ENTRYPOINT in your Dockerfile.
 - command parameters defined by `runtime/service/command`
 
@@ -95,7 +108,7 @@ As this kind of plugin are quite simple, your Dockerfile should be simple as wel
 
 Initial forjj plugins (forjj-jenkins / forjj-github) were written in GO. 
 They were generated from some template to create a vanilla plugin, doing nothing but running. So you can just start writing the plugin logic to manage your application. code 
-You can find [some explanation how to create a basic one](README.md#create-your-forjj-plugin-with-go) which create a simple static binary. 
+You can find [some explanation how to create a basic one](README.md#create-your-forjj-plugin-with-go) which create a simple static binary.
 
 ```Forjfile
 FROM alpine:latest
