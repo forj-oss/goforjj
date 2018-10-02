@@ -358,7 +358,7 @@ func (p *Driver) defineDockerDooDBecome(dockerDooDBecome *runcontext.RunContext)
 // - DOCKER_DOOD_BECOME. It regroups options to enable impersonation in the container. The container started as root
 //   will ask the container to update few things and become the wanted user with a specific UID/GID given.
 //   The container have to update the wanted user UID and GID
-func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, string), addOptions func(...string)) (err error) {
+func (p *Driver) DefineDockerDood() (err error) {
 	if err = p.checkDockerDooD(); err != nil {
 		return
 	}
@@ -384,7 +384,7 @@ func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, st
 	}
 
 	dockerDooD := runcontext.NewRunContext("DOCKER_DOOD", 12)
-	dockerDooD.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	dockerDooD.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddHiddenEnv, p.container.AddOpts)
 	dockerDooD, err = p.defineDockerDooD(dockerDooD, dockerGrpID)
 	if err != nil {
 		return
@@ -392,7 +392,7 @@ func (p *Driver) DefineDockerDood(addVolume func(string), addEnv func(string, st
 	dockerDooD.AddShared()
 
 	dockerDooDBecome := runcontext.NewRunContext("DOCKER_DOOD_BECOME", 6)
-	dockerDooDBecome.DefineContainerFuncs(addVolume, addEnv, addOptions)
+	dockerDooDBecome.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddHiddenEnv, p.container.AddOpts)
 	p.defineDockerDooDBecome(dockerDooDBecome)
 	dockerDooDBecome.AddShared()
 
@@ -407,7 +407,7 @@ func (p *Driver) DefineDockerProxyParameters() {
 	}
 
 	dockerDooDProxy := runcontext.NewRunContext("DOCKER_DOOD_PROXY", 6)
-	dockerDooDProxy.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
+	dockerDooDProxy.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddHiddenEnv, p.container.AddOpts)
 	if !dockerDooDProxy.GetFrom() {
 		dockerDooDProxy.AddFromEnv("https_proxy").
 			AddFromEnv("http_proxy").
@@ -436,7 +436,7 @@ func (p *Driver) DefineDockerForjjMounts() error {
 		return fmt.Errorf("Container mounts not set")
 	}
 	srcContext := runcontext.NewRunContext("DOOD_SOURCE", 12)
-	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts)
+	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddHiddenEnv, p.container.AddOpts)
 
 	// Source path
 	if _, err := os.Stat(p.Source_path); err != nil {
@@ -704,7 +704,7 @@ func (p *Driver) docker_start_service() (err error) {
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
-		if err := p.DefineDockerDood(p.container.AddVolume, p.container.AddEnv, p.container.AddOpts); err != nil {
+		if err := p.DefineDockerDood(); err != nil {
 			return err
 		}
 	} else {
