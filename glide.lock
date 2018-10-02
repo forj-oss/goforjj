@@ -1,5 +1,5 @@
 hash: 4bf30c01ac5060af2799d0af10a7134889b1d7b1c87905aefa6ad93b60889e51
-updated: 2018-10-01T19:10:24.925708933Z
+updated: 2018-10-02T20:47:17.581269977Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: 947dcec5ba9c011838740e680966fd7087a71d0d
@@ -54,7 +54,7 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: caeaecef0a994fc51648bfed24036f0bf80ad9c6
+  version: f4f90372c59250ff438736810f6133978c587386
   subpackages:
   - runcontext
 - name: github.com/gorilla/context
@@ -80,7 +80,7 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 1ed61965b9e594bf37539680d7f63eccd060314f
 - name: golang.org/x/crypto
-  version: 5295e8364332db77d75fce11f1d19c053919a9c9
+  version: e3636079e1a4c1f337f212cc5cd2aca108f6c900
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net

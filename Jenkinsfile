@@ -13,7 +13,7 @@ pipeline {
         stage('Tests') {
             steps {
                 sh('''set +x ; source ./build-env.sh
-                go test goforjj goforjj/genapp goforjj/runcontext''')
+                go test goforjj goforjj/runcontext''')
             }
         }
         stage('Build genapp') {
