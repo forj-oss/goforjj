@@ -1,13 +1,13 @@
 # Forjj plugin documentation
 
-`forjj` thanks to `Forjfile`s will create/update and maintain the software factory that you defined.
+`forjj` thanks to `Forjfiles` will `create`/`update` and `maintain` the software factory that you defined.
 Your `Forjfile` requires to define at least one or more application (`applications/<ApplicationName>`) which will compose your Software factory.
 
 `forjj` can't manage them if there is no *forjj plugin* attached to. The forjj plugin is also known as driver.
 
-This documentation explains how forjj detect, download and use them.
+This documentation explains how forjj detect, download, use them and what a plugin typically do in such action cases.
 
-## how forjj identify a plugin to manage an application
+## How forjj identify a plugin to manage an application
 
 An application is defined in your Forjfile as follow:
 
@@ -21,22 +21,25 @@ applications: # List all applications
 
 `applications/<appName>/driver` (or `<appName>` if not set) is the name of the forjj plugin that forjj will use to manage the application through `create`, `update` or `maintain` action.
 
-As soon as forjj has a complete list of drivers to load, forjj will search for the driver definition.
-It will search them from a list of urls which is described by `forjj workspace` `contrib-repo-path`. 
+As soon as `forjj` has loaded all Forjfiles, it build a complete list of drivers to load and use.
+
+To load them, it will search for drivers definition to load as follow:
+
+It will search them from a list of urls which is described by `forjj workspace` `contrib-repo-path`.
 By default, forjj will search in `https://github.com/forj-oss/<repo>/raw/master`. `<repo>` is replaced by `<driverName>` or `forjj-<driverName>`. So Forjj will check those path to find and download the `<pluginName>.yaml`
 
-For `github` plugin, forjj search for :
+For example, for `github` plugin, forjj will search for :
+
 - `https://github.com/forj-oss/github/raw/master`/`github.yaml`
 - `https://github.com/forj-oss/forjj-github/raw/master`/`github.yaml`
 
-Then, forjj load all `<pluginName>.yaml` or each application defined.
+First found, first loaded. Forjj will exit if one driver definition is missing.
 
 **NOTE** Please note that forjj run a `forjj validate` to verify the Forjfile setup with plugins definition. Forjj can report you some errors if you set some data which has no effect as not recognized by forjj and loaded plugins.
 
-
 ## How forjj determine how to download and start the plugin
- 
-When forjj has loaded a plugin in memory, it search for the runtime section which describes where is the plugin image and how to start it.
+
+When forjj has loaded a plugin definition, it search for the runtime section which describes where is the plugin image and how to start it.
 
 Typical `<pluginName>.yaml`:
 
@@ -57,7 +60,8 @@ runtime: # runtime section to describe how to download and start the plugin.
     parameters: [ "service", "start", "--templates", "/templates"] # Array of parameters to provide to the plugin to start.
 [...]
 ```
-`docker` section describe how to find and pull the plugin image from docker and will use docker to start it.
+
+`docker` section describes how to find and pull the plugin image from docker and will use docker to start it.
 
 The runtime/docker/image is required as the image will be pulled by docker automatically by forjj thanks to this field.
 
@@ -65,7 +69,13 @@ The runtime/docker/image is required as the image will be pulled by docker autom
 
 ## Plugin docker image design
 
-If your plugin do not use `Docker DooD`, then forjj will create a container with a minimum of parameters.
+`Forjj` starts plugins from docker. If those plugins requires to run some docker task, the plugin container will need to be configured with DooD (Docker out of Docker) or DinD (Docker in Docker)
+
+You can read some documentation about those 2 differents technics [here](http://blog.teracy.com/2017/09/11/how-to-use-docker-in-docker-dind-and-docker-outside-of-docker-dood-for-local-ci-testing/).
+
+DooD is one recommended way to run docker commands in docker container. So `Forjj` has implemented some features to manage those container in DooD mode, automatically. It will be explained in [next section](#plugin-dood-docker-image-design).
+
+If your plugin do not use `Docker DooD`, then `forjj` will create a container with a minimum set of parameters.
 
 ### Minimal docker run parameters used by forjj to start a plugin
 
@@ -84,14 +94,10 @@ if forjj is called with `FORJJ_SOURCE_BASE`, mounts are different:
 - $FORJJ_SOURCE_BASE : unique and base directory which contains src, deploy and workspace. Jenkins service uses that variable to mount the jenkins_home.
                        Forjj will take this global path in account to determine where sources, deploys, and workspace are located in the plugin container
 
-
 The container will have the following environment:
 
 - http_proxy/https_proxy/no_proxy : if set in your workstation.
 - LOGNAME                         : Username used to run forjj.
-- SELF_SRC                        : Container source path.
-- SELF_DEPLOY                     : Container Deployments parent directory, containing all deployment reposistories.
-- SELF_WORKSPACE                  : Container workspace path
 
 The container will be started with :
 
@@ -178,6 +184,7 @@ The container will have the following environment:
 **NOTE**: UID/GID can be set outside DooD Context, if the container started as root needs to become a user with a different UID/GID.
 
 The container will be started with :
+
 - the user/group ID used to start forjj. (docker -u UID:GID)
 - default directory (pwd) to /src
 - command defined by `runtime/service/command`. If not set, you will need to define it with CMD or ENTRYPOINT in your Dockerfile.
@@ -189,13 +196,15 @@ In this DooD Context, The plugin image must take care of the DooD environments v
 (UID, GID, DOCKER_DOOD_GROUP, DOCKER_DOOD & DOCKER_DOOD_BECOME)
 
 When the forjj plugin container start, if:
+
 - UID & GID are set:
-    - the plugin process will need to be started with those UID & GID
-    - if needed, the current container user must be updated with those UID/GID
+
+  - the plugin process will need to be started with those UID & GID
+  - if needed, the current container user must be updated with those UID/GID
 - DOCKER_DOOD_GROUP is set:
-    - a docker group must exist or update with the id given in this variable.
+  - a docker group must exist or update with the id given in this variable.
 - DOCKER_DOOD, DOCKER_DOOD_BECOME are set or not:
-    - nothing to do, but if that container needs to create a container in DooD mode, those variables can be used as is to the docker run command. Ex: `docker run $DOCKER_DOOD $DOCKER_DOOD_BECOME [...]`
+  - nothing to do, but if that container needs to create a container in DooD mode, those variables can be used as is to the docker run command. Ex: `docker run $DOCKER_DOOD $DOCKER_DOOD_BECOME [...]`
 
 To simplify your entrypoint script, you can use [`docker-lu`](https://github.com/forj-oss/docker-lu) This program update passwd and group file with needed values
 
@@ -239,6 +248,53 @@ exec /bin/su devops -c "/bin/aPlugin $@"
 
 With UID/GID/DOCKER_DOOD_GROUP, you can use `sed` and `groupadd`/`addgroup` depending on the linux release used to create/update properly. 
 But you can use instead which do this in a single line more securily: [`docker-lu`](https://github.com/forj-oss/docker-lu) was written for that perspective.
+
+## minimal plugin yaml definition
+
+When `forjj` works with plugins, it sends a REST API post request, to `create`/`update` or `maintain` applications by those plugins.
+
+The plugin is started from docker and files are made available through docker mount mechanism and it will need to read files from a source directory and write to a destination directory.
+
+Each request payload is dynamically built by forjj from the plugin file definition with data from Forjfiles, forjj internal and forjj secrets.
+At least, the plugin requires forjj to identify where are plugin source files and where to write files (generate, ...)
+
+Forjj internal data:
+
+- forjj-organization:    Forjj oranization name
+- forjj-instance-name:   Name of the instance of the current application
+
+- forjj-infra:           Name of the Infra repository to use
+- forjj-infra-upstream:  Address of the infra repository upstream
+
+- forjj-deploy-mount:    Container path to the deployment repository
+- forjj-source-mount:    Container path to the source directory.
+- forjj-workspace-mount: Container path to the forjj workspace.
+
+- forjj-username:        User name running forjj (from $LOGNAME)
+
+Those paths are request by the plugin, by defining them in the `<plugin>.yaml` under section `task_flags/<common|create|update|maintain>/`
+
+### Typical create Request plugin actions
+
+when forjj request a plugin to `create` the application, the plugin needs to:
+
+- create initial source files in the `forjj-source-mount`. If it already exist, it must ask the user to use `update` instead.
+- create the deployment code from the initial source files. Generated files will needs to be made in `forjj-deploy-mount`
+
+### Typical update Request plugin actions
+
+when forjj request a plugin to `update` the application, the plugin needs to:
+
+- read source files from the `forjj-source-mount`. If not found, it must request the user to create it first.
+- update the deployment code from the source files. Generated files will needs to be made in `forjj-deploy-mount`
+
+### Typical maintain Request plugin actions
+
+when forjj request a plugin to `maintain` the application, the plugin needs to:
+
+- read and execute deployement files stored in `forjj-deploy-mount`
+
+
 
 Enjoy
 
