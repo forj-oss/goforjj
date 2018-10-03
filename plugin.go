@@ -105,16 +105,25 @@ func (p *Driver) PluginSetSource(path string) {
 
 // PluginSetSourceMount Set plugin source path mount where source will be mounted in the plugin container.
 func (p *Driver) PluginSetSourceMount(path string) {
+	if p.basePath != "" && p.baseMount != "" {
+		path = strings.Replace(path, p.basePath, p.baseMount, 1)
+	}
 	p.SourceMount = path
 }
 
 // PluginSetWorkspaceMount set workspace path from forjj perspective
 func (p *Driver) PluginSetWorkspaceMount(path string) {
+	if p.basePath != "" && p.baseMount != "" {
+		path = strings.Replace(path, p.basePath, p.baseMount, 1)
+	}
 	p.WorkspaceMount = path
 }
 
 // PluginSetDeploymentMount set Deploy path from forjj perspective
 func (p *Driver) PluginSetDeploymentMount(path string) {
+	if p.basePath != "" && p.baseMount != "" {
+		path = strings.Replace(path, p.basePath, p.baseMount, 1)
+	}
 	p.DestMount = path
 }
 
