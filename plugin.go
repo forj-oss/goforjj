@@ -140,7 +140,12 @@ func (p *Driver) PluginSetDeployment(path string) {
 // PluginBase define the source Base mount to use for DooD mount
 func (p *Driver) PluginBase(mount string) {
 	paths := strings.Split(mount, ":")
-	if len(paths) < 2 {
+	if len(paths) <= 0 {
+		return
+	}
+	if len(paths) == 1 {
+		p.basePath = path.Clean(paths[0])
+		p.baseMount = path.Clean(paths[0])
 		return
 	}
 	p.basePath = path.Clean(paths[0])
