@@ -69,10 +69,8 @@ func (c *commandRun) runFlow(outFct func(string), errFct func(string)) (err erro
 
 	cmd.Env = make([]string, 0, len(c.envs)+len(os.Environ()))
 	cmd.Env = append(cmd.Env, os.Environ()...)
-	iCount := len(os.Environ()) - 1
 	for key, value := range c.envs {
-		cmd.Env[iCount] = key + "=" + value
-		iCount++
+		cmd.Env = append(cmd.Env, key + "=" + value)
 	}
 	gotrace.Trace("RUNNING: %s '%s'", command, strings.Join(args, "' '"))
 
