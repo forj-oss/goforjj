@@ -97,6 +97,10 @@ if forjj is called with `FORJJ_SOURCE_BASE`, mounts are different:
 The container will have the following environment:
 
 - http_proxy/https_proxy/no_proxy : if set in your workstation.
+- PROXY                           : a docker run shell helper for proxies. To use it in shell, you will need to run `eval "docker run $PROXY"`
+  - `-e http_proxy`               : http proxy setup
+  - `-e https_proxy`              : https proxy setup
+  - `-e no_proxy`                 : no proxy setup
 - LOGNAME                         : Username used to run forjj.
 
 The container will be started with :
@@ -165,18 +169,28 @@ The container will have the following mount:
 The container will have the following environment:
 
 - http_proxy/https_proxy/no_proxy : if set in your workstation.
+- PROXY                           : a docker run shell helper for proxies. 
+                                    To use it in shell, you will need to run `eval "docker run $PROXY"`.
+  - `-e http_proxy`               : http proxy setup
+  - `-e https_proxy`              : https proxy setup
+  - `-e no_proxy`                 : no proxy setup
 - LOGNAME                         : Current user name used to run forjj.
 - UID                             : DooD - Current user ID which has started forjj.
 - GID                             : DooD - Current user group ID which has started forjj.
 - DOCKER_DOOD_GROUP               : DooD - Group ID of the docker socket file. We assume name to be `docker`.
-- DOOD_BASE                       : DooD - HostPath:ContainerPath. Respect docker run -v syntax. Ex: Jenkins can mount a base directory where forjj sources will be stored. So, forjj must start forjj-jenkins with that context.
-- DOCKER_DOOD                     : DooD - String of docker run options to mount and set environment. Used to run a DooD container from a DooD container. The list of options are:
-  - `-v <hostDockerSocket        >:/var/run/docker.sock`
-  - `-v <hostDockerBinPath       >:/usr/bin/docker`
+- DOOD_SOURCE                     : DooD - docker run shell helper for sources mount. if forjj uses `FORJJ_SOURCE_BASE`, this shell string will just have a single `-v $FORJJ_SOURCE_BASE:$FORJJ_SOURCE_BASE`
+                                    To use it in shell, you will need to run `eval "docker run $DOOD_SOURCE"`.
+- DOCKER_DOOD                     : DooD - String of docker run options to mount and set environment. Used to run a DooD container from a DooD container.
+                                    To use it in shell, you will need to run `eval "docker run $DOCKER_DOOD_BECOME"`.
+  The list of options are:
+  - `-v <hostDockerSocket>:/var/run/docker.sock`
+  - `-v <hostDockerBinPath>:/usr/bin/docker`
   - `-e DOOD_SRC=<hostInfraPluginSource>`
   - `-e DOOD_DEPLOY=<hostPluginSource>`
   - `-e DOCKER_DOOD_GROUP=<hostDockerGroup>`
-- DOCKER_DOOD_BECOME              : DooD - String of docker run option to become root and set environment variable UID/GID/DOCKER_DOOD_GROUP. In details:
+- DOCKER_DOOD_BECOME              : DooD - String of docker run option to become root and set environment variable UID/GID/DOCKER_DOOD_GROUP.
+                                    To use it in shell, you will need to run `eval "docker run $DOCKER_DOOD_BECOME"`.
+  In details:
   - `-u root:root`
   - `-e UID=<hostCurrentUserUID`
   - `-e GID=<hostCurrentUserGID`
@@ -204,7 +218,7 @@ When the forjj plugin container start, if:
 - DOCKER_DOOD_GROUP is set:
   - a docker group must exist or update with the id given in this variable.
 - DOCKER_DOOD, DOCKER_DOOD_BECOME are set or not:
-  - nothing to do, but if that container needs to create a container in DooD mode, those variables can be used as is to the docker run command. Ex: `docker run $DOCKER_DOOD $DOCKER_DOOD_BECOME [...]`
+  - nothing to do, but if that container needs to create a container in DooD mode, those variables can be used as is to the docker run command. Ex: `eval "docker run $DOCKER_DOOD $DOCKER_DOOD_BECOME [...]"`
 
 To simplify your entrypoint script, you can use [`docker-lu`](https://github.com/forj-oss/docker-lu) This program update passwd and group file with needed values
 
@@ -294,8 +308,34 @@ when forjj request a plugin to `maintain` the application, the plugin needs to:
 
 - read and execute deployement files stored in `forjj-deploy-mount`
 
+### Using docker in the plugin - Docker Mount context
 
+As the plugin is configured to support DooD thanks to `forjj`, it can start docker or even shell script to run docker commands.
 
+When the plugin has been started, `forjj` has already configured the plugin container with required mounts and environment variables.
+But when the plugin needs to run docker containers within the plugin container, mounts cannot use local container path to set a mount,
+because the host reference is the host itself and the container.
+
+Here is an example: 
+If the plugin container has been started with `-v /var/container/home:/home`, `/home`, an ls in the plugin container will shows files/directories stored in `/var/container/home` of the host.
+
+if you start a container from this container, with `-v /home:/home`, the container created will mount the HOST `/home` to `/home` in the new container.
+The main confusion is to remind where docker daemon run. 
+If dockerd is running in the host (DooD), the parent mount path reference is the HOST mount path. Not the container mount path.
+if dockerd is running in the container (DinD), the parent mount path reference is the CONTAINER mount path. Not the host mount path
+
+To facilitate running container in the same context as the plugin, `forjj` delivers few additionnal environment variables which was already listed above in section [Docker run parameters used by forjj to start a plugin DooD](#Docker-run-parameters-used-by-forjj-to-start-a-plugin-DooD)
+
+- DOCKER_DOOD        : docker run options to configure the new container is DooD
+- DOCKER_DOOD_BECOME : docker run options to run as root and become a different user (UID/GID)
+- PROXY              : docker run options to add host proxy setup
+- DOOD_SOURCE        : docker run options to mount source/deploy/workspace path
+
+If the plugin container needs to run a container with one or more `docker run` shell helper, you have to run it in an `eval`
+
+ex: 
+
+    eval "docker run $DOOD_SOURCE"
 Enjoy
 
 Forj team
