@@ -447,19 +447,27 @@ func (p *Driver) DefineDockerForjjMounts() error {
 	srcContext := runcontext.NewRunContext("DOOD_SOURCE", 12)
 	srcContext.DefineContainerFuncs(p.container.AddVolume, p.container.AddEnv, p.container.AddHiddenEnv, p.container.AddOpts)
 
-	// Source path
-	if _, err := os.Stat(p.Source_path); err != nil {
-		os.MkdirAll(p.Source_path, 0755)
-	}
-	srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
+	if p.baseMount != "" && p.basePath != "" {
+		// Base souce mount
+		if _, err := os.Stat(p.basePath); err != nil {
+			return fmt.Errorf("%s is inexistent. %s", p.basePath, err)
+		}
+		srcContext.AddVolume(p.basePath + ":" + p.baseMount)
+	} else {
+		// Source path
+		if _, err := os.Stat(p.Source_path); err != nil {
+			os.MkdirAll(p.Source_path, 0755)
+		}
+		srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
 
-	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
-	}
+		if p.DeployPath != "" { // For compatibility reason with old forjj.
+			srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
+		}
 
-	// Workspace path
-	if p.Workspace_path != "" {
-		srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+		// Workspace path
+		if p.Workspace_path != "" {
+			srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
+		}
 	}
 	srcContext.AddShared()
 	return nil
@@ -657,7 +665,7 @@ func (p *Driver) docker_start_service() (err error) {
 		os.MkdirAll(p.Source_path, 0755)
 	}
 
-	if err = p.DefineDockerForjjMounts() ; err != nil {
+	if err = p.DefineDockerForjjMounts(); err != nil {
 		return
 	}
 
