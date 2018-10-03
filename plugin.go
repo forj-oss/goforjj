@@ -442,23 +442,14 @@ func (p *Driver) DefineDockerForjjMounts() error {
 	if _, err := os.Stat(p.Source_path); err != nil {
 		os.MkdirAll(p.Source_path, 0755)
 	}
-	if p.SourceMount == "" {
-		p.SourceMount = "/src/"
-	}
 	srcContext.AddVolume(p.Source_path + ":" + p.SourceMount)
 
 	if p.DeployPath != "" { // For compatibility reason with old forjj.
-		if p.DestMount == "" {
-			p.DestMount = "/deploy/"
-		}
 		srcContext.AddVolume(p.DeployPath + ":" + p.DestMount)
 	}
 
 	// Workspace path
 	if p.Workspace_path != "" {
-		if p.WorkspaceMount == "" {
-			p.WorkspaceMount = "/workspace/"
-		}
 		srcContext.AddVolume(p.Workspace_path + ":" + p.WorkspaceMount)
 	}
 	srcContext.AddShared()
