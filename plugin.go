@@ -710,10 +710,6 @@ func (p *Driver) docker_start_service() (err error) {
 	p.DefineDockerProxyParameters()
 
 	if p.Yaml.Runtime.Docker.Dood {
-		if p.dockerBin == "" {
-			err = fmt.Errorf("Unable to activate Dood on docker container '%s'. Missing --docker-exe-path", p.container.Name())
-			return
-		}
 		gotrace.Trace("Adding docker dood information...")
 		// TODO: download bin version of docker and mount it, or even communicate with the API directly in the plugin container (go: https://github.com/docker/engine-api)
 
