@@ -14,7 +14,7 @@ then
 fi
 
 unset MODS
-MODS=(`cat build-env.modules`)
+MODS="`cat build-env.modules`"
 for MOD in $MODS
 do
     echo "Loading module $MOD ..."

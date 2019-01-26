@@ -17,7 +17,7 @@ then
 fi
 
 source $BUILD_SCRIPT_LIB_PATH/run-build-env.sh
-# Added from ../build-env/bin/inenv
+# Added from ../build-env//bin/inenv
 # From BuildEnv bin/inenv.sh
 
 if [[ "$1" == --help ]]
@@ -30,7 +30,7 @@ fi
 
 if [[ -f $BUILD_ENV_PROJECT/build-env.modules ]]
 then
-    MODS=(`cat $BUILD_ENV_PROJECT/build-env.modules`)
+    MODS="`cat $BUILD_ENV_PROJECT/build-env.modules`"
 
     case ${#MODS[@]} in
     0) IMAGE=alpine ;;

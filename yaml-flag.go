@@ -10,7 +10,11 @@ type YamlFlag struct {
 	Help          string
 	FormatRegexp  string   `yaml:"format-regexp"`
 	Actions       []string `yaml:"only-for-actions"`
-	CliCmdActions []string `yaml:"cli-exported-to-actions"`
+
+	// Define how flags are going to be declared to forjj cli as flags 
+	CliExport     bool     `yaml:"cli-exported"` // true if the object flag must be exported to the forjj cli. Used by objects only.
+	CliCmdActions []string `yaml:"cli-exported-to-actions"` // List of actions to export the flag to. Used for `application` object type only.
+
 	Type          string   `yaml:"of-type"`
 	FlagScope     string   `yaml:"flag-scope"` // 'object' by default. Flag is not prefixed by instance name.
 	// 'instance' Flag is prefixed by instance name if certain condition.
