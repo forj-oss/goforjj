@@ -30,7 +30,7 @@ fi
 
 if [[ -f $BUILD_ENV_PROJECT/build-env.modules ]]
 then
-    MODS=(`cat $BUILD_ENV_PROJECT/build-env.modules`)
+    MODS="`cat $BUILD_ENV_PROJECT/build-env.modules`"
 
     case ${#MODS[@]} in
     0) IMAGE=alpine ;;

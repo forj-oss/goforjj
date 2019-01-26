@@ -11,7 +11,7 @@ fi
 cd $BUILD_ENV_PROJECT
 
 source lib/build-env.fcts.sh
-MODS=(`cat build-env.modules`)
+MODS="`cat build-env.modules`"
 for mod in ${MODS[@]}
 do
     if [[ $mod != core ]]

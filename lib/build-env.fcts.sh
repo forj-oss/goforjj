@@ -94,7 +94,7 @@ function unset_build_env {
         alias build-env='if [ -f build-env.sh ] ; then source build-env.sh ; else echo "Please move to your project where build-env.sh exists." ; fi'
 
         # TODO: Be able to load from a defined list of build env type. Here it is GO
-        local MODS=(`cat build-env.modules`)
+        local MODS="`cat build-env.modules`"
         for MOD in $MODS
         do
             unset_${MOD}
@@ -215,7 +215,8 @@ function be_update {
         echo "build-env.fcts refreshed"
     fi
 
-    local MODS=(`cat build-env.modules`)
+    local MODS="`cat build-env.modules`"
+    echo "Modules to install: $MODS"
     for MOD in $MODS core
     do
         if [[ $MOD = core ]]
