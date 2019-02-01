@@ -1,22 +1,31 @@
 package goforjj
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"text/template"
-	"bytes"
 	"strings"
+	"text/template"
+
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
+// ValueStruct Represents a flag value. Can be of type string or []string
 type ValueStruct struct {
 	internal_type string
-	value string
-	list []string
-} // Represents a flag value. Can be of type string or []string
+	value         string
+	list          []string
+}
 
-func (v ValueStruct)MarshalJSON() ([]byte, error) {
+// NewValueStruct Create a ValueStruct data from the input given. Support string and []string
+func NewValueStruct(value interface{}) (ret *ValueStruct) {
+	ret = new(ValueStruct)
+	ret.Set(value)
+	return
+}
+
+func (v ValueStruct) MarshalJSON() ([]byte, error) {
 	switch v.internal_type {
 	case "[]string":
 		return json.Marshal(v.list)
@@ -25,7 +34,7 @@ func (v ValueStruct)MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v ValueStruct)MarshalYAML() (interface{}, error) {
+func (v ValueStruct) MarshalYAML() (interface{}, error) {
 	switch v.internal_type {
 	case "[]string":
 		return v.list, nil
@@ -53,7 +62,8 @@ func (v *ValueStruct) UnmarshalYAML(unmarchal func(interface{}) error) error {
 	return nil
 }
 
-func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
+// Set the Value given to ValueStruct. Support string and []string
+func (v *ValueStruct) Set(value interface{}) (ret *ValueStruct) {
 	if v == nil {
 		ret = new(ValueStruct)
 	} else {
@@ -73,19 +83,21 @@ func (v *ValueStruct)Set(value interface{}) (ret *ValueStruct) {
 	return
 }
 
-func (v *ValueStruct)Evaluate(data interface{}) error {
+func (v *ValueStruct) Evaluate(data interface{}) error {
 	var doc bytes.Buffer
 	tmpl := template.New("forjj_data")
 
 	switch v.internal_type {
 	case "string":
-		if ! strings.Contains(v.value, "{{") { return nil }
+		if !strings.Contains(v.value, "{{") {
+			return nil
+		}
 		if _, err := tmpl.Funcs(template.FuncMap{
-			"ToLower" : strings.ToLower,
-		}).Parse(v.value) ; err != nil {
+			"ToLower": strings.ToLower,
+		}).Parse(v.value); err != nil {
 			return err
 		}
-		if err := tmpl.Execute(&doc, data) ; err != nil {
+		if err := tmpl.Execute(&doc, data); err != nil {
 			return err
 		}
 		ret := doc.String()
@@ -93,15 +105,15 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 		v.value = ret
 	case "[]string":
 		for index, value := range v.list {
-			if ! strings.Contains(v.value, "{{") {
+			if !strings.Contains(v.value, "{{") {
 				continue
 			}
 			if _, err := tmpl.Funcs(template.FuncMap{
-				"ToLower" : strings.ToLower,
+				"ToLower": strings.ToLower,
 			}).Parse(value); err != nil {
 				return err
 			}
-			if err := tmpl.Execute(&doc, data) ; err != nil {
+			if err := tmpl.Execute(&doc, data); err != nil {
 				return err
 			}
 			ret := doc.String()
@@ -112,7 +124,7 @@ func (v *ValueStruct)Evaluate(data interface{}) error {
 	return nil
 }
 
-func (v *ValueStruct)SetIfFound(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
+func (v *ValueStruct) SetIfFound(value interface{}, found bool) (ret *ValueStruct, ret_bool bool) {
 	if !found {
 		return
 	}
@@ -121,14 +133,16 @@ func (v *ValueStruct)SetIfFound(value interface{}, found bool) (ret *ValueStruct
 	return
 }
 
-func (v *ValueStruct)SetString(value string) {
-	if v == nil { return }
+func (v *ValueStruct) SetString(value string) {
+	if v == nil {
+		return
+	}
 	v.internal_type = "string"
 	v.value = value
 
 }
 
-func (v *ValueStruct)Get() (value interface{}) {
+func (v *ValueStruct) Get() (value interface{}) {
 	switch v.internal_type {
 	case "string":
 		value = v.value
@@ -138,19 +152,27 @@ func (v *ValueStruct)Get() (value interface{}) {
 	return
 }
 
-func (v *ValueStruct)Type() string {
+func (v *ValueStruct) Type() string {
 	return v.internal_type
 }
 
-func (v *ValueStruct)GetString() (string) {
-	if v == nil { return "" }
-	if v.internal_type != "string" { return "" }
+func (v *ValueStruct) GetString() string {
+	if v == nil {
+		return ""
+	}
+	if v.internal_type != "string" {
+		return ""
+	}
 	return v.value
 }
 
-func (v *ValueStruct)GetStringSlice() ([]string) {
-	if v == nil { return nil }
-	if v.internal_type != "[]string" { return nil }
+func (v *ValueStruct) GetStringSlice() []string {
+	if v == nil {
+		return nil
+	}
+	if v.internal_type != "[]string" {
+		return nil
+	}
 	return v.list
 }
 
@@ -158,7 +180,7 @@ func (v *ValueStruct)GetStringSlice() ([]string) {
 // The equality depends on internal type:
 // - string : string equality
 // - []string : same list of elements and each elements are at the same position
-func (v *ValueStruct)Equal(value *ValueStruct) (bool) {
+func (v *ValueStruct) Equal(value *ValueStruct) bool {
 	if v == nil && value == nil {
 		return true
 	}
@@ -172,10 +194,16 @@ func (v *ValueStruct)Equal(value *ValueStruct) (bool) {
 	case "string":
 		return (v.value == value.value)
 	case "[]string":
-		if v.list == nil || value.list == nil { return (v.list == nil && value.list == nil) }
-		if len(v.list) != len(value.list)     { return false }
+		if v.list == nil || value.list == nil {
+			return (v.list == nil && value.list == nil)
+		}
+		if len(v.list) != len(value.list) {
+			return false
+		}
 		for index, element := range v.list {
-			if value.list[index] != element   { return false }
+			if value.list[index] != element {
+				return false
+			}
 		}
 		return true
 	default:
